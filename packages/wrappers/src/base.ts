@@ -467,7 +467,7 @@ export class BaseWrapper {
   }
 
   protected extractSizeInBytes(string: string, k: number): number {
-    const sizePattern = /(\d+(\.\d+)?)\s?(KB|MB|GB)/i;
+    const sizePattern = /(\d+(\.\d+)?)\s?(KB|MB|GB|TB)/i;
     const match = string.match(sizePattern);
     if (!match) return 0;
 

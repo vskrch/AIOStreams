@@ -193,18 +193,27 @@ export class Settings {
   public static readonly EASYNEWS_URL =
     process.env.EASYNEWS_URL ||
     'https://ea627ddf0ee7-easynews.baby-beamup.club/';
-  public static readonly DEFAULT_EASYNEWS_TIMEMOUT = process.env
-    .DEFAULT_EASYNEWS_TIMEMOUT
+  public static readonly DEFAULT_EASYNEWS_TIMEOUT = process.env.DEFAULT_EASYNEWS_TIMEOUT
+    ? parseInt(process.env.DEFAULT_EASYNEWS_TIMEOUT)
+    : process.env.DEFAULT_EASYNEWS_TIMEMOUT
     ? parseInt(process.env.DEFAULT_EASYNEWS_TIMEMOUT)
     : undefined;
+  /** @deprecated Use DEFAULT_EASYNEWS_TIMEOUT */
+  public static readonly DEFAULT_EASYNEWS_TIMEMOUT =
+    Settings.DEFAULT_EASYNEWS_TIMEOUT;
 
   public static readonly EASYNEWS_PLUS_URL =
     process.env.EASYNEWS_PLUS_URL ||
     'https://b89262c192b0-stremio-easynews-addon.baby-beamup.club/';
-  public static readonly DEFAULT_EASYNEWS_PLUS_TIMEMOUT = process.env
-    .DEFAULT_EASYNEWS_PLUS_TIMEMOUT
-    ? parseInt(process.env.DEFAULT_EASYNEWS_PLUS_TIMEMOUT)
-    : undefined;
+  public static readonly DEFAULT_EASYNEWS_PLUS_TIMEOUT =
+    process.env.DEFAULT_EASYNEWS_PLUS_TIMEOUT
+      ? parseInt(process.env.DEFAULT_EASYNEWS_PLUS_TIMEOUT)
+      : process.env.DEFAULT_EASYNEWS_PLUS_TIMEMOUT
+      ? parseInt(process.env.DEFAULT_EASYNEWS_PLUS_TIMEMOUT)
+      : undefined;
+  /** @deprecated Use DEFAULT_EASYNEWS_PLUS_TIMEOUT */
+  public static readonly DEFAULT_EASYNEWS_PLUS_TIMEMOUT =
+    Settings.DEFAULT_EASYNEWS_PLUS_TIMEOUT;
 
   public static readonly DEBRIDIO_URL =
     process.env.DEBRIDIO_URL || 'https://debridio.adobotec.com/';

@@ -37,8 +37,8 @@
 | `DEFAULT_TORBOX_TIMEOUT`           | `15000`                                              | Default timeout for Torbox requests (in milliseconds).                                   |
 | `DEFAULT_COMET_TIMEOUT`            | `15000`                                              | Default timeout for Comet requests (in milliseconds).                                    |
 | `DEFAULT_MEDIAFUSION_TIMEOUT`      | `15000`                                              | Default timeout for MediaFusion requests (in milliseconds).                              |
-| `DEFAULT_EASYNEWS_TIMEMOUT`        | `15000`                                              | Default timeout for Easynews requests (in milliseconds).                                 |
-| `DEFAULT_EASYNEWS_PLUS_TIMEMOUT`   | `15000`                                              | Default timeout for Easynews Plus requests (in milliseconds).                            |
+| `DEFAULT_EASYNEWS_TIMEOUT` *(or `DEFAULT_EASYNEWS_TIMEMOUT`)*        | `15000`                                              | Default timeout for Easynews requests (in milliseconds).                                 |
+| `DEFAULT_EASYNEWS_PLUS_TIMEOUT` *(or `DEFAULT_EASYNEWS_PLUS_TIMEMOUT`)*   | `15000`                                              | Default timeout for Easynews Plus requests (in milliseconds).                            |
 | `SHOW_DIE`                         | `true`                                               | Whether to display the die emoji in AIOStreams results                                                          |
 | `LOG_SENSITIVE_INFO`               | `false`                                              | Whether to log sensitive information.                                                      |
 | `DISABLE_TORRENTIO`                | `false`                                              | Whether to disable adding Torrentio as an addon, through override URLs, custom addons, or through the public ElfHosted instance of StremThru | 

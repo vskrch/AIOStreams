@@ -2,6 +2,9 @@
   "name": "@aiostreams/utils",
   "version": "1.14.2",
   "main": "./dist/index.js",
+  "bin": {
+    "encrypt-config": "./dist/encrypt-config.js"
+  },
   "scripts": {
     "test": "vitest run --passWithNoTests",
     "build": "tsc"

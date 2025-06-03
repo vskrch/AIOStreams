@@ -345,6 +345,16 @@ Most users don't need to set any environment variables. However, if you do, the 
 
 With encryption, someone who has your manifest URL can't directly see your API keys. However, they can still install the addon using the encrypted URL. Once installed, they can view API keys within other addons' URLs that are contained within AIOStreams' responses, as most addons don’t encrypt their manifest URLs.
 
+### Encryption CLI
+
+After building the project you can generate an encrypted configuration string without running the server.
+
+```bash
+node packages/utils/dist/encrypt-config.js path/to/config.json
+```
+
+The printed string can be used wherever an encrypted configuration is required.
+
 ### Environment Variables
 
 Please see [CONFIGURING](CONFIGURING.md) and the [sample .env file](.env.sample) for a list of environment variables that can be set.
