@@ -34,6 +34,14 @@ export class Cache<K, V> {
     this.maxSize = maxSize;
     Cache.startStatsLoop();
   }
+  private cleanupExpired() {
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (now - item.lastAccessed > item.ttl) {
+        this.cache.delete(key);
+      }
+    }
+  }
   private static startStatsLoop() {
     if (Cache.isStatsLoopRunning) {
       return;
@@ -41,6 +49,7 @@ export class Cache<K, V> {
     Cache.isStatsLoopRunning = true;
     const interval = Env.LOG_CACHE_STATS_INTERVAL * 60 * 1000; // Convert minutes to ms
     const runAndReschedule = () => {
+      Cache.cleanupAll();
       Cache.stats();
 
       const delay = interval - (Date.now() % interval);
@@ -64,6 +73,12 @@ export class Cache<K, V> {
       this.instances.set(name, new Cache<K, V>(maxSize));
     }
     return this.instances.get(name) as Cache<K, V>;
+  }
+
+  private static cleanupAll() {
+    for (const cache of this.instances.values()) {
+      cache.cleanupExpired();
+    }
   }
 
   /**
