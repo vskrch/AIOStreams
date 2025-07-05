@@ -1,0 +1,18 @@
+# Exclude documentation and configs
+*.md
+Dockerfile
+compose.yaml
+release-please-config.json
+.release-please-manifest.json
+.prettierrc
+.vscode
+.github
+
+# Exclude source and test files
+packages/*/src
+packages/*/tests
+scripts
+
+# Exclude TypeScript config and build info
+**/*.tsbuildinfo
+tsconfig*.json
