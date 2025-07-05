@@ -366,7 +366,6 @@ export const Env = cleanEnv(process.env, {
     default: 15,
     desc: 'Max number of addons',
   }),
-  // TODO
   MAX_KEYWORD_FILTERS: num({
     default: 30,
     desc: 'Max number of keyword filters',

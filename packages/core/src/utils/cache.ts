@@ -42,6 +42,13 @@ export class Cache<K, V> {
       }
     }
   }
+
+  /**
+   * Manually trigger cleanup of expired items in this instance.
+   */
+  public cleanup() {
+    this.cleanupExpired();
+  }
   private static startStatsLoop() {
     if (Cache.isStatsLoopRunning) {
       return;
@@ -49,7 +56,7 @@ export class Cache<K, V> {
     Cache.isStatsLoopRunning = true;
     const interval = Env.LOG_CACHE_STATS_INTERVAL * 60 * 1000; // Convert minutes to ms
     const runAndReschedule = () => {
-      Cache.cleanupAll();
+      Cache.cleanupAllInstances();
       Cache.stats();
 
       const delay = interval - (Date.now() % interval);
@@ -75,7 +82,10 @@ export class Cache<K, V> {
     return this.instances.get(name) as Cache<K, V>;
   }
 
-  private static cleanupAll() {
+  /**
+   * Clean up expired items in all cache instances.
+   */
+  public static cleanupAllInstances() {
     for (const cache of this.instances.values()) {
       cache.cleanupExpired();
     }
