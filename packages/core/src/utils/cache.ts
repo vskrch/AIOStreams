@@ -98,6 +98,18 @@ export class Cache<K, V> {
   }
 
   /**
+   * Clear all cache instances completely.
+   */
+  public static clearAllInstances() {
+    if (this.instances.size === 0) {
+      return;
+    }
+    for (const cache of this.instances.values()) {
+      cache.clear();
+    }
+  }
+
+  /**
    * Gets the statistics of the cache in use by the program. returns a formatted string containing a list of all cache instances
    * and their currently held items, max items
    */
@@ -148,6 +160,37 @@ export class Cache<K, V> {
 
     const lines = [...header, ...bodyLines, ...footer];
     logger.verbose(lines.join('\n'));
+  }
+
+  /**
+   * Return cache statistics in raw object form for each instance.
+   */
+  public static getStatsObject() {
+    const stats: Array<{
+      name: string;
+      itemCount: number;
+      maxSize: number;
+      estimatedSize: number;
+    }> = [];
+
+    for (const [name, cache] of this.instances.entries()) {
+      let instanceSize = 0;
+      for (const item of cache.cache.values()) {
+        try {
+          instanceSize += Buffer.byteLength(JSON.stringify(item), 'utf8');
+        } catch {
+          instanceSize += 0;
+        }
+      }
+      stats.push({
+        name,
+        itemCount: cache.cache.size,
+        maxSize: cache.maxSize,
+        estimatedSize: instanceSize,
+      });
+    }
+
+    return stats;
   }
 
   /**
