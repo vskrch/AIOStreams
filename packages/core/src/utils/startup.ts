@@ -144,6 +144,12 @@ const logStartupInfo = () => {
       logKeyValue('Stream Cache:', '❌ DISABLED');
     } else {
       logKeyValue('Stream TTL:', formatDuration(Env.STREAM_CACHE_TTL));
+      if (Env.STREAM_CACHE_REFRESH_COUNT > 0) {
+        logKeyValue(
+          'Stream Refresh Count:',
+          String(Env.STREAM_CACHE_REFRESH_COUNT)
+        );
+      }
     }
 
     // Subtitle Cache

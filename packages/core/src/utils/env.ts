@@ -339,6 +339,10 @@ export const Env = cleanEnv(process.env, {
     default: -1,
     desc: 'Cache TTL for stream files. If -1, no caching will be done.',
   }),
+  STREAM_CACHE_REFRESH_COUNT: num({
+    default: 0,
+    desc: 'Number of times to refresh stream cache when it expires',
+  }),
   CATALOG_CACHE_TTL: num({
     default: 300,
     desc: 'Cache TTL for catalog files',
@@ -366,7 +370,6 @@ export const Env = cleanEnv(process.env, {
     default: 15,
     desc: 'Max number of addons',
   }),
-  // TODO
   MAX_KEYWORD_FILTERS: num({
     default: 30,
     desc: 'Max number of keyword filters',

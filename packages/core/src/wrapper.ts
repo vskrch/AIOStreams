@@ -255,13 +255,61 @@ export class Wrapper {
     return await makeRequest(url, timeout, this.addon.headers, this.addon.ip);
   }
 
+  private static streamRefreshTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  private scheduleStreamRefresh<T>(
+    url: string,
+    params: ResourceParams,
+    timeout: number,
+    validator: (data: unknown) => T,
+    cacheTtl: number,
+    remaining: number
+  ) {
+    if (remaining <= 0) {
+      return;
+    }
+    const existing = Wrapper.streamRefreshTimers.get(url);
+    if (existing) {
+      clearTimeout(existing);
+    }
+    const timer = setTimeout(async () => {
+      Wrapper.streamRefreshTimers.delete(url);
+      try {
+        await this.makeResourceRequest(
+          'stream',
+          params,
+          timeout,
+          validator,
+          true,
+          cacheTtl,
+          false
+        );
+      } catch (error: any) {
+        logger.error(
+          `Failed to refresh stream cache for ${this.getAddonName(this.addon)}: ${error.message}`
+        );
+      }
+      this.scheduleStreamRefresh(
+        url,
+        params,
+        timeout,
+        validator,
+        cacheTtl,
+        remaining - 1
+      );
+    }, cacheTtl * 1000);
+    timer.unref();
+    Wrapper.streamRefreshTimers.set(url, timer);
+  }
+
   private async makeResourceRequest<T>(
     resource: Resource,
     params: ResourceParams,
     timeout: number,
     validator: (data: unknown) => T,
     cache: boolean = false,
-    cacheTtl: number = RESOURCE_TTL
+    cacheTtl: number = RESOURCE_TTL,
+    autoRefresh: boolean = true
   ) {
     const { type, id, extras } = params;
     const url = this.buildResourceUrl(resource, type, id, extras);
@@ -297,6 +345,20 @@ export class Wrapper {
 
       if (cache) {
         resourceCache.set(url, validated, cacheTtl);
+        if (
+          resource === 'stream' &&
+          autoRefresh &&
+          Env.STREAM_CACHE_REFRESH_COUNT > 0
+        ) {
+          this.scheduleStreamRefresh(
+            url,
+            params,
+            timeout,
+            validator,
+            cacheTtl,
+            Env.STREAM_CACHE_REFRESH_COUNT
+          );
+        }
       }
       return validated;
     } catch (error: any) {

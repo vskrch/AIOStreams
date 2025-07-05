@@ -34,6 +34,24 @@ export class Cache<K, V> {
     this.maxSize = maxSize;
     Cache.startStatsLoop();
   }
+  private cleanupExpired() {
+    if (this.cache.size === 0) {
+      return;
+    }
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (now - item.lastAccessed > item.ttl) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Manually trigger cleanup of expired items in this instance.
+   */
+  public cleanup() {
+    this.cleanupExpired();
+  }
   private static startStatsLoop() {
     if (Cache.isStatsLoopRunning) {
       return;
@@ -41,6 +59,7 @@ export class Cache<K, V> {
     Cache.isStatsLoopRunning = true;
     const interval = Env.LOG_CACHE_STATS_INTERVAL * 60 * 1000; // Convert minutes to ms
     const runAndReschedule = () => {
+      Cache.cleanupAllInstances();
       Cache.stats();
 
       const delay = interval - (Date.now() % interval);
@@ -64,6 +83,18 @@ export class Cache<K, V> {
       this.instances.set(name, new Cache<K, V>(maxSize));
     }
     return this.instances.get(name) as Cache<K, V>;
+  }
+
+  /**
+   * Clean up expired items in all cache instances.
+   */
+  public static cleanupAllInstances() {
+    if (this.instances.size === 0) {
+      return;
+    }
+    for (const cache of this.instances.values()) {
+      cache.cleanupExpired();
+    }
   }
 
   /**
@@ -199,6 +230,9 @@ export class Cache<K, V> {
   }
 
   private evict(): void {
+    if (this.cache.size === 0) {
+      return;
+    }
     let oldestKey: K | undefined;
     let oldestTime = Infinity;
 
