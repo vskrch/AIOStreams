@@ -7,6 +7,17 @@ import { fetch, ProxyAgent } from 'undici';
 const logger = createLogger('http');
 const urlCount = Cache.getInstance<string, number>('url-count');
 
+let proxyAgent: ProxyAgent | undefined;
+function getProxyAgent() {
+  if (!Env.ADDON_PROXY) {
+    return undefined;
+  }
+  if (!proxyAgent) {
+    proxyAgent = new ProxyAgent(Env.ADDON_PROXY);
+  }
+  return proxyAgent;
+}
+
 export class PossibleRecursiveRequestError extends Error {
   constructor(message: string) {
     super(message);
@@ -74,7 +85,7 @@ export function makeRequest(
     )} with forwarded ip ${maskSensitiveInfo(forwardIp ?? 'none')} and headers ${maskSensitiveInfo(JSON.stringify(Object.fromEntries(headers)))}`
   );
   let response = fetch(url, {
-    dispatcher: useProxy ? new ProxyAgent(Env.ADDON_PROXY!) : undefined,
+    dispatcher: useProxy ? getProxyAgent() : undefined,
     method: 'GET',
     headers: headers,
     signal: AbortSignal.timeout(timeout),

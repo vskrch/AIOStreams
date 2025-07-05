@@ -35,6 +35,9 @@ export class Cache<K, V> {
     Cache.startStatsLoop();
   }
   private cleanupExpired() {
+    if (this.cache.size === 0) {
+      return;
+    }
     const now = Date.now();
     for (const [key, item] of this.cache.entries()) {
       if (now - item.lastAccessed > item.ttl) {
@@ -86,6 +89,9 @@ export class Cache<K, V> {
    * Clean up expired items in all cache instances.
    */
   public static cleanupAllInstances() {
+    if (this.instances.size === 0) {
+      return;
+    }
     for (const cache of this.instances.values()) {
       cache.cleanupExpired();
     }
@@ -224,6 +230,9 @@ export class Cache<K, V> {
   }
 
   private evict(): void {
+    if (this.cache.size === 0) {
+      return;
+    }
     let oldestKey: K | undefined;
     let oldestTime = Infinity;
 
