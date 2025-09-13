@@ -184,10 +184,6 @@ function shouldProxy(url: URL): {
           : ruleProxyIndexOrBool === 'true'
             ? 0
             : -1;
-
-        if (useProxy) {
-          return { useProxy, proxyIndex };
-        }
       } else if (ruleHostname.startsWith('*')) {
         if (hostname.endsWith(ruleHostname.slice(1))) {
           useProxy = !(ruleProxyIndexOrBool === 'false');
