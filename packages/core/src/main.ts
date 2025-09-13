@@ -719,7 +719,7 @@ export class AIOStreams {
               }),
             ];
           } catch (error: any) {
-            if (this.options?.skipFailedAddons) {
+            if (this.options?.skipFailedAddons !== false) {
               this.addonInitialisationErrors.push({
                 addon: addon,
                 error: error.message,
