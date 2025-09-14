@@ -203,6 +203,13 @@ const ManamiEntrySchema = z.object({
 });
 type ManamiEntry = z.infer<typeof ManamiEntrySchema>;
 
+const MinimisedManamiEntrySchema = ManamiEntrySchema.pick({
+  title: true,
+  animeSeason: true,
+  synonyms: true,
+});
+type MinimisedManamiEntry = z.infer<typeof MinimisedManamiEntrySchema>;
+
 const KitsuEntrySchema = z
   .object({
     fanartLogoId: z.coerce.number().optional(),
@@ -304,8 +311,63 @@ const ExtendedAnitraktTvEntrySchema = z
 
 type ExtendedAnitraktTvEntry = z.infer<typeof ExtendedAnitraktTvEntrySchema>;
 
+const AnimeEntrySchema = z
+  .object({
+    mappings: z
+      .record(
+        z.string(),
+        z.union([z.string(), z.number(), z.null(), z.undefined()])
+      )
+      .optional(),
+    imdb: z
+      .object({
+        fromImdbSeason: z.number().optional(),
+        fromImdbEpisode: z.number().optional(),
+        title: z.string().optional(),
+      })
+      .nullable(),
+    fanart: z
+      .object({
+        logoId: z.number(),
+      })
+      .nullable(),
+    trakt: z
+      .object({
+        title: z.string(),
+        slug: z.string(),
+        isSplitCour: z.boolean().optional(),
+        season: z
+          .object({
+            id: z.number(),
+            number: z.number(),
+            externals: z.object({
+              tvdb: z.number().nullable(),
+              tmdb: z.number().nullable(),
+              imdb: z.string().nullable().optional(),
+            }),
+          })
+          .nullable()
+          .optional(),
+      })
+      .nullable(),
+    title: z.string().optional(),
+    animeSeason: z
+      .object({
+        season: AnimeSeason,
+        year: z.number().nullable(),
+      })
+      .optional(),
+    synonyms: z.array(z.string()).optional(),
+  })
+  .nullable();
+
+type AnimeEntry = z.infer<typeof AnimeEntrySchema>;
+
 type MappingIdMap = Map<IdType, Map<string | number, MappingEntry>>;
-type ManamiIdMap = Map<IdType, Map<string | number, ManamiEntry>>;
+type ManamiIdMap = Map<
+  IdType,
+  Map<string | number, ManamiEntry | MinimisedManamiEntry>
+>;
 type KitsuIdMap = Map<number, KitsuEntry>;
 type ExtendedAnitraktMoviesIdMap = Map<number, ExtendedAnitraktMovieEntry>;
 type ExtendedAnitraktTvIdMap = Map<number, ExtendedAnitraktTvEntry>;
@@ -353,6 +415,14 @@ export class AnimeDatabase {
       return;
     }
 
+    if (Env.ANIME_DB_LEVEL_OF_DETAIL === 'none') {
+      logger.info(
+        'AnimeDatabase detail level is none, skipping initialisation.'
+      );
+      this.isInitialised = true;
+      return;
+    }
+
     logger.info('Starting initial refresh of all anime data sources...');
     // Perform initial fetch for all datasets concurrently
     const refreshPromises = Object.values(DATA_SOURCES).map((dataSource) =>
@@ -375,7 +445,7 @@ export class AnimeDatabase {
     return false;
   }
 
-  public getEntryById(idType: IdType, idValue: string | number) {
+  public getEntryById(idType: IdType, idValue: string | number): AnimeEntry {
     const getFromMap = <T>(map: Map<any, T> | undefined, key: any) =>
       map?.get(key) || map?.get(key.toString()) || map?.get(Number(key));
 
@@ -633,7 +703,14 @@ export class AnimeDatabase {
             if (idValue) {
               const existingEntry = newManamiById.get(idType)?.get(idValue);
               if (!existingEntry) {
-                newManamiById.get(idType)?.set(idValue, entry);
+                newManamiById
+                  .get(idType)
+                  ?.set(
+                    idValue,
+                    Env.ANIME_DB_LEVEL_OF_DETAIL === 'required'
+                      ? this.minimiseManamiEntry(entry)
+                      : entry
+                  );
               }
             }
           }
@@ -644,6 +721,14 @@ export class AnimeDatabase {
     logger.info(
       `[${DATA_SOURCES.manami.name}] Loaded and indexed ${validEntries.length} valid entries in ${getTimeTakenSincePoint(start)}`
     );
+  }
+
+  private minimiseManamiEntry(entry: ManamiEntry): MinimisedManamiEntry {
+    return {
+      title: entry.title,
+      animeSeason: entry.animeSeason,
+      synonyms: entry.synonyms,
+    };
   }
 
   private async loadKitsuImdbMapping(): Promise<void> {
