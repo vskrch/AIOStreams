@@ -106,7 +106,18 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       requestType: type,
       requestId: id,
     });
-    const searchMetadata = await this._getSearchMetadata(parsedId, type);
+
+    let searchMetadata: SearchMetadata;
+    try {
+      searchMetadata = await this._getSearchMetadata(parsedId, type);
+    } catch (error) {
+      return [
+        this._createErrorStream({
+          title: `${this.name}`,
+          description: error instanceof Error ? error.message : String(error),
+        }),
+      ];
+    }
 
     const searchPromises = await Promise.allSettled([
       this._searchTorrents(parsedId, searchMetadata),
