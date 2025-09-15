@@ -144,10 +144,14 @@ export class MetadataService {
           const cinemetaData = imdbResult.value;
           if (cinemetaData.name) titles.unshift(cinemetaData.name);
           if (cinemetaData.releaseInfo && !year) {
-            const releaseYear = Number(
-              cinemetaData.releaseInfo.toString().split('-')[0]
-            );
-            if (!isNaN(releaseYear)) year = releaseYear;
+            const years = cinemetaData.releaseInfo
+              .toString()
+              .split(/[-–—]/)
+              .map((y) => y.trim());
+            if (years.length > 0 && Number.isInteger(Number(years[0])))
+              year = Number(years[0]);
+            if (years.length > 1 && Number.isInteger(Number(years[1])))
+              yearEnd = Number(years[1]);
           }
           if (cinemetaData.videos) {
             const seasonMap = new Map<number, Set<number>>();
@@ -192,7 +196,10 @@ export class MetadataService {
           ...new Set(titles.map((title) => title.toLowerCase())),
         ];
 
-        if (!uniqueTitles.length || !year) {
+        if (
+          !uniqueTitles.length ||
+          (year === undefined && id.mediaType !== 'movie')
+        ) {
           throw new Error(`Could not find metadata for ${id.fullId}`);
         }
         logger.debug(
