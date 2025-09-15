@@ -242,7 +242,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     if (animeEntry && !parsedId.season) {
       parsedId.season =
         animeEntry.imdb?.fromImdbSeason?.toString() ??
-        animeEntry.trakt?.season?.toString();
+        animeEntry.trakt?.season?.number?.toString();
     }
 
     const metadata = await new MetadataService({
