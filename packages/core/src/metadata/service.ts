@@ -16,15 +16,12 @@ export interface MetadataServiceConfig {
 }
 
 export class MetadataService {
-  private readonly tmdbMetadata: TMDBMetadata;
   private readonly lock: DistributedLock;
+  private readonly config: MetadataServiceConfig;
 
   public constructor(config: MetadataServiceConfig) {
-    this.tmdbMetadata = new TMDBMetadata({
-      accessToken: config.tmdbAccessToken,
-      apiKey: config.tmdbApiKey,
-    });
     this.lock = DistributedLock.getInstance();
+    this.config = config;
   }
 
   public async getMetadata(
@@ -81,7 +78,14 @@ export class MetadataService {
           let id = tmdbId
             ? `tmdb:${tmdbId}`
             : (imdbId ?? (tvdbId ? `tvdb:${tvdbId}` : null));
-          promises.push(this.tmdbMetadata.getMetadata(id!, type));
+          promises.push(
+            (async () => {
+              return new TMDBMetadata({
+                accessToken: this.config.tmdbAccessToken,
+                apiKey: this.config.tmdbApiKey,
+              }).getMetadata(id!, type);
+            })()
+          );
         } else {
           promises.push(Promise.resolve(undefined));
         }
