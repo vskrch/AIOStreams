@@ -5,7 +5,7 @@ import {
   Env,
   formatZodError,
   makeRequest,
-} from '../../utils';
+} from '../../utils/index.js';
 import z from 'zod';
 
 interface ResponseMeta {

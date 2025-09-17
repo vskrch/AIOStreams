@@ -1,18 +1,22 @@
-import { BaseDebridAddon, BaseDebridConfigSchema } from '../base/debrid';
+import { BaseDebridAddon, BaseDebridConfigSchema } from '../base/debrid.js';
 import { z } from 'zod';
-import { createLogger, Env, getTimeTakenSincePoint } from '../../utils';
+import {
+  createLogger,
+  Env,
+  getTimeTakenSincePoint,
+} from '../../utils/index.js';
 import ProwlarrApi, {
   ProwlarrApiIndexer,
   ProwlarrApiSearchItem,
   ProwlarrApiError,
-} from './api';
-import { ParsedId } from '../../utils/id-parser';
-import { SearchMetadata } from '../base/debrid';
-import { Torrent, NZB, UnprocessedTorrent } from '../../debrid';
+} from './api.js';
+import { ParsedId } from '../../utils/id-parser.js';
+import { SearchMetadata } from '../base/debrid.js';
+import { Torrent, NZB, UnprocessedTorrent } from '../../debrid/index.js';
 import {
   extractInfoHashFromMagnet,
   extractTrackersFromMagnet,
-} from '../utils/debrid';
+} from '../utils/debrid.js';
 
 export const ProwlarrAddonConfigSchema = BaseDebridConfigSchema.extend({
   url: z.string(),

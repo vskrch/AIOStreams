@@ -1,11 +1,11 @@
-import { Torrent, UnprocessedTorrent, DebridFile } from '../debrid';
+import { Torrent, UnprocessedTorrent, DebridFile } from '../debrid/index.js';
 import {
   extractInfoHashFromMagnet,
   extractTrackersFromMagnet,
-} from '../builtins/utils/debrid';
-import { createLogger } from './logger';
-import { Cache } from './cache';
-import { makeRequest } from './http';
+} from '../builtins/utils/debrid.js';
+import { createLogger } from './logger.js';
+import { Cache } from './cache.js';
+import { makeRequest } from './http.js';
 
 const logger = createLogger('torrent');
 

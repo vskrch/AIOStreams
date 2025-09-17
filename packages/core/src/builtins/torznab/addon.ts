@@ -1,15 +1,15 @@
 import { z } from 'zod';
-import { ParsedId } from '../../utils/id-parser';
-import { createLogger } from '../../utils';
-import { Torrent, NZB, UnprocessedTorrent } from '../../debrid';
+import { ParsedId } from '../../utils/id-parser.js';
+import { createLogger } from '../../utils/index.js';
+import { Torrent, NZB, UnprocessedTorrent } from '../../debrid/index.js';
 import { SearchMetadata } from '../base/debrid';
-import { extractTrackersFromMagnet } from '../utils/debrid';
-import { BaseNabApi, Capabilities } from '../base/nab/api';
+import { extractTrackersFromMagnet } from '../utils/debrid.js';
+import { BaseNabApi, Capabilities } from '../base/nab/api.js';
 import {
   BaseNabAddon,
   NabAddonConfigSchema,
   NabAddonConfig,
-} from '../base/nab/addon';
+} from '../base/nab/addon.js';
 
 const logger = createLogger('torznab');
 

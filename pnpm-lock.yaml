@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  go-ptt@0.4.0:
+    hash: c33069e8968004bf0b191c5c11cf7451b2ddaf38e2d343785493af925268d4f7
+    path: patches/go-ptt@0.4.0.patch
+
 importers:
 
   .:
@@ -55,7 +60,7 @@ importers:
         version: 2.2.3
       go-ptt:
         specifier: ^0.4.0
-        version: 0.4.0
+        version: 0.4.0(patch_hash=c33069e8968004bf0b191c5c11cf7451b2ddaf38e2d343785493af925268d4f7)
       moment-timezone:
         specifier: ^0.5.48
         version: 0.5.48
@@ -7847,7 +7852,7 @@ snapshots:
       define-properties: 1.2.1
       gopd: 1.2.0
 
-  go-ptt@0.4.0:
+  go-ptt@0.4.0(patch_hash=c33069e8968004bf0b191c5c11cf7451b2ddaf38e2d343785493af925268d4f7):
     dependencies:
       '@bufbuild/protobuf': 2.7.0
       '@grpc/grpc-js': 1.13.4

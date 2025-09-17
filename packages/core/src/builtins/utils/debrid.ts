@@ -1,16 +1,10 @@
-// utility function for debrid-based builtins
-
-import z from 'zod';
 import {
   BuiltinServiceId,
-  constants,
   createLogger,
   getTimeTakenSincePoint,
-} from '../../utils';
+} from '../../utils/index.js';
 import {
   BuiltinDebridServices,
-  DebridDownload,
-  DebridError,
   DebridFile,
   getDebridService,
   selectFileInTorrentOrNZB,
@@ -20,8 +14,8 @@ import {
   NZB,
   isSeasonWrong,
   isEpisodeWrong,
-} from '../../debrid';
-import { PTT } from '../../parser';
+} from '../../debrid/index.js';
+import { PTT } from '../../parser/index.js';
 import { ParseResult } from 'go-ptt';
 
 // we have a list of torrents which need to be

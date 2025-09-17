@@ -1,5 +1,5 @@
-import { createLogger, maskSensitiveInfo } from './logger';
-import { Env } from './env';
+import { createLogger, maskSensitiveInfo } from './logger.js';
+import { Env } from './env.js';
 
 const logger = createLogger('startup');
 

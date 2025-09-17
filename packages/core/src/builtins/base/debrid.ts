@@ -1,6 +1,6 @@
-import { Manifest, Meta, Stream } from '../../db/schemas';
+import { Manifest, Meta, Stream } from '../../db/schemas.js';
 import { z, ZodError } from 'zod';
-import { IdParser, IdType, ParsedId } from '../../utils/id-parser';
+import { IdParser, IdType, ParsedId } from '../../utils/id-parser.js';
 import {
   AnimeDatabase,
   constants,
@@ -8,8 +8,8 @@ import {
   formatZodError,
   getTimeTakenSincePoint,
   SERVICE_DETAILS,
-} from '../../utils';
-import { TorrentClient } from '../../utils/torrent';
+} from '../../utils/index.js';
+import { TorrentClient } from '../../utils/torrent.js';
 import {
   BuiltinDebridServices,
   PlaybackInfo,
@@ -20,11 +20,11 @@ import {
   UnprocessedTorrent,
   ServiceAuth,
   DebridError,
-} from '../../debrid';
-import { processTorrents, processNZBs } from '../utils/debrid';
-import { calculateAbsoluteEpisode } from '../utils/general';
-import { TitleMetadata } from '../torbox-search/source-handlers';
-import { MetadataService } from '../../metadata/service';
+} from '../../debrid/index.js';
+import { processTorrents, processNZBs } from '../utils/debrid.js';
+import { calculateAbsoluteEpisode } from '../utils/general.js';
+import { TitleMetadata } from '../torbox-search/source-handlers.js';
+import { MetadataService } from '../../metadata/service.js';
 import { Logger } from 'winston';
 
 export interface SearchMetadata extends TitleMetadata {

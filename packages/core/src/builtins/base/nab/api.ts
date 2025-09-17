@@ -7,7 +7,7 @@ import {
   formatZodError,
   getTimeTakenSincePoint,
   createLogger,
-} from '../../../utils';
+} from '../../../utils/index.js';
 import { Parser } from 'xml2js';
 import { Logger } from 'winston';
 

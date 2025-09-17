@@ -1,15 +1,14 @@
-import { ParsedStream, UserData } from '../db';
-// import { constants, Env, createLogger } from '../utils';
-import * as constants from '../utils/constants';
-import { createLogger } from '../utils/logger';
+import { ParsedStream, UserData } from '../db/schemas.js';
+import * as constants from '../utils/constants.js';
+import { createLogger } from '../utils/logger.js';
 import {
   formatBytes,
   formatDuration,
   languageToCode,
   languageToEmoji,
   makeSmall,
-} from './utils';
-import { Env } from '../utils/env';
+} from './utils.js';
+import { Env } from '../utils/env.js';
 
 const logger = createLogger('formatter');
 
@@ -112,10 +111,10 @@ const stringModifiers = {
   'upper': (value: string) => value.toUpperCase(),
   'lower': (value: string) => value.toLowerCase(),
   'title': (value: string) => value
-            .split(' ')
-            .map((word) => word.toLowerCase())
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' '),
+      .split(' ')
+      .map((word) => word.toLowerCase())
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' '),
   'length': (value: string) => value.length.toString(),
   'reverse': (value: string) => value.split('').reverse().join(''),
   'base64': (value: string) => btoa(value),
@@ -414,7 +413,7 @@ export abstract class BaseFormatter {
     const variable = `(?<variableName>${validVariables.join('|')})\\.(?<propertyName>${validProperties.join('|')})`;
 
     const singleValidModifier = this.buildModifierRegexPattern();
-    
+
     // Build the conditional check pattern separately
     // Use [^"]* to capture anything except quotes, making it non-greedy
     const checkTrue = `"(?<mod_check_true>[^"]*)"`;
@@ -425,7 +424,7 @@ export abstract class BaseFormatter {
     const modTZLocale = `::(?<mod_tzlocale>[A-Za-z]{2,3}(?:-[A-Z]{2})?|[A-Za-z]+?/[A-Za-z_]+?)`;
 
     const regexPattern = `\\{${variable}(?<modifiers>(${singleValidModifier})+)?(${modTZLocale})?(${checkTF})?\\}`;
-    
+
     return new RegExp(regexPattern, 'gi')
   }
 
@@ -517,7 +516,7 @@ export abstract class BaseFormatter {
   ): string | undefined {
     const singleModTerminator = '((::)|($))'; // :: if there's multiple modifiers or $ for the end of the string
     const singleValidModRe = new RegExp(this.buildModifierRegexPattern() + singleModTerminator, 'gi');
-    
+
     let result = input as any;
     // iterate over modifiers in order of appearance
     for (const modMatch of [...groups.modifiers.matchAll(singleValidModRe)].sort((a, b) => (a.index ?? 0) - (b.index ?? 0))) {
@@ -537,7 +536,7 @@ export abstract class BaseFormatter {
         let check_false = groups.mod_check_false ?? "";
         if (typeof check_true !== 'string' || typeof check_false !== 'string')
           return `{unknown_conditional_modifier_check_true_or_false}`;
-        
+
         if (parseValue) {
           check_true = this.parseString(check_true, parseValue) || check_true;
           check_false = this.parseString(check_false, parseValue) || check_false;
@@ -568,29 +567,29 @@ export abstract class BaseFormatter {
         if (!conditionalModifiers.exact.exists(input)) {
           conditional = false;
         }
-        
+
         // EXACT
         else if (isExact) {
           const modAsKey = mod as keyof typeof conditionalModifiers.exact;
           conditional = conditionalModifiers.exact[modAsKey](input);
         }
-        
+
         // PREFIX
         else if (isPrefix) {
           // get the longest prefix match
           const modPrefix = Object.keys(conditionalModifiers.prefix).sort((a, b) => b.length - a.length).find(key => mod.startsWith(key))!!;
-          
+
           // Pre-process string value and check to allow for intuitive comparisons
           const stringValue = input.toString().toLowerCase();
           let stringCheck = mod.substring(modPrefix.length).toLowerCase();
           // remove whitespace from stringCheck if it isn't in stringValue
           stringCheck = !/\s/.test(stringValue) ? stringCheck.replace(/\s/g, '') : stringCheck;
-          
+
           // parse value/check as if they're numbers (123,456 -> 123456)
           const [parsedNumericValue, parsedNumericCheck] = [Number(stringValue.replace(/,\s/g, '')), Number(stringCheck.replace(/,\s/g, ''))];
           const isNumericComparison = ["<", "<=", ">", ">=", "="].includes(modPrefix) && 
             !isNaN(parsedNumericValue) && !isNaN(parsedNumericCheck);
-          
+
           conditional = conditionalModifiers.prefix[modPrefix as keyof typeof conditionalModifiers.prefix](
             isNumericComparison ? parsedNumericValue as any : stringValue, 
             isNumericComparison ? parsedNumericCheck as any : stringCheck,
