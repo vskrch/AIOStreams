@@ -718,6 +718,7 @@ export class AnimeDatabase {
           logger.info(`[${source.name}] Source is up to date.`);
         }
         await this[source.loader]();
+        break;
       } catch (error) {
         logger.error(
           `[${source.name}] Failed to refresh: ${error}. Will retry ${attempt === 0 ? '1 more time' : 'on next refresh interval'}.`
