@@ -26,6 +26,7 @@ import { calculateAbsoluteEpisode } from '../utils/general.js';
 import { TitleMetadata } from '../torbox-search/source-handlers.js';
 import { MetadataService } from '../../metadata/service.js';
 import { Logger } from 'winston';
+import pLimit from 'p-limit';
 
 export interface SearchMetadata extends TitleMetadata {
   primaryTitle?: string;
@@ -149,15 +150,18 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       );
     }
 
-    if (torrentResults.some((t) => !t.hash && t.downloadUrl)) {
-      // Process torrents in batches of 5 to avoid overwhelming the system
-      const BATCH_SIZE = 15;
-      const enrichedResults: Torrent[] = [];
-      const torrentsToProcess = [...torrentResults];
-
-      while (torrentsToProcess.length > 0) {
-        const batch = torrentsToProcess.splice(0, BATCH_SIZE);
-        const metadataPromises = batch.map(async (torrent) => {
+    const torrentsToDownload = torrentResults.filter(
+      (t) => !t.hash && t.downloadUrl
+    );
+    torrentResults = torrentResults.filter((t) => t.hash);
+    if (torrentsToDownload.length > 0) {
+      this.logger.info(
+        `Fetching metadata for ${torrentsToDownload.length} torrents`
+      );
+      const start = Date.now();
+      const limit = pLimit(Env.BUILTIN_GET_TORRENT_CONCURRENCY);
+      const metadataPromises = torrentsToDownload.map((torrent) =>
+        limit(async () => {
           try {
             const metadata = await TorrentClient.getMetadata(torrent);
             if (!metadata) {
@@ -170,17 +174,18 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
               files: metadata.files,
             } as Torrent;
           } catch (error) {
-            this.logger.error(`Failed to fetch metadata for torrent: ${error}`);
             return torrent.hash ? (torrent as Torrent) : null;
           }
-        });
+        })
+      );
 
-        const batchResults = await Promise.all(metadataPromises);
-        enrichedResults.push(
-          ...batchResults.filter((r): r is Torrent => r !== null)
-        );
-      }
-      torrentResults = enrichedResults;
+      const enrichedResults = (await Promise.all(metadataPromises)).filter(
+        (r): r is Torrent => r !== null
+      );
+      this.logger.info(
+        `Got info for ${enrichedResults.length} torrents in ${getTimeTakenSincePoint(start)}`
+      );
+      torrentResults = [...torrentResults, ...enrichedResults];
     }
 
     const [processedTorrents, processedNzbs] = await Promise.all([

@@ -59,6 +59,13 @@ export abstract class BaseNabAddon<
 
     if (this.userData.forceQuerySearch) {
     } else if (
+      // prefer tvdb ID over imdb ID for series
+      parsedId.mediaType === 'series' &&
+      searchCapabilities.supportedParams.includes('tvdbid') &&
+      metadata.tvdbId
+    ) {
+      queryParams.tvdbid = metadata.tvdbId;
+    } else if (
       searchCapabilities.supportedParams.includes('imdbid') &&
       metadata.imdbId
     )

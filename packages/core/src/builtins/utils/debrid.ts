@@ -323,8 +323,11 @@ async function processNZBsForDebridService(
 
   const allStrings: string[] = [];
 
+  for (const nzb of nzbs) {
+    allStrings.push(nzb.title ?? '');
+  }
+
   for (const nzb of nzbCheckResults) {
-    allStrings.push(nzb.name ?? '');
     if (nzb.files && Array.isArray(nzb.files)) {
       for (const file of nzb.files) {
         allStrings.push(file.name ?? '');

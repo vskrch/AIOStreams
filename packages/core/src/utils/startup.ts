@@ -526,38 +526,20 @@ const logStartupInfo = () => {
 
   logSection('BUILT-IN ADDONS', '🔧', () => {
     // Torznab
-    logKeyValue('Torznab:', '');
+    logKeyValue('*znab:', '');
     logKeyValue(
       'Search Timeout:',
-      formatMilliseconds(Env.BUILTIN_TORZNAB_SEARCH_TIMEOUT),
+      formatMilliseconds(Env.BUILTIN_NAB_SEARCH_TIMEOUT),
       '       '
     );
     logKeyValue(
       'Search Cache TTL:',
-      formatDuration(Env.BUILTIN_TORZNAB_SEARCH_CACHE_TTL),
+      formatDuration(Env.BUILTIN_NAB_SEARCH_CACHE_TTL),
       '       '
     );
     logKeyValue(
       'Capabilities Cache TTL:',
-      formatDuration(Env.BUILTIN_TORZNAB_CAPABILITIES_CACHE_TTL),
-      '       '
-    );
-
-    // Newznab
-    logKeyValue('Newznab:', '');
-    logKeyValue(
-      'Search Timeout:',
-      formatMilliseconds(Env.BUILTIN_NEWZNAB_SEARCH_TIMEOUT),
-      '       '
-    );
-    logKeyValue(
-      'Search Cache TTL:',
-      formatDuration(Env.BUILTIN_NEWZNAB_SEARCH_CACHE_TTL),
-      '       '
-    );
-    logKeyValue(
-      'Capabilities Cache TTL:',
-      formatDuration(Env.BUILTIN_NEWZNAB_CAPABILITIES_CACHE_TTL),
+      formatDuration(Env.BUILTIN_NAB_CAPABILITIES_CACHE_TTL),
       '       '
     );
 

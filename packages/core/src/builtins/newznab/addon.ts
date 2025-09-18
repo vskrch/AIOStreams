@@ -68,6 +68,7 @@ export class NewznabAddon extends BaseNabAddon<NabAddonConfig, NewznabApi> {
         nzb: nzbUrl,
         age: `${age}d`,
         title: result.title,
+        indexer: result.newznab?.hydraIndexerName?.toString() ?? undefined,
         size:
           result.size ??
           (result.newznab?.size ? Number(result.newznab.size) : 0),

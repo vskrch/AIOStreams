@@ -1580,6 +1580,20 @@ export const Env = cleanEnv(process.env, {
     default: 60 * 60, // 1 hour
     desc: 'Builtin Debrid playback link cache TTL',
   }),
+
+  BUILTIN_GET_TORRENT_TIMEOUT: num({
+    default: 5000,
+    desc: 'Builtin Get Torrent timeout',
+  }),
+  BUILTIN_GET_TORRENT_CONCURRENCY: num({
+    default: 100,
+    desc: 'Builtin Get Torrent concurrency limit',
+  }),
+  BUILTIN_TORRENT_METADATA_CACHE_TTL: num({
+    default: 7 * 24 * 60 * 60, // 7 days
+    desc: 'Builtin Torrent metadata cache TTL',
+  }),
+
   BUILTIN_GDRIVE_CLIENT_ID: str({
     default: undefined,
     desc: 'Builtin GDrive client ID',
@@ -1626,30 +1640,17 @@ export const Env = cleanEnv(process.env, {
     desc: 'Whether to cache results separately for every user that is using their own search engines.',
   }),
 
-  BUILTIN_TORZNAB_SEARCH_TIMEOUT: num({
+  BUILTIN_NAB_SEARCH_TIMEOUT: num({
     default: 30000, // 30 seconds
-    desc: 'Builtin Torznab Search timeout',
+    desc: 'Builtin Torznab/Newznab Search timeout',
   }),
-  BUILTIN_TORZNAB_SEARCH_CACHE_TTL: num({
+  BUILTIN_NAB_SEARCH_CACHE_TTL: num({
     default: 7 * 24 * 60 * 60, // 7 days
-    desc: 'Builtin Torznab Search cache TTL',
+    desc: 'Builtin Torznab/Newznab Search cache TTL',
   }),
-  BUILTIN_TORZNAB_CAPABILITIES_CACHE_TTL: num({
+  BUILTIN_NAB_CAPABILITIES_CACHE_TTL: num({
     default: 14 * 24 * 60 * 60, // 14 days
-    desc: 'Builtin Torznab Capabilities cache TTL',
-  }),
-
-  BUILTIN_NEWZNAB_SEARCH_TIMEOUT: num({
-    default: 30000, // 30 seconds
-    desc: 'Builtin Newznab Search timeout',
-  }),
-  BUILTIN_NEWZNAB_SEARCH_CACHE_TTL: num({
-    default: 7 * 24 * 60 * 60, // 7 days
-    desc: 'Builtin Newznab Search cache TTL',
-  }),
-  BUILTIN_NEWZNAB_CAPABILITIES_CACHE_TTL: num({
-    default: 14 * 24 * 60 * 60, // 14 days
-    desc: 'Builtin Newznab Capabilities cache TTL',
+    desc: 'Builtin Torznab/Newznab Capabilities cache TTL',
   }),
 
   BUILTIN_ZILEAN_URL: url({
@@ -1668,6 +1669,32 @@ export const Env = cleanEnv(process.env, {
   BUILTIN_ANIMETOSHO_TIMEOUT: num({
     default: undefined,
     desc: 'Builtin AnimeTosho timeout',
+  }),
+
+  BUILTIN_JACKETT_URL: url({
+    default: undefined,
+    desc: 'Builtin Jackett URL',
+  }),
+  BUILTIN_JACKETT_API_KEY: str({
+    default: undefined,
+    desc: 'Builtin Jackett API Key',
+  }),
+  BUILTIN_JACKETT_TIMEOUT: num({
+    default: undefined,
+    desc: 'Builtin Jackett timeout',
+  }),
+
+  BUILTIN_NZBHYDRA_URL: url({
+    default: undefined,
+    desc: 'Builtin NZBHydra URL',
+  }),
+  BUILTIN_NZBHYDRA_API_KEY: str({
+    default: undefined,
+    desc: 'Builtin NZBHydra API Key',
+  }),
+  BUILTIN_NZBHYDRA_TIMEOUT: num({
+    default: undefined,
+    desc: 'Builtin NZBHydra timeout',
   }),
 
   BUILTIN_PROWLARR_URL: url({

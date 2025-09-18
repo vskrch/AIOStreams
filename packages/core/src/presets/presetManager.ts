@@ -59,6 +59,8 @@ import { ZileanPreset } from './zilean.js';
 import { AnimeToshoPreset } from './animetosho.js';
 import { NewznabPreset } from './newznab.js';
 import { ProwlarrPreset } from './prowlarr.js';
+import { JackettPreset } from './jackett.js';
+import { NZBHydraPreset } from './nzbhydra.js';
 
 let PRESET_LIST: string[] = [
   'custom',
@@ -72,7 +74,9 @@ let PRESET_LIST: string[] = [
   'stremthruStore',
   'animetosho',
   'zilean',
-  Env.BUILTIN_PROWLARR_URL && Env.BUILTIN_PROWLARR_API_KEY ? 'prowlarr' : '',
+  'prowlarr',
+  'jackett',
+  'nzbhydra',
   'jackettio',
   'peerflix',
   'orion',
@@ -256,10 +260,12 @@ export class PresetManager {
         return AnimeToshoPreset;
       case 'prowlarr':
         return ProwlarrPreset;
+      case 'jackett':
+        return JackettPreset;
+      case 'nzbhydra':
+        return NZBHydraPreset;
       default:
         throw new Error(`Preset ${id} not found`);
     }
   }
 }
-
-
