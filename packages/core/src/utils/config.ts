@@ -523,6 +523,16 @@ export function applyMigrations(config: any): UserData {
       behaviour: 'parallel',
     };
   }
+
+  if (config.showStatistics || config.statisticsPosition) {
+    config.statistics = {
+      enabled: config.showStatistics ?? false,
+      position: config.statisticsPosition ?? 'bottom',
+      statsToShow: ['addon', 'filter'],
+    };
+    delete config.showStatistics;
+    delete config.statisticsPosition;
+  }
   return config;
 }
 

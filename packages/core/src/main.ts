@@ -145,7 +145,7 @@ export class AIOStreams {
     }>
   > {
     logger.info(`Handling stream request`, { type, id });
-
+    const statistics: { title: string; description: string }[] = [];
     // get a list of all addons that support the stream resource with the given type and id.
     const supportedAddons = [];
     for (const [instanceId, addonResources] of Object.entries(
@@ -174,11 +174,15 @@ export class AIOStreams {
       }
     );
 
-    const { streams, errors, statistics } = await this.fetcher.fetch(
-      supportedAddons,
-      type,
-      id
-    );
+    const {
+      streams,
+      errors,
+      statistics: addonStatistics,
+    } = await this.fetcher.fetch(supportedAddons, type, id);
+
+    if (this.userData.statistics?.statsToShow?.includes('addon')) {
+      statistics.push(...addonStatistics);
+    }
 
     // append initialisation errors to the errors array
     errors.push(
@@ -243,25 +247,26 @@ export class AIOStreams {
       return groups;
     }
 
-    if (filterDetails.length > 0) {
-      const removalGroups = splitByPin(filterDetails);
-      for (const group of removalGroups) {
-        statistics.push({
-          title: '🔍 Removal Reasons',
-          description: group.join('\n').trim(),
-        });
+    if (this.userData.statistics?.statsToShow?.includes('filter')) {
+      if (filterDetails.length > 0) {
+        const removalGroups = splitByPin(filterDetails);
+        for (const group of removalGroups) {
+          statistics.push({
+            title: '🔍 Removal Reasons',
+            description: group.join('\n').trim(),
+          });
+        }
+      }
+      if (includedDetails.length > 0) {
+        const includedGroups = splitByPin(includedDetails);
+        for (const group of includedGroups) {
+          statistics.push({
+            title: '🔍 Included Reasons',
+            description: group.join('\n').trim(),
+          });
+        }
       }
     }
-    if (includedDetails.length > 0) {
-      const includedGroups = splitByPin(includedDetails);
-      for (const group of includedGroups) {
-        statistics.push({
-          title: '🔍 Included Reasons',
-          description: group.join('\n').trim(),
-        });
-      }
-    }
-
     // return the final list of streams, followed by the error streams.
     logger.info(
       `Returning ${finalStreams.length} streams and ${errors.length} errors and ${statistics.length} statistic`
