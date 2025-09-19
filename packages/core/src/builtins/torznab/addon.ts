@@ -49,7 +49,8 @@ export class TorznabAddon extends BaseNabAddon<NabAddonConfig, TorznabApi> {
     for (const result of results) {
       const infoHash = this.extractInfoHash(result);
       const downloadUrl = result.enclosure.find(
-        (e: any) => e.type === 'application/x-bittorrent'
+        (e: any) =>
+          e.type === 'application/x-bittorrent' && !e.url.includes('magnet:')
       )?.url;
 
       if (!infoHash && !downloadUrl) continue;
