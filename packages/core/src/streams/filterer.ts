@@ -245,6 +245,7 @@ class StreamFilterer {
         requestedMetadata = await new MetadataService({
           tmdbAccessToken: this.userData.tmdbAccessToken,
           tmdbApiKey: this.userData.tmdbApiKey,
+          tvdbApiKey: this.userData.tvdbApiKey,
         }).getMetadata(parsedId, type as any);
         if (
           isAnime &&
