@@ -67,6 +67,7 @@ export class TorznabAddon extends BaseNabAddon<NabAddonConfig, TorznabApi> {
           ![-1, 999].includes(result.torznab.seeders)
             ? result.torznab.seeders
             : undefined,
+        indexer: result.jackettindexer?.name ?? undefined,
         title: result.title,
         size: result.size ?? 0,
         type: 'torrent',
