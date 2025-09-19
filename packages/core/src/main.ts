@@ -16,6 +16,8 @@ import {
   ExtrasParser,
   makeUrlLogSafe,
   AnimeDatabase,
+  ParsedId,
+  IdParser,
 } from './utils/index.js';
 import { Wrapper } from './wrapper.js';
 import { PresetManager } from './presets/index.js';
@@ -1237,16 +1239,16 @@ export class AIOStreams {
     });
   }
 
-  private async getMetadata(id: string): Promise<Metadata | undefined> {
+  private async getMetadata(parsedId: ParsedId): Promise<Metadata | undefined> {
     try {
       const metadata = await new TMDBMetadata({
         accessToken: this.userData.tmdbAccessToken,
         apiKey: this.userData.tmdbApiKey,
-      }).getMetadata(id, 'series');
+      }).getMetadata(parsedId);
       return metadata;
     } catch (error) {
       logger.warn(
-        `Error getting metadata for ${id}, will not be able to precache next season if necessary`,
+        `Error getting metadata for ${parsedId.fullId}, will not be able to precache next season if necessary`,
         {
           error: error instanceof Error ? error.message : String(error),
         }
@@ -1256,15 +1258,16 @@ export class AIOStreams {
   }
 
   private _getNextEpisode(
-    currentSeason: number,
+    currentSeason: number | undefined,
     currentEpisode: number,
     metadata?: Metadata
   ): {
-    season: number;
+    season: number | undefined;
     episode: number;
   } {
     let season = currentSeason;
     let episode = currentEpisode + 1;
+    if (!currentSeason) return { season, episode };
     const episodeCount = metadata?.seasons?.find(
       (s) => s.season_number === season
     )?.episode_count;
@@ -1383,22 +1386,31 @@ export class AIOStreams {
   }
 
   private async precacheNextEpisode(type: string, id: string) {
-    const seasonEpisodeRegex = /:(\d+):(\d+)$/;
-    const match = id.match(seasonEpisodeRegex);
-    if (!match) {
+    const parsedId = IdParser.parse(id, type);
+    if (!parsedId) {
       return;
     }
-    const titleId = id.replace(seasonEpisodeRegex, '');
-    const currentSeason = Number(match[1]);
-    const currentEpisode = Number(match[2]);
 
-    const metadata = await this.getMetadata(id);
+    const currentSeason = parsedId.season ? Number(parsedId.season) : undefined;
+    const currentEpisode = parsedId.episode
+      ? Number(parsedId.episode)
+      : undefined;
+    if (!currentEpisode) {
+      return;
+    }
+
+    const metadata = await this.getMetadata(parsedId);
 
     const { season: seasonToPrecache, episode: episodeToPrecache } =
       this._getNextEpisode(currentSeason, currentEpisode, metadata);
 
-    const precacheId = `${titleId}:${seasonToPrecache}:${episodeToPrecache}`;
-    logger.info(`Pre-caching next episode of ${titleId}`, {
+    const precacheId = parsedId.generator(
+      parsedId.value,
+      seasonToPrecache?.toString(),
+      episodeToPrecache?.toString()
+    );
+    logger.info(`Pre-caching next episode`, {
+      titleId: parsedId.value,
       currentSeason,
       currentEpisode,
       episodeToPrecache,

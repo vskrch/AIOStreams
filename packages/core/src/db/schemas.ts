@@ -414,6 +414,7 @@ export const UserDataSchema = z.object({
   statisticsPosition: z.enum(['top', 'bottom']).optional(),
   tmdbAccessToken: z.string().optional(),
   tmdbApiKey: z.string().optional(),
+  tvdbApiKey: z.string().optional(),
   yearMatching: z
     .object({
       enabled: z.boolean().optional(),

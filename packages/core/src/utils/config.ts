@@ -28,6 +28,7 @@ import {
   StreamSelector,
 } from '../parser/streamExpression.js';
 import { createLogger } from './logger.js';
+import { TVDBMetadata } from '../metadata/tvdb.js';
 
 const logger = createLogger('core');
 
@@ -415,6 +416,20 @@ export async function validateConfig(
         throw new Error(`Invalid TMDB access token: ${error}`);
       }
       logger.warn(`Invalid TMDB access token: ${error}`);
+    }
+  }
+
+  if (config.tvdbApiKey) {
+    try {
+      const tvdb = new TVDBMetadata({
+        apiKey: config.tvdbApiKey,
+      });
+      await tvdb.validateApiKey();
+    } catch (error) {
+      if (!options?.skipErrorsFromAddonsOrProxies) {
+        throw new Error(`Invalid TVDB API key: ${error}`);
+      }
+      logger.warn(`Invalid TVDB API key: ${error}`);
     }
   }
 
