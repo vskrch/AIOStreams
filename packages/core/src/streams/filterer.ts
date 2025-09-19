@@ -18,6 +18,7 @@ import { Metadata } from '../metadata/utils.js';
 import { titleMatch } from '../parser/utils.js';
 import { partial_ratio } from 'fuzzball';
 import { calculateAbsoluteEpisode } from '../builtins/utils/general.js';
+import { formatBytes } from '../formatters/utils.js';
 
 const logger = createLogger('filterer');
 
@@ -1212,11 +1213,17 @@ class StreamFilterer {
 
       if (minMax) {
         if (stream.size && minMax[0] && stream.size < minMax[0]) {
-          this.incrementRemovalReason('size', `< ${minMax[0]}`);
+          this.incrementRemovalReason(
+            'size',
+            `< ${formatBytes(minMax[0], 1000)}`
+          );
           return false;
         }
         if (stream.size && minMax[1] && stream.size > minMax[1]) {
-          this.incrementRemovalReason('size', `> ${minMax[1]}`);
+          this.incrementRemovalReason(
+            'size',
+            `> ${formatBytes(minMax[1], 1000)}`
+          );
           return false;
         }
       }
