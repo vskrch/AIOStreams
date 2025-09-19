@@ -1299,6 +1299,11 @@ class StreamFilterer {
     }
     for (const expression of this.userData.includedStreamExpressions) {
       const selectedStreams = await selector.select(streams, expression);
+      this.filterStatistics.included.streamExpression.total +=
+        selectedStreams.length;
+      this.filterStatistics.included.streamExpression.details[expression] =
+        (this.filterStatistics.included.streamExpression.details[expression] ||
+          0) + selectedStreams.length;
       selectedStreams.forEach((stream) => streamsToKeep.add(stream.id));
     }
     return streams.filter((stream) => streamsToKeep.has(stream.id));
@@ -1342,9 +1347,14 @@ class StreamFilterer {
 
           // Update skip reasons for this condition (only count newly selected streams)
           if (selectedStreams.length > 0) {
-            this.incrementRemovalReason('excludedFilterCondition', expression);
-            // skipReasons.excludedFilterCondition.details[expression] =
-            //   selectedStreams.length;
+            this.filterStatistics.removed.excludedFilterCondition.total +=
+              selectedStreams.length;
+            this.filterStatistics.removed.excludedFilterCondition.details[
+              expression
+            ] =
+              (this.filterStatistics.removed.excludedFilterCondition.details[
+                expression
+              ] || 0) + selectedStreams.length;
           }
         } catch (error) {
           logger.error(
@@ -1382,7 +1392,14 @@ class StreamFilterer {
 
           // Update skip reasons for this condition (only count newly selected streams)
           if (selectedStreams.length > 0) {
-            this.incrementRemovalReason('requiredFilterCondition', expression);
+            this.filterStatistics.removed.requiredFilterCondition.total +=
+              selectedStreams.length;
+            this.filterStatistics.removed.requiredFilterCondition.details[
+              expression
+            ] =
+              (this.filterStatistics.removed.requiredFilterCondition.details[
+                expression
+              ] || 0) + selectedStreams.length;
           }
         } catch (error) {
           logger.error(
