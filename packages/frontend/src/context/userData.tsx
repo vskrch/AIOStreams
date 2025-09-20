@@ -51,6 +51,7 @@ export function applyMigrations(config: any): UserData {
       enabled: config.showStatistics ?? false,
       position: config.statisticsPosition ?? 'bottom',
       statsToShow: ['addon', 'filter'],
+      ...(config.statistics ?? {}),
     };
     delete config.showStatistics;
     delete config.statisticsPosition;
