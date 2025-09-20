@@ -235,6 +235,7 @@ function Content() {
               }))}
               emptyMessage="No statistics to show"
               multiple
+              defaultValue={['addon', 'filter']}
               value={userData.statistics?.statsToShow}
               onValueChange={(value) => {
                 setUserData((prev) => ({
