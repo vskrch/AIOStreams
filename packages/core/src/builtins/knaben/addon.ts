@@ -22,6 +22,12 @@ export const KnabenAddonConfigSchema = BaseDebridConfigSchema;
 
 export type KnabenAddonConfig = z.infer<typeof KnabenAddonConfigSchema>;
 
+const BLACKLISTED_CATEGORIES = [
+  KnabenCategory.AnimeLiterature,
+  KnabenCategory.AnimeMusic,
+  KnabenCategory.AnimeMusicVideo,
+];
+
 export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
   readonly id = 'knaben';
   readonly name = 'Knaben';
@@ -100,7 +106,14 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
     });
 
     const allResults = await Promise.all(searchPromises);
-    const hits = allResults.flat();
+    const hits = allResults
+      .flat()
+      .filter(
+        (hit) =>
+          !BLACKLISTED_CATEGORIES.some((category) =>
+            hit.categoryId.includes(category)
+          )
+      );
 
     const seenTorrents = new Set<string>();
     const torrents: UnprocessedTorrent[] = [];

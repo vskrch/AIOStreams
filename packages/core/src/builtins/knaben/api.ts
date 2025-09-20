@@ -11,6 +11,14 @@ enum KnabenCategory {
   TV = 2000000,
   Movies = 3000000,
   Anime = 6000000,
+  AnimeSubbed = 6001000,
+  AnimeDubbed = 6002000,
+  AnimeDualAudio = 6003000,
+  AnimeRaw = 6004000,
+  AnimeMusicVideo = 6005000,
+  AnimeLiterature = 6006000,
+  AnimeMusic = 6007000,
+  AnimeNonEnglishTranslated = 6008000,
 }
 
 const KnabenSearchHitSchema = z.looseObject({
