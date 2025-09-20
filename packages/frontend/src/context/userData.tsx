@@ -9,6 +9,54 @@ import { useStatus } from './status';
 
 const USER_DATA_KEY = 'aiostreams-user-data';
 
+export function applyMigrations(config: any): UserData {
+  if (
+    config.deduplicator &&
+    typeof config.deduplicator.multiGroupBehaviour === 'string'
+  ) {
+    switch (config.deduplicator.multiGroupBehaviour as string) {
+      case 'remove_uncached':
+        config.deduplicator.multiGroupBehaviour = 'aggressive';
+        break;
+      case 'remove_uncached_same_service':
+        config.deduplicator.multiGroupBehaviour = 'conservative';
+        break;
+      case 'remove_nothing':
+        config.deduplicator.multiGroupBehaviour = 'keep_all';
+        break;
+    }
+  }
+  if (config.titleMatching?.matchYear) {
+    config.yearMatching = {
+      enabled: true,
+      tolerance: config.titleMatching.yearTolerance
+        ? config.titleMatching.yearTolerance
+        : 1,
+      requestTypes: config.titleMatching.requestTypes ?? [],
+      addons: config.titleMatching.addons ?? [],
+    };
+    delete config.titleMatching.matchYear;
+  }
+
+  if (Array.isArray(config.groups)) {
+    config.groups = {
+      enabled: config.disableGroups ? false : true,
+      groupings: config.groups,
+      behaviour: 'parallel',
+    };
+  }
+
+  if (config.showStatistics || config.statisticsPosition) {
+    config.statistics = {
+      enabled: config.showStatistics ?? false,
+      position: config.statisticsPosition ?? 'bottom',
+      statsToShow: ['addon', 'filter'],
+    };
+    delete config.showStatistics;
+    delete config.statisticsPosition;
+  }
+  return config;
+}
 const DefaultUserData: UserData = {
   services: Object.values(SERVICE_DETAILS).map((service) => ({
     id: service.id,
@@ -75,7 +123,8 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const [userData, setUserData] = React.useState<UserData>(() => {
     try {
       const stored = localStorage.getItem(USER_DATA_KEY);
-      return stored ? JSON.parse(stored) : DefaultUserData;
+      const data = stored ? JSON.parse(stored) : DefaultUserData;
+      return applyMigrations(data);
     } catch {
       return DefaultUserData;
     }
