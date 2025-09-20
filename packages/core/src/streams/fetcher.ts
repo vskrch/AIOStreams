@@ -303,6 +303,32 @@ class StreamFetcher {
     logger.info(
       `Fetched ${allStreams.length} streams from ${addons.length} addons in ${getTimeTakenSincePoint(start)}`
     );
+
+    // Sort statistic streams by time ascending
+    const statStreamsWithTime = allStatisticStreams.map((stat) => {
+      const match = stat.description.match(
+        /⏱️ Time\s*:\s*(\d+(?:\.\d+)?)(ms|s)/
+      );
+      let time = Number.POSITIVE_INFINITY;
+      if (match) {
+        const value = parseFloat(match[1]);
+        const unit = match[2];
+        time =
+          unit === 's'
+            ? value * 1000
+            : unit === 'ms'
+              ? value
+              : Number.POSITIVE_INFINITY;
+      }
+      return { stat, time };
+    });
+
+    statStreamsWithTime.sort((a, b) => a.time - b.time);
+
+    // Reassign sorted statistics back to allStatisticStreams
+    for (let i = 0; i < allStatisticStreams.length; i++) {
+      allStatisticStreams[i] = statStreamsWithTime[i].stat;
+    }
     return {
       streams: allStreams,
       errors: allErrors,
