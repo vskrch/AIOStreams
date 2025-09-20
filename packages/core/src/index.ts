@@ -14,5 +14,6 @@ export {
   TorznabAddon,
   NewznabAddon,
   ProwlarrAddon,
+  KnabenAddon,
 } from './builtins/index.js';
 export { PresetManager } from './presets/index.js';

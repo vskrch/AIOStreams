@@ -35,6 +35,7 @@ export interface SearchMetadata extends TitleMetadata {
   imdbId?: string | null;
   tmdbId?: number | null;
   tvdbId?: number | null;
+  isAnime?: boolean;
 }
 
 export const BaseDebridConfigSchema = z.object({
@@ -314,6 +315,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       imdbId,
       tmdbId: metadata.tmdbId ?? null,
       tvdbId: metadata.tvdbId ?? null,
+      isAnime: animeEntry ? true : false,
     };
 
     this.logger.debug(

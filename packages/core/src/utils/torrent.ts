@@ -87,7 +87,7 @@ export class TorrentClient {
       let metadata: TorrentMetadata;
 
       // Handle redirects
-      if (response.status === 302 || response.status === 301) {
+      if (response.status >= 300 && response.status < 400) {
         const redirectUrl = response.headers.get('Location');
         if (!redirectUrl) {
           throw new Error('Redirect location not found');

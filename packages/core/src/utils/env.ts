@@ -1726,6 +1726,19 @@ export const Env = cleanEnv(process.env, {
     desc: 'Builtin Prowlarr Indexers cache TTL',
   }),
 
+  BUILTIN_KNABEN_TIMEOUT: num({
+    default: undefined,
+    desc: 'Builtin Knaben timeout',
+  }),
+  BUILTIN_KNABEN_SEARCH_TIMEOUT: num({
+    default: 30000, // 30 seconds
+    desc: 'Builtin Knaben Search timeout',
+  }),
+  BUILTIN_KNABEN_SEARCH_CACHE_TTL: num({
+    default: 7 * 24 * 60 * 60, // 7 days
+    desc: 'Builtin Knaben Search cache TTL',
+  }),
+
   // Rate limiting settings
   DISABLE_RATE_LIMITS: bool({
     default: false,

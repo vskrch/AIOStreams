@@ -27,6 +27,7 @@ import {
   torznab,
   newznab,
   prowlarr,
+  knaben,
 } from './routes/builtins/index.js';
 import {
   ipMiddleware,
@@ -130,6 +131,7 @@ builtinsRouter.use('/torbox-search', torboxSearch);
 builtinsRouter.use('/torznab', torznab);
 builtinsRouter.use('/newznab', newznab);
 builtinsRouter.use('/prowlarr', prowlarr);
+builtinsRouter.use('/knaben', knaben);
 app.use('/builtins', builtinsRouter);
 
 app.get(

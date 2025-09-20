@@ -61,6 +61,7 @@ import { NewznabPreset } from './newznab.js';
 import { ProwlarrPreset } from './prowlarr.js';
 import { JackettPreset } from './jackett.js';
 import { NZBHydraPreset } from './nzbhydra.js';
+import { KnabenPreset } from './knaben.js';
 
 let PRESET_LIST: string[] = [
   'custom',
@@ -72,8 +73,9 @@ let PRESET_LIST: string[] = [
   'mediafusion',
   'stremthruTorz',
   'stremthruStore',
-  'animetosho',
   'zilean',
+  'knaben',
+  'animetosho',
   'prowlarr',
   'jackett',
   'nzbhydra',
@@ -264,6 +266,8 @@ export class PresetManager {
         return JackettPreset;
       case 'nzbhydra':
         return NZBHydraPreset;
+      case 'knaben':
+        return KnabenPreset;
       default:
         throw new Error(`Preset ${id} not found`);
     }
