@@ -148,10 +148,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     data: ((prev: UserData) => UserData | null) | null
   ) => {
     if (data === null) {
-      setUserData((prev) => ({
-        ...prev,
-        ...DefaultUserData,
-      }));
+      setUserData(DefaultUserData);
     } else {
       setUserData((prev) => {
         const result = data(prev);
