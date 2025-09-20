@@ -19,7 +19,7 @@ const KnabenSearchHitSchema = z.looseObject({
   category: z.string(),
   categoryId: z.array(z.number()),
   date: z.iso.datetime({ offset: true }),
-  details: z.url(),
+  details: z.url().nullable(),
   hash: z
     .string()
     .nullable()
@@ -58,7 +58,7 @@ const KnabenSearchOptions = z.object({
         message: 'Must be "score" or a percentage string like "80%"',
       }),
     ])
-    .default('score')
+    .default('100%')
     .optional(),
   searchField: z.keyof(KnabenSearchHitSchema).default('title').optional(),
   query: z.string(),
