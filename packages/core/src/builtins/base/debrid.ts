@@ -168,25 +168,22 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
         `Fetching metadata for ${torrentsToDownload.length} torrents`
       );
       const start = Date.now();
-      const limit = pLimit(Env.BUILTIN_GET_TORRENT_CONCURRENCY);
-      const metadataPromises = torrentsToDownload.map((torrent) =>
-        limit(async () => {
-          try {
-            const metadata = await TorrentClient.getMetadata(torrent);
-            if (!metadata) {
-              return torrent.hash ? (torrent as Torrent) : null;
-            }
-            return {
-              ...torrent,
-              hash: metadata.hash,
-              sources: metadata.sources,
-              files: metadata.files,
-            } as Torrent;
-          } catch (error) {
+      const metadataPromises = torrentsToDownload.map(async (torrent) => {
+        try {
+          const metadata = await TorrentClient.getMetadata(torrent);
+          if (!metadata) {
             return torrent.hash ? (torrent as Torrent) : null;
           }
-        })
-      );
+          return {
+            ...torrent,
+            hash: metadata.hash,
+            sources: metadata.sources,
+            files: metadata.files,
+          } as Torrent;
+        } catch (error) {
+          return torrent.hash ? (torrent as Torrent) : null;
+        }
+      });
 
       const enrichedResults = (await Promise.all(metadataPromises)).filter(
         (r): r is Torrent => r !== null

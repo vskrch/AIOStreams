@@ -11,7 +11,10 @@ import {
 } from '../../utils/index.js';
 import KnabenAPI, { KnabenCategory } from './api.js';
 import { NZB, UnprocessedTorrent } from '../../debrid/utils.js';
-import { extractTrackersFromMagnet } from '../utils/debrid.js';
+import {
+  extractInfoHashFromMagnet,
+  extractTrackersFromMagnet,
+} from '../utils/debrid.js';
 
 const logger = createLogger('knaben');
 
@@ -85,6 +88,7 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
         query: q,
         categories,
         size: 300,
+        hideUnsafe: false,
       });
       logger.info(
         `Knaben search for ${q} took ${getTimeTakenSincePoint(start)}`,
@@ -101,13 +105,16 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
     const seenTorrents = new Set<string>();
     const torrents: UnprocessedTorrent[] = [];
     for (const hit of hits) {
-      if (!hit.hash && !hit.link) {
+      const hash =
+        hit.hash ??
+        (hit.magnetUrl ? extractInfoHashFromMagnet(hit.magnetUrl) : undefined);
+      if (!hash && !hit.link) {
         logger.warn(
           `Knaben search hit has no hash or download url: ${JSON.stringify(hit)}`
         );
         continue;
       }
-      if (seenTorrents.has(hit.hash ?? hit.link ?? '')) {
+      if (seenTorrents.has(hash ?? hit.link ?? '')) {
         continue;
       }
       let sources: string[] = [];
@@ -116,7 +123,7 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
       }
 
       torrents.push({
-        hash: hit.hash ?? undefined,
+        hash: hash ?? undefined,
         downloadUrl: hit.link ?? undefined,
         sources,
         indexer: hit.tracker,

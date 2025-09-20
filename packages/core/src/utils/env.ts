@@ -1593,6 +1593,10 @@ export const Env = cleanEnv(process.env, {
     default: 100,
     desc: 'Builtin Get Torrent concurrency limit',
   }),
+  BUILTIN_GET_TORRENT_LAZILY: bool({
+    default: true,
+    desc: 'Get the torrent links lazily (in the background). First search will return only the available results while torrent fetches happen in the background.',
+  }),
   BUILTIN_TORRENT_METADATA_CACHE_TTL: num({
     default: 7 * 24 * 60 * 60, // 7 days
     desc: 'Builtin Torrent metadata cache TTL',
