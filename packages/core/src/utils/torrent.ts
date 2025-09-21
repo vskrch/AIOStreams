@@ -7,7 +7,7 @@ import { createLogger } from './logger.js';
 import { Cache } from './cache.js';
 // import { makeRequest } from './http.js';
 import { fetch } from 'undici';
-import parseTorrent from 'parse-torrent';
+import parseTorrent, { Instance } from 'parse-torrent';
 import { Env } from './env.js';
 import { getTimeTakenSincePoint } from './index.js';
 import pLimit from 'p-limit';
@@ -149,10 +149,22 @@ export class TorrentClient {
       metadata = { hash, files: [], sources };
     } else if (response.ok) {
       const bytes = await response.arrayBuffer();
-      const parsedTorrent = parseTorrent(new Uint8Array(bytes));
+
+      const parsedTorrent = await (parseTorrent(
+        new Uint8Array(bytes)
+      ) as unknown as Promise<Instance>);
+
       const sources = Array.from(
         new Set([...(parsedTorrent.announce || []), ...(torrent.sources || [])])
       );
+
+      if (!parsedTorrent.infoHash) {
+        logger.debug(
+          `No info hash found in torrent: ${JSON.stringify(parsedTorrent)}`
+        );
+        metadata = { hash: downloadUrl, files: [], sources };
+        throw new Error('No info hash found in torrent');
+      }
 
       logger.debug(
         `Got info for ${downloadUrl} from downloaded torrent in ${getTimeTakenSincePoint(start)}`,
@@ -162,11 +174,13 @@ export class TorrentClient {
       );
       metadata = {
         hash: parsedTorrent.infoHash,
-        files: (parsedTorrent.files || []).map((file, index) => ({
-          size: file.length,
-          id: index,
-          name: file.name,
-        })),
+        files: ('files' in parsedTorrent ? parsedTorrent.files || [] : []).map(
+          (file, index) => ({
+            size: file.length,
+            id: index,
+            name: file.name,
+          })
+        ),
         sources,
       };
     } else {
