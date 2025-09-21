@@ -104,7 +104,7 @@ export class JackettPreset extends TorznabPreset {
 
     const config = {
       ...this.getBaseConfig(userData, services),
-      url: `${jackettUrl.replace(/\/$/, '')}/api/v2.0/results/all/torznab`,
+      url: `${jackettUrl.replace(/\/$/, '')}/api/v2.0/indexers/all/results/torznab`,
       apiPath: '/api',
       apiKey: jackettApiKey,
       forceQuerySearch: true,
