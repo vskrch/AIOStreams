@@ -65,14 +65,18 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
       if (metadata.isAnime) {
         categories.push(KnabenCategory.Anime);
       }
+      if (parsedId.season) {
+        queries.push(
+          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`
+        );
+      }
       if (metadata.absoluteEpisode) {
         queries.push(
           `${metadata.primaryTitle} ${metadata.absoluteEpisode.toString().padStart(2, '0')}`
         );
-      }
-      if (parsedId.season) {
+      } else if (parsedId.episode && !parsedId.season) {
         queries.push(
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`
+          `${metadata.primaryTitle} E${parsedId.episode.toString().padStart(2, '0')}`
         );
       }
       if (parsedId.season && parsedId.episode) {
