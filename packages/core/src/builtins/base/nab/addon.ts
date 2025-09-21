@@ -109,21 +109,32 @@ export abstract class BaseNabAddon<
       searchCapabilities.supportedParams.includes('q') &&
       metadata.primaryTitle
     ) {
-      queries.push(metadata.primaryTitle);
       if (
-        parsedId.season &&
-        parsedId.episode &&
+        (parsedId.season || parsedId.episode) &&
         !queryParams.season &&
         !queryParams.ep
       ) {
-        queries = [
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`,
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}E${parsedId.episode.toString().padStart(2, '0')}`,
-        ];
-        if (metadata.absoluteEpisode)
+        if (parsedId.season) {
+          queries.push(
+            `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`
+          );
+        }
+        if (metadata.absoluteEpisode) {
           queries.push(
             `${metadata.primaryTitle} ${metadata.absoluteEpisode.toString().padStart(2, '0')}`
           );
+        } else if (parsedId.episode && !parsedId.season) {
+          queries.push(
+            `${metadata.primaryTitle} E${parsedId.episode.toString().padStart(2, '0')}`
+          );
+        }
+        if (parsedId.season && parsedId.episode) {
+          queries.push(
+            `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}E${parsedId.episode.toString().padStart(2, '0')}`
+          );
+        }
+      } else {
+        queries.push(metadata.primaryTitle);
       }
       if (
         metadata.year &&
@@ -164,7 +175,9 @@ export abstract class BaseNabAddon<
     this.logger.debug(
       `Available search functions: ${JSON.stringify(available)}`
     );
-    if (type === 'movie') {
+    if (this.userData.forceQuerySearch) {
+      // dont use specific search functions when force query search is enabled
+    } else if (type === 'movie') {
       const movieSearch = available.find((s) =>
         s.toLowerCase().includes('movie')
       );

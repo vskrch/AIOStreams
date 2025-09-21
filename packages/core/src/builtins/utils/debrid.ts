@@ -14,6 +14,7 @@ import {
   NZB,
   isSeasonWrong,
   isEpisodeWrong,
+  isTitleWrong,
 } from '../../debrid/index.js';
 import { PTT } from '../../parser/index.js';
 import { ParseResult } from 'go-ptt';
@@ -151,6 +152,9 @@ async function processTorrentsForDebridService(
 
     const parsedTorrent = parsedFiles.get(torrent.title ?? '');
     if (metadata && parsedTorrent) {
+      if (isTitleWrong(parsedTorrent, metadata)) {
+        continue;
+      }
       if (isSeasonWrong(parsedTorrent, metadata)) {
         continue;
       }

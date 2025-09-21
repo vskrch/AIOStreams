@@ -260,9 +260,12 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
 
     // Update season from anime entry if available
     if (animeEntry && !parsedId.season) {
-      parsedId.season =
+      const season =
         animeEntry.imdb?.fromImdbSeason?.toString() ??
         animeEntry.trakt?.season?.number?.toString();
+      if (season && season !== '1') {
+        parsedId.season = season;
+      }
     }
 
     const metadata = await new MetadataService({
@@ -273,7 +276,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
 
     // Calculate absolute episode if needed
     let absoluteEpisode: number | undefined;
-    if (animeEntry && parsedId.season && parsedId.episode && metadata.seasons) {
+    if (animeEntry && parsedId.episode && metadata.seasons) {
       const seasons = metadata.seasons.map(
         ({ season_number, episode_count }) => ({
           number: season_number.toString(),
@@ -284,7 +287,11 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
         `Calculating absolute episode with current season and episode: ${parsedId.season}, ${parsedId.episode} and seasons: ${JSON.stringify(seasons)}`
       );
       absoluteEpisode = Number(
-        calculateAbsoluteEpisode(parsedId.season, parsedId.episode, seasons)
+        calculateAbsoluteEpisode(
+          parsedId.season ?? '1',
+          parsedId.episode,
+          seasons
+        )
       );
     }
 
