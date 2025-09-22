@@ -1769,6 +1769,26 @@ export const Env = cleanEnv(process.env, {
     desc: 'Builtin Knaben Search cache TTL',
   }),
 
+  BUILTIN_TORRENT_GALAXY_URL: url({
+    default: 'https://torrentgalaxy.space',
+    desc: 'Builtin Torrent Galaxy URL',
+  }),
+  BUILTIN_DEFAULT_TORRENT_GALAXY_TIMEOUT: num({
+    default: undefined,
+    desc: 'Builtin Torrent Galaxy timeout',
+  }),
+  BUILTIN_TORRENT_GALAXY_SEARCH_TIMEOUT: num({
+    default: 30000, // 30 seconds
+    desc: 'Builtin Torrent Galaxy Search timeout',
+  }),
+  BUILTIN_TORRENT_GALAXY_SEARCH_CACHE_TTL: num({
+    default: 7 * 24 * 60 * 60, // 7 days
+    desc: 'Builtin Torrent Galaxy Search cache TTL',
+  }),
+  BUILTIN_TORRENT_GALAXY_PAGE_LIMIT: num({
+    default: 5,
+    desc: 'The maximum number of pages to fetch.',
+  }),
   // Rate limiting settings
   DISABLE_RATE_LIMITS: bool({
     default: false,

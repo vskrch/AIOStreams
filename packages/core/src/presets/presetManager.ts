@@ -64,7 +64,7 @@ import { NZBHydraPreset } from './nzbhydra.js';
 import { KnabenPreset } from './knaben.js';
 import { BitmagnetPreset } from './bitmagnet.js';
 import { SootioPreset } from './sootio.js';
-
+import { TorrentGalaxyPreset } from './torrentGalaxy.js';
 let PRESET_LIST: string[] = [
   'custom',
   'torznab',
@@ -78,6 +78,7 @@ let PRESET_LIST: string[] = [
   'sootio',
   'zilean',
   'knaben',
+  'torrent-galaxy',
   Env.BUILTIN_BITMAGNET_URL ? 'bitmagnet' : '',
   'animetosho',
   'prowlarr',
@@ -276,6 +277,8 @@ export class PresetManager {
         return BitmagnetPreset;
       case 'sootio':
         return SootioPreset;
+      case 'torrent-galaxy':
+        return TorrentGalaxyPreset;
       default:
         throw new Error(`Preset ${id} not found`);
     }

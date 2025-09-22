@@ -45,6 +45,8 @@ const moduleMap: { [key: string]: string } = {
   newznab: '🔍  NEWZNAB',
   'metadata-service': '🔍  METADATA',
   torrent: '👤  TORRENT',
+  knaben: '🔍  KNABEN',
+  'torrent-galaxy': '🌐  TGx',
 };
 
 // Define colors for each log level using full names
