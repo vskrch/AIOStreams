@@ -92,7 +92,13 @@ export class TorznabAddon extends BaseNabAddon<NabAddonConfig, TorznabApi> {
   private extractInfoHash(result: any): string | undefined {
     return validateInfoHash(
       result.torznab?.infohash?.toString() ||
-        result.torznab?.magneturl
+        (
+          result.torznab?.magneturl ||
+          result.enclosure.find(
+            (e: any) =>
+              e.type === 'application/x-bittorrent' && e.url.includes('magnet:')
+          )?.url
+        )
           ?.toString()
           ?.match(/(?:urn(?::|%3A)btih(?::|%3A))([a-f0-9]{40})/i)?.[1]
           ?.toLowerCase()
