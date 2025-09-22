@@ -87,6 +87,8 @@ export const PARSE_REGEX: PARSE_REGEX = {
     IMAX: createRegex('imax'),
     AI: createRegex('ai[ .\\-_]?(upscale|enhanced|remaster)?'),
     SDR: createRegex('sdr'),
+    'H-OU': createRegex('h?(alf)?[ .\\-_]?(ou|over[ .\\-_]?under)'),
+    'H-SBS': createRegex('h?(alf)?[ .\\-_]?(sbs|side[ .\\-_]?by[ .\\-_]?side)'),
   },
   audioTags: {
     Atmos: createRegex('atmos'),
@@ -123,8 +125,6 @@ export const PARSE_REGEX: PARSE_REGEX = {
     AV1: createRegex('av1'),
     XviD: createRegex('xvid'),
     DivX: createRegex('divx|dvix'),
-    'H-OU': createRegex('h?(alf)?[ .\\-_]?(ou|over[ .\\-_]?under)'),
-    'H-SBS': createRegex('h?(alf)?[ .\\-_]?(sbs|side[ .\\-_]?by[ .\\-_]?side)'),
   },
   languages: {
     Multi: createLanguageRegex('multi'),

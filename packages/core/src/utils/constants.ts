@@ -618,6 +618,8 @@ const VISUAL_TAGS = [
   'IMAX',
   'AI',
   'SDR',
+  'H-OU',
+  'H-SBS',
   'Unknown',
 ] as const;
 
@@ -644,8 +646,8 @@ const ENCODES = [
   'AVC',
   'XviD',
   'DivX',
-  'H-OU',
-  'H-SBS',
+  // 'H-OU',
+  // 'H-SBS',
   'Unknown',
 ] as const;
 
