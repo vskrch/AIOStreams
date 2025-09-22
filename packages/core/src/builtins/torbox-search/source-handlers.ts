@@ -413,9 +413,10 @@ export class UsenetSourceHandler extends SourceHandler {
   ): Promise<Stream[]> {
     const { type, value, season, episode, externalType } = parsedId;
     const cacheKey = this.getCacheKey(parsedId, 'usenet');
-    let titleMetadata: TitleMetadata | undefined;
-
-    let torrents = await this.searchCache.get(cacheKey);
+    let torrents: Torrent[] | undefined = await this.searchCache.get(cacheKey);
+    let titleMetadata: TitleMetadata | undefined = await this.metadataCache.get(
+      `metadata:${type}:${value}`
+    );
 
     if (!torrents) {
       const start = Date.now();
