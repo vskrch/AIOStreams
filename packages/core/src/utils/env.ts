@@ -1185,6 +1185,19 @@ export const Env = cleanEnv(process.env, {
     desc: 'Default StreamFusion StremThru URL',
   }),
 
+  SOOTIO_URL: urlOrUrlList({
+    default: ['https://sootio.elfhosted.com'],
+    desc: 'Sootio URL',
+  }),
+  DEFAULT_SOOTIO_TIMEOUT: num({
+    default: undefined,
+    desc: 'Default Sootio timeout',
+  }),
+  DEFAULT_SOOTIO_USER_AGENT: userAgent({
+    default: undefined,
+    desc: 'Default Sootio user agent',
+  }),
+
   // DMM Cast settings
   DEFAULT_DMM_CAST_TIMEOUT: num({
     default: undefined,

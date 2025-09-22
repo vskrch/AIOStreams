@@ -63,6 +63,7 @@ import { JackettPreset } from './jackett.js';
 import { NZBHydraPreset } from './nzbhydra.js';
 import { KnabenPreset } from './knaben.js';
 import { BitmagnetPreset } from './bitmagnet.js';
+import { SootioPreset } from './sootio.js';
 
 let PRESET_LIST: string[] = [
   'custom',
@@ -74,6 +75,7 @@ let PRESET_LIST: string[] = [
   'mediafusion',
   'stremthruTorz',
   'stremthruStore',
+  'sootio',
   'zilean',
   'knaben',
   Env.BUILTIN_BITMAGNET_URL ? 'bitmagnet' : '',
@@ -272,6 +274,8 @@ export class PresetManager {
         return KnabenPreset;
       case 'bitmagnet':
         return BitmagnetPreset;
+      case 'sootio':
+        return SootioPreset;
       default:
         throw new Error(`Preset ${id} not found`);
     }
