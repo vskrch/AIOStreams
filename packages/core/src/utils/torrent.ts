@@ -1,6 +1,7 @@
 import { Torrent, UnprocessedTorrent, DebridFile } from '../debrid/index.js';
 import {
   extractInfoHashFromMagnet,
+  validateInfoHash,
   extractTrackersFromMagnet,
 } from '../builtins/utils/debrid.js';
 import { createLogger } from './logger.js';
@@ -136,7 +137,7 @@ export class TorrentClient {
       const redirectUrl = response.headers.get('Location');
       if (!redirectUrl) throw new Error('Redirect location not found');
 
-      const hash = extractInfoHashFromMagnet(redirectUrl);
+      const hash = validateInfoHash(extractInfoHashFromMagnet(redirectUrl));
       if (!hash) throw new Error('Invalid magnet URL in redirect');
 
       const sources = extractTrackersFromMagnet(redirectUrl);
@@ -158,7 +159,7 @@ export class TorrentClient {
         new Set([...(parsedTorrent.announce || []), ...(torrent.sources || [])])
       );
 
-      if (!parsedTorrent.infoHash) {
+      if (!validateInfoHash(parsedTorrent.infoHash)) {
         logger.debug(
           `No info hash found in torrent: ${JSON.stringify(parsedTorrent)}`
         );

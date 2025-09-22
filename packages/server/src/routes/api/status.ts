@@ -3,6 +3,7 @@ import {
   Env,
   getEnvironmentServiceDetails,
   PresetManager,
+  PTT,
   UserRepository,
 } from '@aiostreams/core';
 import { StatusResponse } from '@aiostreams/core';
@@ -19,6 +20,14 @@ const statusInfo = async (): Promise<StatusResponse> => {
   if (Env.FORCE_PUBLIC_PROXY_HOST) {
     forcedPublicProxyUrl = `${Env.FORCE_PUBLIC_PROXY_PROTOCOL}://${Env.FORCE_PUBLIC_PROXY_HOST}:${Env.FORCE_PUBLIC_PROXY_PORT ?? ''}`;
   }
+
+  // test PTT server.
+
+  const parsed = (await PTT.parse(['The Flash S01E01']))[0];
+  if (!parsed || parsed.err) {
+    throw new Error('Failed to parse title: ' + parsed?.err || 'Unknown error');
+  }
+
   return {
     version: Env.VERSION,
     tag: Env.TAG,

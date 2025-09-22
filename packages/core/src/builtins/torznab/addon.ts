@@ -3,7 +3,10 @@ import { ParsedId } from '../../utils/id-parser.js';
 import { createLogger } from '../../utils/index.js';
 import { Torrent, NZB, UnprocessedTorrent } from '../../debrid/index.js';
 import { SearchMetadata } from '../base/debrid';
-import { extractTrackersFromMagnet } from '../utils/debrid.js';
+import {
+  extractTrackersFromMagnet,
+  validateInfoHash,
+} from '../utils/debrid.js';
 import { BaseNabApi, Capabilities } from '../base/nab/api.js';
 import {
   BaseNabAddon,
@@ -87,12 +90,12 @@ export class TorznabAddon extends BaseNabAddon<NabAddonConfig, TorznabApi> {
   }
 
   private extractInfoHash(result: any): string | undefined {
-    return (
+    return validateInfoHash(
       result.torznab?.infohash?.toString() ||
-      result.torznab?.magneturl
-        ?.toString()
-        ?.match(/(?:urn(?::|%3A)btih(?::|%3A))([a-f0-9]{40})/i)?.[1]
-        ?.toLowerCase()
+        result.torznab?.magneturl
+          ?.toString()
+          ?.match(/(?:urn(?::|%3A)btih(?::|%3A))([a-f0-9]{40})/i)?.[1]
+          ?.toLowerCase()
     );
   }
 }

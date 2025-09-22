@@ -56,7 +56,7 @@ router.get(
         let staticFile: string = StaticFiles.INTERNAL_SERVER_ERROR;
         if (error instanceof DebridError) {
           logger.error(
-            `Got Debrid error during debrid resolve: ${error.code}: ${error.message}`
+            `[${storeAuth.id}] Got Debrid error during debrid resolve: ${error.code}: ${error.message}`
           );
           switch (error.code) {
             case 'UNAVAILABLE_FOR_LEGAL_REASONS':
@@ -84,7 +84,7 @@ router.get(
           }
         } else {
           logger.error(
-            `Got unknown error during debrid resolve: ${error.message}`
+            `[${storeAuth.id}] Got unknown error during debrid resolve: ${error.message}`
           );
         }
 

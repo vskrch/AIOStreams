@@ -17,6 +17,7 @@ import { Torrent, NZB, UnprocessedTorrent } from '../../debrid/index.js';
 import {
   extractInfoHashFromMagnet,
   extractTrackersFromMagnet,
+  validateInfoHash,
 } from '../utils/debrid.js';
 
 export const ProwlarrAddonConfigSchema = BaseDebridConfigSchema.extend({
@@ -142,9 +143,10 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
       const downloadUrl = result.magnetUrl?.startsWith('http')
         ? result.magnetUrl
         : result.downloadUrl;
-      const infoHash =
+      const infoHash = validateInfoHash(
         result.infoHash ||
-        (magnetUrl ? extractInfoHashFromMagnet(magnetUrl) : undefined);
+          (magnetUrl ? extractInfoHashFromMagnet(magnetUrl) : undefined)
+      );
       if (!infoHash && !downloadUrl) continue;
       if (seenTorrents.has(infoHash ?? downloadUrl!)) continue;
       seenTorrents.add(infoHash ?? downloadUrl!);

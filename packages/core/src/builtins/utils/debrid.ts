@@ -35,6 +35,12 @@ interface Metadata {
   absoluteEpisode?: number;
 }
 
+export function validateInfoHash(
+  infoHash: string | undefined
+): string | undefined {
+  return infoHash && /^[a-f0-9]{40}$/i.test(infoHash) ? infoHash : undefined;
+}
+
 export function extractTrackersFromMagnet(magnet: string): string[] {
   return new URL(magnet.replace('&amp;', '&')).searchParams.getAll('tr');
 }

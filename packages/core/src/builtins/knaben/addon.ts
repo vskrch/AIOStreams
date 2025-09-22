@@ -14,6 +14,7 @@ import { NZB, UnprocessedTorrent } from '../../debrid/utils.js';
 import {
   extractInfoHashFromMagnet,
   extractTrackersFromMagnet,
+  validateInfoHash,
 } from '../utils/debrid.js';
 
 const logger = createLogger('knaben');
@@ -102,9 +103,10 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
     const seenTorrents = new Set<string>();
     const torrents: UnprocessedTorrent[] = [];
     for (const hit of hits) {
-      const hash =
+      const hash = validateInfoHash(
         hit.hash ??
-        (hit.magnetUrl ? extractInfoHashFromMagnet(hit.magnetUrl) : undefined);
+          (hit.magnetUrl ? extractInfoHashFromMagnet(hit.magnetUrl) : undefined)
+      );
       if (!hash && !hit.link) {
         logger.warn(
           `Knaben search hit has no hash or download url: ${JSON.stringify(hit)}`
