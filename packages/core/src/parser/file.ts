@@ -1,7 +1,6 @@
 import { PARSE_REGEX } from './regex.js';
 import { ParsedFile } from '../db/schemas.js';
 import ptt from './ptt.js';
-import { normaliseTitle } from './utils.js';
 
 function matchPattern(
   filename: string,
@@ -26,7 +25,11 @@ class FileParser {
     const parsed = ptt.parse(filename);
     if (
       ['vinland', 'furiosaamadmax', 'horizonanamerican'].includes(
-        normaliseTitle(parsed.title || '')
+        (parsed.title || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^\p{L}\p{N}+]/gu, '')
+          .toLowerCase()
       ) &&
       parsed.complete
     ) {
