@@ -1665,7 +1665,7 @@ export const Env = cleanEnv(process.env, {
     default: 'https://zilean.elfhosted.com',
     desc: 'Builtin Zilean URL',
   }),
-  BUILTIN_ZILEAN_TIMEOUT: num({
+  BUILTIN_DEFAULT_ZILEAN_TIMEOUT: num({
     default: undefined,
     desc: 'Builtin Zilean timeout',
   }),
@@ -1674,9 +1674,18 @@ export const Env = cleanEnv(process.env, {
     default: 'https://feed.animetosho.org',
     desc: 'Builtin AnimeTosho URL',
   }),
-  BUILTIN_ANIMETOSHO_TIMEOUT: num({
+  BUILTIN_DEFAULT_ANIMETOSHO_TIMEOUT: num({
     default: undefined,
     desc: 'Builtin AnimeTosho timeout',
+  }),
+
+  BUILTIN_BITMAGNET_URL: url({
+    default: undefined,
+    desc: 'Builtin Bitmagnet URL',
+  }),
+  BUILTIN_DEFAULT_BITMAGNET_TIMEOUT: num({
+    default: undefined,
+    desc: 'Builtin Bitmagnet timeout',
   }),
 
   BUILTIN_JACKETT_URL: url({
@@ -1687,7 +1696,7 @@ export const Env = cleanEnv(process.env, {
     default: undefined,
     desc: 'Builtin Jackett API Key',
   }),
-  BUILTIN_JACKETT_TIMEOUT: num({
+  BUILTIN_DEFAULT_JACKETT_TIMEOUT: num({
     default: undefined,
     desc: 'Builtin Jackett timeout',
   }),
@@ -1700,7 +1709,7 @@ export const Env = cleanEnv(process.env, {
     default: undefined,
     desc: 'Builtin NZBHydra API Key',
   }),
-  BUILTIN_NZBHYDRA_TIMEOUT: num({
+  BUILTIN_DEFAULT_NZBHYDRA_TIMEOUT: num({
     default: undefined,
     desc: 'Builtin NZBHydra timeout',
   }),
@@ -1717,6 +1726,10 @@ export const Env = cleanEnv(process.env, {
     default: undefined,
     desc: 'Comma separated list of prowlarr indexers to use.',
   }),
+  BUILTIN_DEFAULT_PROWLARR_TIMEOUT: num({
+    default: undefined,
+    desc: 'Default timeout for the builtin Prowlarr addon.',
+  }),
   BUILTIN_PROWLARR_SEARCH_TIMEOUT: num({
     default: 30000, // 30 seconds
     desc: 'Builtin Prowlarr Search timeout',
@@ -1730,7 +1743,7 @@ export const Env = cleanEnv(process.env, {
     desc: 'Builtin Prowlarr Indexers cache TTL',
   }),
 
-  BUILTIN_KNABEN_TIMEOUT: num({
+  BUILTIN_DEFAULT_KNABEN_TIMEOUT: num({
     default: undefined,
     desc: 'Builtin Knaben timeout',
   }),

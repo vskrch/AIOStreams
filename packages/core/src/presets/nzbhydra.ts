@@ -20,7 +20,7 @@ export class NZBHydraPreset extends NewznabPreset {
         name: 'Timeout',
         description: 'The timeout for this addon',
         type: 'number',
-        default: Env.BUILTIN_NZBHYDRA_TIMEOUT,
+        default: Env.BUILTIN_DEFAULT_NZBHYDRA_TIMEOUT,
         constraints: {
           min: Env.MIN_TIMEOUT,
           max: Env.MAX_TIMEOUT,
@@ -61,7 +61,7 @@ export class NZBHydraPreset extends NewznabPreset {
       NAME: 'NZBHydra',
       LOGO: 'https://raw.githubusercontent.com/theotherp/nzbhydra2/refs/heads/master/core/ui-src/img/logo.png',
       URL: `${Env.INTERNAL_URL}/builtins/newznab`,
-      TIMEOUT: Env.BUILTIN_NZBHYDRA_TIMEOUT || Env.DEFAULT_TIMEOUT,
+      TIMEOUT: Env.BUILTIN_DEFAULT_NZBHYDRA_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: [constants.TORBOX_SERVICE],
       DESCRIPTION:

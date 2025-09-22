@@ -62,6 +62,7 @@ import { ProwlarrPreset } from './prowlarr.js';
 import { JackettPreset } from './jackett.js';
 import { NZBHydraPreset } from './nzbhydra.js';
 import { KnabenPreset } from './knaben.js';
+import { BitmagnetPreset } from './bitmagnet.js';
 
 let PRESET_LIST: string[] = [
   'custom',
@@ -75,6 +76,7 @@ let PRESET_LIST: string[] = [
   'stremthruStore',
   'zilean',
   'knaben',
+  Env.BUILTIN_BITMAGNET_URL ? 'bitmagnet' : '',
   'animetosho',
   'prowlarr',
   'jackett',
@@ -268,6 +270,8 @@ export class PresetManager {
         return NZBHydraPreset;
       case 'knaben':
         return KnabenPreset;
+      case 'bitmagnet':
+        return BitmagnetPreset;
       default:
         throw new Error(`Preset ${id} not found`);
     }

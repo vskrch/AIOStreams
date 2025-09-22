@@ -21,7 +21,7 @@ export class KnabenPreset extends TorznabPreset {
         description: 'The timeout for this addon',
         type: 'number',
         required: true,
-        default: Env.BUILTIN_KNABEN_TIMEOUT || Env.DEFAULT_TIMEOUT,
+        default: Env.BUILTIN_DEFAULT_KNABEN_TIMEOUT || Env.DEFAULT_TIMEOUT,
       },
       {
         id: 'services',
@@ -45,7 +45,7 @@ export class KnabenPreset extends TorznabPreset {
       NAME: 'Knaben',
       LOGO: '/assets/knaben_logo.png',
       URL: `${Env.INTERNAL_URL}/builtins/knaben`,
-      TIMEOUT: Env.BUILTIN_KNABEN_TIMEOUT || Env.DEFAULT_TIMEOUT,
+      TIMEOUT: Env.BUILTIN_DEFAULT_KNABEN_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: StremThruPreset.supportedServices,
       DESCRIPTION: 'Directly search Knaben for results with your services.',

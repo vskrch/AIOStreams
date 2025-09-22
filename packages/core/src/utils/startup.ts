@@ -519,6 +519,10 @@ const logStartupInfo = () => {
       Env.TMDB_API_KEY ? '✅ Configured' : '❌ None'
     );
     logKeyValue(
+      'TVDB API Key:',
+      Env.TVDB_API_KEY ? '✅ Configured' : '❌ None'
+    );
+    logKeyValue(
       'Trakt Client ID:',
       Env.TRAKT_CLIENT_ID ? '✅ Configured' : '❌ None'
     );
@@ -542,6 +546,22 @@ const logStartupInfo = () => {
       formatDuration(Env.BUILTIN_NAB_CAPABILITIES_CACHE_TTL),
       '       '
     );
+
+    // Bitmagnet
+    logKeyValue(
+      'Bitmagnet:',
+      Env.BUILTIN_BITMAGNET_URL ? '✅ Configured' : '❌ None'
+    );
+    if (Env.BUILTIN_BITMAGNET_URL) {
+      logKeyValue('    URL:', Env.BUILTIN_BITMAGNET_URL, '       ');
+    }
+    if (Env.BUILTIN_DEFAULT_BITMAGNET_TIMEOUT) {
+      logKeyValue(
+        '  Default Timeout:',
+        formatMilliseconds(Env.BUILTIN_DEFAULT_BITMAGNET_TIMEOUT),
+        '       '
+      );
+    }
 
     // Prowlarr
     const prowlarrSearchEnabled =
@@ -583,19 +603,19 @@ const logStartupInfo = () => {
 
     // animetosho
     logKeyValue('AnimeTosho:', Env.BUILTIN_ANIMETOSHO_URL);
-    if (Env.BUILTIN_ANIMETOSHO_TIMEOUT) {
+    if (Env.BUILTIN_DEFAULT_ANIMETOSHO_TIMEOUT) {
       logKeyValue(
-        '  Timeout:',
-        formatMilliseconds(Env.BUILTIN_ANIMETOSHO_TIMEOUT),
+        '  Default Timeout:',
+        formatMilliseconds(Env.BUILTIN_DEFAULT_ANIMETOSHO_TIMEOUT),
         '     '
       );
     }
 
     logKeyValue('Zilean', Env.BUILTIN_ZILEAN_URL);
-    if (Env.BUILTIN_ZILEAN_TIMEOUT) {
+    if (Env.BUILTIN_DEFAULT_ZILEAN_TIMEOUT) {
       logKeyValue(
-        '  Timeout:',
-        formatMilliseconds(Env.BUILTIN_ZILEAN_TIMEOUT),
+        '  Default Timeout:',
+        formatMilliseconds(Env.BUILTIN_DEFAULT_ZILEAN_TIMEOUT),
         '     '
       );
     }
