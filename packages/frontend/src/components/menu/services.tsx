@@ -303,6 +303,7 @@ function Content() {
         description="Provide your RPDB API key if you want catalogs of supported types to use posters from RPDB"
       >
         <PasswordInput
+          autoComplete="new-password"
           label="RPDB API Key"
           help={
             <span>
