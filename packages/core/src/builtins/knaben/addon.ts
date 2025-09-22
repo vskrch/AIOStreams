@@ -51,44 +51,24 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
     parsedId: ParsedId,
     metadata: SearchMetadata
   ): Promise<UnprocessedTorrent[]> {
-    const queries = [];
     let categories: number[] = [];
     if (!metadata.primaryTitle) {
       return [];
     }
 
-    if (parsedId.mediaType === 'movie') {
-      categories.push(KnabenCategory.Movies);
-      queries.push(`${metadata.primaryTitle} ${metadata.year}`);
-    } else {
-      categories.push(KnabenCategory.TV);
-      if (metadata.isAnime) {
-        categories.push(KnabenCategory.Anime);
-      }
-      if (parsedId.season) {
-        queries.push(
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`
-        );
-      }
-      if (metadata.absoluteEpisode) {
-        queries.push(
-          `${metadata.primaryTitle} ${metadata.absoluteEpisode.toString().padStart(2, '0')}`
-        );
-      } else if (parsedId.episode && !parsedId.season) {
-        queries.push(
-          `${metadata.primaryTitle} E${parsedId.episode.toString().padStart(2, '0')}`
-        );
-      }
-      if (parsedId.season && parsedId.episode) {
-        queries.push(
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}E${parsedId.episode.toString().padStart(2, '0')}`
-        );
-      }
-    }
+    const queries = this.buildQueries(parsedId, metadata);
 
     if (queries.length === 0) {
       return [];
     }
+
+    categories = [
+      ...(parsedId.mediaType === 'movie' ? [KnabenCategory.Movies] : []),
+      ...(parsedId.mediaType === 'series' || metadata.isAnime
+        ? [KnabenCategory.TV]
+        : []),
+      ...(metadata.isAnime ? [KnabenCategory.Anime] : []),
+    ];
 
     logger.info(`Performing knaben search`, { queries, categories });
 

@@ -109,40 +109,12 @@ export abstract class BaseNabAddon<
       searchCapabilities.supportedParams.includes('q') &&
       metadata.primaryTitle
     ) {
-      if (
-        (parsedId.season || parsedId.episode) &&
-        !queryParams.season &&
-        !queryParams.ep
-      ) {
-        if (parsedId.season) {
-          queries.push(
-            `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`
-          );
-        }
-        if (metadata.absoluteEpisode) {
-          queries.push(
-            `${metadata.primaryTitle} ${metadata.absoluteEpisode.toString().padStart(2, '0')}`
-          );
-        } else if (parsedId.episode && !parsedId.season) {
-          queries.push(
-            `${metadata.primaryTitle} E${parsedId.episode.toString().padStart(2, '0')}`
-          );
-        }
-        if (parsedId.season && parsedId.episode) {
-          queries.push(
-            `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}E${parsedId.episode.toString().padStart(2, '0')}`
-          );
-        }
-      } else {
-        queries.push(metadata.primaryTitle);
-      }
-      if (
-        metadata.year &&
-        parsedId.mediaType === 'movie' &&
-        !queryParams.year
-      ) {
-        queries = queries.map((q) => `${q} ${metadata.year}`);
-      }
+      queries = this.buildQueries(parsedId, metadata, {
+        // add year if it is not already in the query params
+        addYear: !queryParams.year,
+        // add season and episode if they are not already in the query params
+        addSeasonEpisode: !queryParams.season && !queryParams.ep,
+      });
     }
     let results: SearchResultItem<A['namespace']>[] = [];
     if (queries.length > 0) {
