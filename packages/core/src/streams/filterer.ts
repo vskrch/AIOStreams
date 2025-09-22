@@ -223,6 +223,8 @@ class StreamFilterer {
     let requestedMetadata:
       | (Metadata & { absoluteEpisode?: number })
       | undefined;
+    let yearWithinTitle: string | undefined;
+    let yearWithinTitleRegex: RegExp | undefined;
     if (
       (this.userData.titleMatching?.enabled ||
         this.userData.yearMatching?.enabled ||
@@ -266,6 +268,13 @@ class StreamFilterer {
             calculateAbsoluteEpisode(parsedId.season, parsedId.episode, seasons)
           );
         }
+
+        yearWithinTitle = requestedMetadata.title.match(
+          /\b(19\d{2}|20[012]\d{1})\b/
+        )?.[0];
+        if (yearWithinTitle) {
+          yearWithinTitleRegex = new RegExp(`${yearWithinTitle[0]}`, 'g');
+        }
         logger.info(`Fetched metadata for ${id}`, requestedMetadata);
       } catch (error) {
         logger.warn(
@@ -298,7 +307,7 @@ class StreamFilterer {
         return true;
       }
 
-      const streamTitle = stream.parsedFile?.title;
+      let streamTitle = stream.parsedFile?.title;
       if (
         titleMatchingOptions.requestTypes?.length &&
         (!titleMatchingOptions.requestTypes.includes(type) ||
@@ -319,6 +328,15 @@ class StreamFilterer {
         return false;
       }
 
+      if (
+        requestedMetadata.title.toLowerCase().includes('saga') &&
+        stream.filename?.toLowerCase().includes('saga') &&
+        !streamTitle.toLowerCase().includes('saga')
+      ) {
+        streamTitle += ' Saga';
+        stream.parsedFile!.title = streamTitle;
+      }
+
       if (titleMatchingOptions.mode === 'exact') {
         return titleMatch(
           normaliseTitle(streamTitle),
@@ -337,6 +355,20 @@ class StreamFilterer {
           }
         );
       }
+    };
+
+    const findYearInString = (string: string) => {
+      const regexes = [
+        /[([*]?(?!^)(?<!\d|Cap[. ]?)((?:19\d{2}|20[012]\d{2}))(?!\d|kbps)[*)\]]?/i,
+        /[([]?((?:19\d{2}|20[012]\d{1}))(?!\d|kbps)[)\]]?/i,
+      ];
+      for (const regex of regexes) {
+        const match = string.match(regex);
+        if (match && match[1]) {
+          return match[1];
+        }
+      }
+      return undefined;
     };
 
     const performYearMatch = (stream: ParsedStream) => {
@@ -368,7 +400,32 @@ class StreamFilterer {
         return true;
       }
 
-      const streamYear = stream.parsedFile?.year;
+      let streamYear = stream.parsedFile?.year;
+      if (yearWithinTitleRegex && yearWithinTitle) {
+        const yearStr = yearWithinTitle;
+        const filenameWithoutYear = stream.filename
+          ? stream.filename.replace(yearWithinTitleRegex, '')
+          : undefined;
+        const foldernameWithoutYear = stream.folderName
+          ? stream.folderName.replace(yearStr, '')
+          : undefined;
+
+        const strings = [filenameWithoutYear, foldernameWithoutYear].filter(
+          (s): s is string => s !== undefined
+        );
+
+        for (const string of strings) {
+          const newStreamYear = findYearInString(string);
+          if (newStreamYear) {
+            streamYear = newStreamYear;
+            if (stream.parsedFile) {
+              stream.parsedFile.year = newStreamYear;
+            }
+            break;
+          }
+        }
+      }
+
       if (!streamYear) {
         // if no year is present, filter out if its a movie, keep otherwise
         return type === 'movie' ? false : true;
