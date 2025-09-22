@@ -93,7 +93,7 @@ export class RPDB {
           idValue = `${type}-${entry.mappings.themoviedbId}`;
         } else if (entry.mappings?.imdbId) {
           idType = 'imdb';
-          idValue = `tt${entry.mappings.imdbId}`;
+          idValue = entry.mappings.imdbId.toString();
         } else {
           return null;
         }
