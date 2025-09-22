@@ -146,7 +146,7 @@ export class DistributedLock {
     const { timeout = 30000, ttl = 60000 } = options;
     const { retryInterval = db.isSQLite() ? 250 : 100 } = options;
     const owner = Math.random().toString(36).substring(2);
-    const expiresAt = new Date(Date.now() + ttl);
+    const expiresAt = Date.now() + ttl;
 
     const tryAcquireLock = async () => {
       return TransactionQueue.getInstance().enqueue(async () => {
@@ -154,7 +154,7 @@ export class DistributedLock {
         try {
           await tx.execute(
             `DELETE FROM distributed_locks WHERE expires_at < ?`,
-            [new Date()]
+            [Date.now()]
           );
           const existing = await tx.execute(
             `SELECT * FROM distributed_locks WHERE key = ?`,
