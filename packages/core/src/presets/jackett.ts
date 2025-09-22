@@ -74,7 +74,7 @@ export class JackettPreset extends TorznabPreset {
       TIMEOUT: Env.BUILTIN_DEFAULT_JACKETT_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: StremThruPreset.supportedServices,
-      DESCRIPTION: 'Directly search a Jackett instance.',
+      DESCRIPTION: 'An addon to get debrid results from a Jackett instance.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
       SUPPORTED_RESOURCES: supportedResources,

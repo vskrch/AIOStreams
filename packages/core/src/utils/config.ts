@@ -542,10 +542,12 @@ export function applyMigrations(config: any): UserData {
       config[type + 'Encodes'] = config[type + 'Encodes'].filter(
         (encode: string) => {
           if (encode === 'H-OU' || encode === 'H-SBS') {
+            // add H-OU and H-SBS to visual tags if in encodes.
             config[type + 'VisualTags'] = [
               ...(config[type + 'VisualTags'] ?? []),
               encode,
             ];
+            // filter out H-OU and H-SBS from encodes
             return false;
           }
           return true;

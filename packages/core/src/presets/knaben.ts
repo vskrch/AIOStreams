@@ -48,7 +48,8 @@ export class KnabenPreset extends TorznabPreset {
       TIMEOUT: Env.BUILTIN_DEFAULT_KNABEN_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: StremThruPreset.supportedServices,
-      DESCRIPTION: 'Directly search Knaben for results with your services.',
+      DESCRIPTION:
+        'An addon to get debrid results from Knaben, an indexer proxy for several indexers, including The Pirate Bay, 1337x, RARBG, YTS, Nyaa.si and more.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
       SUPPORTED_RESOURCES: supportedResources,

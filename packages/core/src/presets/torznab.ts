@@ -83,8 +83,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
       TIMEOUT: Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: StremThruPreset.supportedServices,
-      DESCRIPTION:
-        'Directly search a Torznab instance for results with your services.',
+      DESCRIPTION: 'An addon to get debrid results from a Torznab endpoint.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
       SUPPORTED_RESOURCES: supportedResources,

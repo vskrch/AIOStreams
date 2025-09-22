@@ -38,7 +38,8 @@ export class AnimeToshoPreset extends TorznabPreset {
       TIMEOUT: Env.BUILTIN_DEFAULT_ANIMETOSHO_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: StremThruPreset.supportedServices,
-      DESCRIPTION: 'Directly search AnimeTosho.',
+      DESCRIPTION:
+        'An addon to get debrid results from AnimeTosho which mirrors most results from Nyaa.si and TokyoTosho.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
       SUPPORTED_RESOURCES: supportedResources,

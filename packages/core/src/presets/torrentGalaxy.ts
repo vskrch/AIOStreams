@@ -50,8 +50,7 @@ export class TorrentGalaxyPreset extends TorznabPreset {
         Env.BUILTIN_DEFAULT_TORRENT_GALAXY_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: StremThruPreset.supportedServices,
-      DESCRIPTION:
-        'Directly search TorrentGalaxy for results with your services.',
+      DESCRIPTION: 'An addon to get debrid results from TorrentGalaxy.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
       SUPPORTED_RESOURCES: supportedResources,

@@ -48,7 +48,8 @@ export class BitmagnetPreset extends TorznabPreset {
       TIMEOUT: Env.BUILTIN_DEFAULT_BITMAGNET_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
       SUPPORTED_SERVICES: StremThruPreset.supportedServices,
-      DESCRIPTION: 'Directly search a Bitmagnet instance.',
+      DESCRIPTION:
+        'An addon to get debrid results from Bitmagnet, a self-hosted BitTorrent indexer and DHT crawler.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
       SUPPORTED_RESOURCES: supportedResources,
