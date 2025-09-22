@@ -1,6 +1,7 @@
 import { PARSE_REGEX } from './regex.js';
 import { ParsedFile } from '../db/schemas.js';
 import ptt from './ptt.js';
+import { normaliseTitle } from './utils.js';
 
 function matchPattern(
   filename: string,
@@ -24,7 +25,9 @@ class FileParser {
   static parse(filename: string): ParsedFile {
     const parsed = ptt.parse(filename);
     if (
-      ['vinland'].includes(parsed.title?.toLowerCase() || '') &&
+      ['vinland', 'furiosaamadmax', 'horizonanamerican'].includes(
+        normaliseTitle(parsed.title || '')
+      ) &&
       parsed.complete
     ) {
       parsed.title += ' Saga';
