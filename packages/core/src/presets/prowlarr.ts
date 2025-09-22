@@ -69,12 +69,11 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
         required: !Env.BUILTIN_PROWLARR_URL || !Env.BUILTIN_PROWLARR_API_KEY,
       },
       {
-        id: 'indexerLimitNote',
-        name: '',
+        id: 'tags',
+        name: 'Tags',
         description:
-          'To limit the indexers to use, you can add a tag with the name "aiostreams" to the indexers you want to use.',
-        type: 'alert',
-        intent: 'info',
+          'Optionally provide a comma separated list of tags here to limit the indexers to be used. Only indexers with these tags will be used.',
+        type: 'string',
       },
     ];
 
@@ -171,6 +170,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       url: prowlarrUrl,
       apiKey: prowlarrApiKey,
       indexers: Env.BUILTIN_PROWLARR_INDEXERS || [],
+      tags: typeof options.tags === 'string' ? options.tags.split(',') : [],
     };
 
     const configString = this.base64EncodeJSON(config);

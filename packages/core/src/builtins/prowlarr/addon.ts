@@ -23,6 +23,7 @@ export const ProwlarrAddonConfigSchema = BaseDebridConfigSchema.extend({
   url: z.string(),
   apiKey: z.string(),
   indexers: z.array(z.string()),
+  tags: z.array(z.string()),
 });
 
 export type ProwlarrAddonConfig = z.infer<typeof ProwlarrAddonConfigSchema>;
@@ -37,10 +38,11 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
   readonly api: ProwlarrApi;
 
   private readonly indexers: string[] = [];
-
+  private readonly tags: string[] = [];
   constructor(config: ProwlarrAddonConfig, clientIp?: string) {
     super(config, ProwlarrAddonConfigSchema, clientIp);
     this.indexers = config.indexers.map((x) => x.toLowerCase());
+    this.tags = config.tags.map((x) => x.toLowerCase());
     this.api = new ProwlarrApi({
       baseUrl: config.url,
       apiKey: config.apiKey,
@@ -53,7 +55,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     metadata: SearchMetadata
   ): Promise<UnprocessedTorrent[]> {
     let availableIndexers: ProwlarrApiIndexer[] = [];
-    let aiostreamsTagId: number | undefined;
+    let chosenTags: number[] = [];
     try {
       const { data } = await this.api.indexers();
       availableIndexers = data;
@@ -67,24 +69,27 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     }
     try {
       const { data } = await this.api.tags();
-      aiostreamsTagId = data.find(
-        (tag) => tag.label.toLowerCase() === 'aiostreams'
-      )?.id;
+      chosenTags = data
+        .filter((tag) => this.tags.includes(tag.label.toLowerCase()))
+        .map((tag) => tag.id);
     } catch (error) {
       logger.warn(`Failed to get Prowlarr tags: ${error}`);
     }
-    const chosenIndexerIds = availableIndexers
-      .filter(
-        (indexer) =>
-          indexer.enable &&
-          ((!this.indexers.length && !aiostreamsTagId) ||
-            (aiostreamsTagId && indexer.tags.includes(aiostreamsTagId)) ||
-            (this.indexers.length &&
-              (this.indexers.includes(indexer.name.toLowerCase()) ||
-                this.indexers.includes(indexer.definitionName.toLowerCase()) ||
-                this.indexers.includes(indexer.sortName.toLowerCase()))))
-      )
-      .map((indexer) => indexer.id);
+    const chosenIndexers = availableIndexers.filter(
+      (indexer) =>
+        indexer.enable &&
+        ((!this.indexers.length && !chosenTags.length) ||
+          (chosenTags.length &&
+            indexer.tags.some((tag) => chosenTags.includes(tag))) ||
+          (this.indexers.length &&
+            (this.indexers.includes(indexer.name.toLowerCase()) ||
+              this.indexers.includes(indexer.definitionName.toLowerCase()) ||
+              this.indexers.includes(indexer.sortName.toLowerCase()))))
+    );
+    // .map((indexer) => indexer.id);
+    this.logger.info(
+      `Chosen indexers: ${chosenIndexers.map((indexer) => indexer.name).join(', ')}`
+    );
 
     let queries: string[] = [];
 
@@ -113,7 +118,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
       const start = Date.now();
       const { data } = await this.api.search({
         query: q,
-        indexerIds: chosenIndexerIds,
+        indexerIds: chosenIndexers.map((indexer) => indexer.id),
         type: 'search',
       });
       this.logger.info(
