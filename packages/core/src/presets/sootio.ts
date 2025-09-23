@@ -35,6 +35,7 @@ export class SootioPreset extends Preset {
     const supportedServices: ServiceId[] = [
       constants.REALDEBRID_SERVICE,
       constants.OFFCLOUD_SERVICE,
+      constants.TORBOX_SERVICE,
     ];
 
     const supportedResources = [
@@ -165,6 +166,7 @@ export class SootioPreset extends Preset {
     const serviceNameMap: Partial<Record<ServiceId, string>> = {
       realdebrid: 'RealDebrid',
       offcloud: 'OffCloud',
+      torbox: 'TorBox',
     };
     const config = {
       DebridProvider: serviceNameMap[serviceId],
