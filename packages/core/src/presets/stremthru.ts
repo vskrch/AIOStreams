@@ -20,6 +20,10 @@ export class StremThruStreamParser extends StreamParser {
     return undefined;
   }
 
+  protected get filenameRegex(): RegExp | undefined {
+    return this.getRegexForTextAfterEmojis(['📄', '📁']);
+  }
+
   protected override getFolderSize(
     stream: Stream,
     currentParsedStream: ParsedStream
