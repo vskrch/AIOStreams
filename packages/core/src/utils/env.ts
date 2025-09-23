@@ -1089,7 +1089,7 @@ export const Env = cleanEnv(process.env, {
   }),
 
   DEBRIDIO_TV_URL: url({
-    default: 'https://tv-addon.debridio.com',
+    default: 'https://tv.lb.debridio.com',
     desc: 'Debridio TV URL',
   }),
   DEFAULT_DEBRIDIO_TV_TIMEOUT: num({
