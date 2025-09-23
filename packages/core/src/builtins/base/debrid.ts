@@ -246,7 +246,11 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       addSeasonEpisode?: boolean;
     }
   ): string[] {
-    const { addYear = true, addSeasonEpisode = true } = options ?? {};
+    const { addYear, addSeasonEpisode } = {
+      addYear: true,
+      addSeasonEpisode: true,
+      ...options,
+    };
     let queries: string[] = [];
     if (!metadata.primaryTitle) {
       return [];

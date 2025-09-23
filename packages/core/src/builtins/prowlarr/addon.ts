@@ -92,25 +92,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
       `Chosen indexers: ${chosenIndexers.map((indexer) => indexer.name).join(', ')}`
     );
 
-    let queries: string[] = [];
-
-    if (metadata.primaryTitle) {
-      queries.push(metadata.primaryTitle);
-      if (parsedId.season && parsedId.episode) {
-        queries = [
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}E${parsedId.episode.toString().padStart(2, '0')}`,
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`,
-        ];
-        if (metadata.absoluteEpisode)
-          queries.push(
-            `${metadata.primaryTitle} ${metadata.absoluteEpisode.toString().padStart(2, '0')}`
-          );
-      }
-      if (metadata.year && parsedId.mediaType === 'movie') {
-        queries = queries.map((q) => `${q} ${metadata.year}`);
-      }
-    }
-
+    const queries = this.buildQueries(parsedId, metadata);
     if (queries.length === 0) {
       return [];
     }
