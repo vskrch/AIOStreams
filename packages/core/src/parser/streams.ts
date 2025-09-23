@@ -219,7 +219,7 @@ class StreamParser {
 
     for (const line of potentialFilenames) {
       const parsed = FileParser.parse(line);
-      if (parsed.year || (parsed.season && parsed.episode) || parsed.episode) {
+      if (parsed.year || parsed.season || parsed.episode) {
         filename = line;
         break;
       }
