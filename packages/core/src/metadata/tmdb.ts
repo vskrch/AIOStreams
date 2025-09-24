@@ -13,7 +13,9 @@ export type TMDBIdType = 'imdb_id' | 'tmdb_id' | 'tvdb_id';
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 const FIND_BY_ID_PATH = '/find';
 const MOVIE_DETAILS_PATH = '/movie';
+const MOVIE_TRANSLATIONS_PATH = (id: string) => `/movie/${id}/translations`;
 const TV_DETAILS_PATH = '/tv';
+const TV_TRANSLATIONS_PATH = (id: string) => `/tv/${id}/translations`;
 const ALTERNATIVE_TITLES_PATH = '/alternative_titles';
 
 // Cache TTLs in seconds
@@ -55,6 +57,35 @@ const TVAlternativeTitlesSchema = z.object({
   results: z.array(
     z.object({
       title: z.string(),
+    })
+  ),
+});
+
+const BaseTranslationsSchema = z.object({
+  iso_3166_1: z.string(),
+  iso_639_1: z.string(),
+  name: z.string(),
+  english_name: z.string(),
+});
+
+const TVTranslationsSchema = z.object({
+  id: z.number(),
+  translations: z.array(
+    BaseTranslationsSchema.extend({
+      data: z.object({
+        title: z.string(),
+      }),
+    })
+  ),
+});
+
+const MovieTranslationsSchema = z.object({
+  id: z.number(),
+  translations: z.array(
+    BaseTranslationsSchema.extend({
+      data: z.object({
+        name: z.string(),
+      }),
     })
   ),
 });
@@ -227,7 +258,7 @@ export class TMDBMetadata {
         ? (detailsData as z.infer<typeof TVDetailsSchema>).seasons
         : undefined;
 
-    // Fetch alternative titles
+    // Fetch alternative titles and translations in parallel
     const altTitlesUrl = new URL(
       API_BASE_URL +
         (parsedId.mediaType === 'movie'
@@ -236,34 +267,85 @@ export class TMDBMetadata {
         `/${tmdbId}` +
         ALTERNATIVE_TITLES_PATH
     );
+    const translatedTitlesUrl = new URL(
+      API_BASE_URL +
+        (parsedId.mediaType === 'movie'
+          ? MOVIE_TRANSLATIONS_PATH(tmdbId)
+          : TV_TRANSLATIONS_PATH(tmdbId))
+    );
     this.addSearchParams(altTitlesUrl);
-    const altTitlesResponse = await makeRequest(altTitlesUrl.toString(), {
-      timeout: 10000,
-      headers: this.getHeaders(),
-    });
+    this.addSearchParams(translatedTitlesUrl);
 
-    if (!altTitlesResponse.ok) {
+    const [altTitlesResult, translationsResult] = await Promise.allSettled([
+      makeRequest(altTitlesUrl.toString(), {
+        timeout: 10000,
+        headers: this.getHeaders(),
+      }).then(async (response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch alternative titles: ${response.statusText}`
+          );
+        }
+        const json = await response.json();
+        const data =
+          parsedId.mediaType === 'movie'
+            ? MovieAlternativeTitlesSchema.parse(json)
+            : TVAlternativeTitlesSchema.parse(json);
+        return parsedId.mediaType === 'movie'
+          ? (data as z.infer<typeof MovieAlternativeTitlesSchema>).titles.map(
+              (title) => title.title
+            )
+          : (data as z.infer<typeof TVAlternativeTitlesSchema>).results.map(
+              (title) => title.title
+            );
+      }),
+      makeRequest(translatedTitlesUrl.toString(), {
+        timeout: 10000,
+        headers: this.getHeaders(),
+      }).then(async (response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch translations: ${response.statusText}`
+          );
+        }
+        const json = await response.json();
+        const data =
+          parsedId.mediaType === 'movie'
+            ? MovieTranslationsSchema.parse(json)
+            : TVTranslationsSchema.parse(json);
+        return data.translations
+          .map((translation) => {
+            if (parsedId.mediaType === 'movie') {
+              return (translation.data as { name: string }).name;
+            } else {
+              return (translation.data as { title: string }).title;
+            }
+          })
+          .filter(Boolean);
+      }),
+    ]);
+
+    // Collect all successful titles
+    const allTitles = [primaryTitle];
+
+    if (altTitlesResult.status === 'fulfilled') {
+      allTitles.push(...altTitlesResult.value);
+    }
+
+    if (translationsResult.status === 'fulfilled') {
+      allTitles.push(...translationsResult.value);
+    }
+
+    // If both requests failed, we should throw an error
+    if (
+      altTitlesResult.status === 'rejected' &&
+      translationsResult.status === 'rejected'
+    ) {
       throw new Error(
-        `Failed to fetch alternative titles: ${altTitlesResponse.statusText}`
+        `Failed to fetch both alternative titles and translations: ${altTitlesResult.reason}, ${translationsResult.reason}`
       );
     }
 
-    const altTitlesJson = await altTitlesResponse.json();
-    const altTitlesData =
-      parsedId.mediaType === 'movie'
-        ? MovieAlternativeTitlesSchema.parse(altTitlesJson)
-        : TVAlternativeTitlesSchema.parse(altTitlesJson);
-    const alternativeTitles =
-      parsedId.mediaType === 'movie'
-        ? (
-            altTitlesData as z.infer<typeof MovieAlternativeTitlesSchema>
-          ).titles.map((title) => title.title)
-        : (
-            altTitlesData as z.infer<typeof TVAlternativeTitlesSchema>
-          ).results.map((title) => title.title);
-
-    // Combine primary title with alternative titles, ensuring no duplicates
-    const allTitles = [primaryTitle, ...alternativeTitles];
     const uniqueTitles = [...new Set(allTitles)];
     const metadata: Metadata = {
       title: primaryTitle,
