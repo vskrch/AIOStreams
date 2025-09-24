@@ -243,6 +243,18 @@ class StreamFilterer {
           parsedId.season =
             animeEntry.imdb?.fromImdbSeason?.toString() ??
             animeEntry.trakt?.season?.toString();
+          if (
+            animeEntry.imdb?.fromImdbEpisode &&
+            animeEntry.imdb?.fromImdbEpisode !== 1 &&
+            parsedId.episode &&
+            ['malId', 'kitsuId'].includes(parsedId.type)
+          ) {
+            parsedId.episode = (
+              animeEntry.imdb.fromImdbEpisode +
+              Number(parsedId.episode) -
+              1
+            ).toString();
+          }
         }
         requestedMetadata = await new MetadataService({
           tmdbAccessToken: this.userData.tmdbAccessToken,
