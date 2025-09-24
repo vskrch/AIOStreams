@@ -68,9 +68,7 @@ const ProwlarrApiSearchItemSchema = z.object({
   indexer: z.string(),
   title: z.string(),
   downloadUrl: z.url().optional(),
-  indexerFlags: z.array(
-    z.enum(['freeleech', 'public', 'private', 'semi-private'])
-  ),
+  indexerFlags: z.array(z.string()),
   magnetUrl: z.url().optional(),
   infoHash: z
     .string()
