@@ -24,6 +24,7 @@ export class NZBHydraPreset extends NewznabPreset {
         constraints: {
           min: Env.MIN_TIMEOUT,
           max: Env.MAX_TIMEOUT,
+          forceInUi: false,
         },
       },
 

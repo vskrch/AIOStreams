@@ -47,6 +47,7 @@ export class NewznabPreset extends BuiltinAddonPreset {
         constraints: {
           min: Env.MIN_TIMEOUT,
           max: Env.MAX_TIMEOUT,
+          forceInUi: false,
         },
       },
       {

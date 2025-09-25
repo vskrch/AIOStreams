@@ -48,6 +48,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
         constraints: {
           min: Env.MIN_TIMEOUT,
           max: Env.MAX_TIMEOUT,
+          forceInUi: false,
         },
       },
       {
