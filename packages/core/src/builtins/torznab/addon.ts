@@ -73,7 +73,9 @@ export class TorznabAddon extends BaseNabAddon<NabAddonConfig, TorznabApi> {
             : undefined,
         indexer: result.jackettindexer?.name ?? undefined,
         title: result.title,
-        size: result.size ?? 0,
+        size:
+          result.size ??
+          (result.torznab?.size ? Number(result.torznab.size) : 0),
         type: 'torrent',
       });
     }
