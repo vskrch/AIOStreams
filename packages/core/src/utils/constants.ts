@@ -1,4 +1,4 @@
-import { Option } from '../db/schemas.js';
+import { Option, Resource } from '../db/schemas.js';
 
 export enum ErrorCode {
   // User API
@@ -883,6 +883,14 @@ const RESOURCES = [
   META_RESOURCE,
   ADDON_CATALOG_RESOURCE,
 ] as const;
+
+export const RESOURCE_LABELS: Record<Resource, string> = {
+  [STREAM_RESOURCE]: 'Stream',
+  [SUBTITLES_RESOURCE]: 'Subtitles',
+  [CATALOG_RESOURCE]: 'Catalog',
+  [META_RESOURCE]: 'Metadata',
+  [ADDON_CATALOG_RESOURCE]: 'Addon Catalog',
+};
 
 const LANGUAGES = [
   'English',

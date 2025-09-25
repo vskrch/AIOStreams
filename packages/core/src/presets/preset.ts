@@ -93,7 +93,7 @@ export const baseOptions = (
       showInNoobMode: false,
       default: resources,
       options: resources.map((resource) => ({
-        label: resource,
+        label: constants.RESOURCE_LABELS[resource],
         value: resource,
       })),
     },

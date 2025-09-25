@@ -117,7 +117,7 @@ export class AIOStreamsPreset extends Preset {
         required: false,
         default: undefined,
         options: RESOURCES.map((resource) => ({
-          label: resource,
+          label: constants.RESOURCE_LABELS[resource],
           value: resource,
         })),
       },
