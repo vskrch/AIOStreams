@@ -137,11 +137,22 @@ builtinsRouter.use('/torrent-galaxy', torrentGalaxy);
 app.use('/builtins', builtinsRouter);
 
 app.get(
-  ['/_next/*any', '/assets/*any', '/favicon.ico', '/logo.png'],
+  [
+    '/_next/*any',
+    '/assets/*any',
+    '/favicon.ico',
+    '/logo.png',
+    '/manifest.json',
+    '/android-chrome-192x192.png',
+    '/android-chrome-512x512.png',
+    '/apple-touch-icon.png',
+    '/favicon-16x16.png',
+    '/favicon-32x32.png',
+  ],
   staticRateLimiter,
   (req, res, next) => {
     const filePath = path.resolve(frontendRoot, req.path.replace(/^\//, ''));
-    if (filePath.startsWith(frontendRoot)) {
+    if (filePath.startsWith(frontendRoot) && fs.existsSync(filePath)) {
       res.sendFile(filePath);
       return;
     }
