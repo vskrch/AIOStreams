@@ -343,9 +343,24 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       this.logger.debug(
         `Calculating absolute episode with current season and episode: ${parsedId.season}, ${parsedId.episode} and seasons: ${JSON.stringify(seasons)}`
       );
+      // Calculate base absolute episode
       absoluteEpisode = Number(
         calculateAbsoluteEpisode(parsedId.season, parsedId.episode, seasons)
       );
+
+      // Adjust for non-IMDB episodes if they exist
+      if (
+        animeEntry?.imdb?.nonImdbEpisodes &&
+        absoluteEpisode &&
+        parsedId.type === 'imdbId'
+      ) {
+        const nonImdbEpisodesBefore = animeEntry.imdb.nonImdbEpisodes.filter(
+          (ep) => ep < absoluteEpisode!
+        ).length;
+        if (nonImdbEpisodesBefore > 0) {
+          absoluteEpisode += nonImdbEpisodesBefore;
+        }
+      }
     }
 
     // // Map IDs

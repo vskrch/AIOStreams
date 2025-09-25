@@ -213,6 +213,7 @@ interface KitsuEntry {
   title?: string;
   fromSeason?: number;
   fromEpisode?: number;
+  nonImdbEpisodes?: number[];
 }
 
 interface ExtendedAnitraktMovieEntry {
@@ -272,6 +273,7 @@ interface AnimeEntry {
   imdb?: {
     fromImdbSeason?: number;
     fromImdbEpisode?: number;
+    nonImdbEpisodes?: number[];
     title?: string;
   } | null;
   fanart?: {
@@ -407,6 +409,7 @@ function validateKitsuEntry(data: any): KitsuEntry | null {
     title: data.title,
     fromSeason: data.fromSeason,
     fromEpisode: data.fromEpisode,
+    nonImdbEpisodes: data.nonImdbEpisodes,
   };
 
   // All fields are optional, just validate types
@@ -646,6 +649,7 @@ export class AnimeDatabase {
         ? {
             fromImdbSeason: kitsuEntry.fromSeason,
             fromImdbEpisode: kitsuEntry.fromEpisode,
+            nonImdbEpisodes: kitsuEntry.nonImdbEpisodes,
             title: kitsuEntry.title,
           }
         : null,

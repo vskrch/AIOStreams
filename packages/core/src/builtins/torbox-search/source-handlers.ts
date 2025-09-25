@@ -196,6 +196,19 @@ abstract class SourceHandler {
             parsedId.episode.toString(),
             seasons
           );
+          if (
+            animeEntry?.imdb?.nonImdbEpisodes &&
+            absoluteEpisode &&
+            parsedId.type === 'imdbId'
+          ) {
+            const nonImdbEpisodesBefore =
+              animeEntry.imdb.nonImdbEpisodes.filter(
+                (ep) => ep < absoluteEpisode!
+              ).length;
+            if (nonImdbEpisodesBefore > 0) {
+              absoluteEpisode += nonImdbEpisodesBefore;
+            }
+          }
         }
 
         logger.debug(

@@ -276,9 +276,19 @@ class StreamFilterer {
           logger.debug(
             `Calculating absolute episode with current season and episode: ${parsedId.season}, ${parsedId.episode} and seasons: ${JSON.stringify(seasons)}`
           );
-          requestedMetadata.absoluteEpisode = Number(
+          let absoluteEpisode = Number(
             calculateAbsoluteEpisode(parsedId.season, parsedId.episode, seasons)
           );
+          if (animeEntry?.imdb?.nonImdbEpisodes && absoluteEpisode) {
+            const nonImdbEpisodesBefore =
+              animeEntry.imdb.nonImdbEpisodes.filter(
+                (ep) => ep < absoluteEpisode!
+              ).length;
+            if (nonImdbEpisodesBefore > 0) {
+              absoluteEpisode += nonImdbEpisodesBefore;
+            }
+          }
+          requestedMetadata.absoluteEpisode = absoluteEpisode;
         }
 
         yearWithinTitle = requestedMetadata.title.match(
@@ -1264,10 +1274,8 @@ class StreamFilterer {
 
       const global = this.userData.size?.global;
       const resolution = stream.parsedFile?.resolution
-        ? this.userData.size?.resolution?.[
-            stream.parsedFile
-              .resolution as keyof typeof this.userData.size.resolution
-          ]
+        ? // @ts-ignore
+          this.userData.size?.resolution?.[stream.parsedFile.resolution]
         : undefined;
 
       let minMax: [number | undefined, number | undefined] | undefined;
