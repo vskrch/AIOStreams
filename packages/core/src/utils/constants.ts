@@ -125,6 +125,7 @@ export const LIGHT_GDRIVE_FORMATTER = 'lightgdrive';
 export const MINIMALISTIC_GDRIVE_FORMATTER = 'minimalisticgdrive';
 export const TORRENTIO_FORMATTER = 'torrentio';
 export const TORBOX_FORMATTER = 'torbox';
+export const PRISM_FORMATTER = 'prism';
 export const CUSTOM_FORMATTER = 'custom';
 
 export const FORMATTERS = [
@@ -133,6 +134,7 @@ export const FORMATTERS = [
   MINIMALISTIC_GDRIVE_FORMATTER,
   TORRENTIO_FORMATTER,
   TORBOX_FORMATTER,
+  PRISM_FORMATTER,
   CUSTOM_FORMATTER,
 ] as const;
 
@@ -153,6 +155,11 @@ export const FORMATTER_DETAILS: Record<FormatterType, FormatterDetail> = {
     name: 'Light Google Drive',
     description:
       'A lighter version of the GDrive formatter, focused on asthetics',
+  },
+  [PRISM_FORMATTER]: {
+    id: PRISM_FORMATTER,
+    name: 'Prism',
+    description: 'An aesthetic formatter with every detail within 5 lines.',
   },
   [MINIMALISTIC_GDRIVE_FORMATTER]: {
     id: MINIMALISTIC_GDRIVE_FORMATTER,
