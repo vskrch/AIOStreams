@@ -209,6 +209,7 @@ function Content() {
           ? undefined
           : userData.tmdbAccessToken,
         tmdbApiKey: filterCredentialsInExport ? undefined : userData.tmdbApiKey,
+        tvdbApiKey: filterCredentialsInExport ? undefined : userData.tvdbApiKey,
         rpdbApiKey: filterCredentialsInExport ? undefined : userData.rpdbApiKey,
         services: userData?.services?.map((service) => ({
           ...service,
