@@ -49,7 +49,9 @@ const manifest = async (config?: UserData): Promise<Manifest> => {
     }, [] as string[]),
     logo:
       config?.addonLogo ||
-      'https://raw.githubusercontent.com/Viren070/AIOStreams/refs/heads/main/packages/frontend/public/logo.png',
+      `https://raw.githubusercontent.com/Viren070/AIOStreams/refs/heads/main/packages/frontend/public/logo${
+        Env.ALTERNATE_DESIGN ? '_alt' : ''
+      }.png`,
     behaviorHints: {
       configurable: true,
       configurationRequired: config ? false : true,

@@ -325,6 +325,10 @@ export const Env = cleanEnv(process.env, {
     default: undefined,
     desc: 'Custom HTML for the addon',
   }),
+  ALTERNATE_DESIGN: bool({
+    default: false,
+    desc: 'Alternate design for the frontend.',
+  }),
   SECRET_KEY: secretKey({
     desc: 'Secret key for the addon, used for encryption and must be 64 characters of hex',
     example: 'Generate using: openssl rand -hex 32',

@@ -136,16 +136,28 @@ builtinsRouter.use('/knaben', knaben);
 builtinsRouter.use('/torrent-galaxy', torrentGalaxy);
 app.use('/builtins', builtinsRouter);
 
+app.get('/logo.png', staticRateLimiter, (req, res, next) => {
+  const filePath = path.resolve(
+    frontendRoot,
+    Env.ALTERNATE_DESIGN ? 'logo_alt.png' : 'logo.png'
+  );
+  if (filePath.startsWith(frontendRoot) && fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+    return;
+  }
+  next();
+});
 app.get(
   [
     '/_next/*any',
     '/assets/*any',
     '/favicon.ico',
-    '/logo.png',
     '/manifest.json',
     '/web-app-manifest-192x192.png',
     '/web-app-manifest-512x512.png',
     '/apple-icon.png',
+    '/mini-nightly-white.png',
+    '/mini-stable-white.png',
     '/icon0.svg',
     '/icon1.png',
   ],
