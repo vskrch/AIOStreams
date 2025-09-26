@@ -180,7 +180,10 @@ export class AIOStreams {
       statistics: addonStatistics,
     } = await this.fetcher.fetch(supportedAddons, type, id);
 
-    if (this.userData.statistics?.statsToShow?.includes('addon')) {
+    if (
+      this.userData.statistics?.enabled &&
+      this.userData.statistics?.statsToShow?.includes('addon')
+    ) {
       statistics.push(...addonStatistics);
     }
 
@@ -247,7 +250,10 @@ export class AIOStreams {
       return groups;
     }
 
-    if (this.userData.statistics?.statsToShow?.includes('filter')) {
+    if (
+      this.userData.statistics?.enabled &&
+      this.userData.statistics?.statsToShow?.includes('filter')
+    ) {
       if (filterDetails.length > 0) {
         const removalGroups = splitByPin(filterDetails);
         for (const group of removalGroups) {
