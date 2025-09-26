@@ -55,6 +55,14 @@ export class NZBHydraPreset extends NewznabPreset {
         type: 'password',
         required: !Env.BUILTIN_NZBHYDRA_URL || !Env.BUILTIN_NZBHYDRA_API_KEY,
       },
+      {
+        id: 'forceQuerySearch',
+        name: 'Force Query Search',
+        description: 'Force the addon to use the query search parameter',
+        type: 'boolean',
+        required: false,
+        default: true,
+      },
     ];
 
     return {
@@ -98,7 +106,7 @@ export class NZBHydraPreset extends NewznabPreset {
       url: nzbhydraUrl,
       apiPath: options.apiPath,
       apiKey: nzbhydraApiKey,
-      forceQuerySearch: true,
+      forceQuerySearch: options.forceQuerySearch ?? true,
     };
 
     const configString = this.base64EncodeJSON(config);
