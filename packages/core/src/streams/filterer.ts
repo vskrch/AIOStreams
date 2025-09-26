@@ -525,7 +525,17 @@ class StreamFilterer {
           (stream.parsedFile?.seasons &&
             !stream.parsedFile.seasons.includes(requestedSeason)))
       ) {
-        return false;
+        // If absolute episode matches, and parsed season is 1, allow even if season is incorrect
+        if (
+          stream.parsedFile?.season === 1 &&
+          stream.parsedFile?.episode &&
+          requestedMetadata?.absoluteEpisode &&
+          stream.parsedFile.episode === requestedMetadata.absoluteEpisode
+        ) {
+          // allow
+        } else {
+          return false;
+        }
       }
 
       // is the present episode incorrect (does not match either the requested episode or absolute episode if present)
