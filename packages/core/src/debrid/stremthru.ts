@@ -68,7 +68,7 @@ export class StremThruInterface implements DebridService {
     const cachedResults: DebridDownload[] = [];
     const magnetsToCheck: string[] = [];
     for (const magnet of magnets) {
-      const cacheKey = getSimpleTextHash(magnet);
+      const cacheKey = `${this.serviceName}:${getSimpleTextHash(magnet)}`;
       const cached = await StremThruInterface.checkCache.get(cacheKey);
       if (cached) {
         cachedResults.push(cached);
@@ -115,7 +115,7 @@ export class StremThruInterface implements DebridService {
           };
           newResults.push(download);
           StremThruInterface.checkCache.set(
-            getSimpleTextHash(item.hash),
+            `${this.serviceName}:${getSimpleTextHash(item.hash)}`,
             download,
             Env.BUILTIN_DEBRID_INSTANT_AVAILABILITY_CACHE_TTL
           );
