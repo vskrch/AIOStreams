@@ -1120,7 +1120,7 @@ export const Env = cleanEnv(process.env, {
 
   // StremThru Store settings
   STREMTHRU_STORE_URL: urlOrUrlList({
-    default: ['https://stremthru.13377001.xyz/'],
+    default: ['https://stremthru.13377001.xyz/stremio/store'],
     desc: 'StremThru Store URL',
   }),
   DEFAULT_STREMTHRU_STORE_TIMEOUT: num({
