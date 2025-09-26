@@ -82,7 +82,10 @@ const createTorznabItemSchema = () =>
   z
     .object({
       title: z.array(z.string()).transform((arr) => arr[0]),
-      link: z.array(z.string()).transform((arr) => arr[0]),
+      link: z
+        .array(z.string())
+        .optional()
+        .transform((arr) => arr?.[0]),
       guid: z
         .array(z.union([z.string(), z.object({ _: z.string() })]))
         .transform((arr) => (typeof arr[0] === 'string' ? arr[0] : arr[0]._)),
@@ -135,7 +138,10 @@ const createNewznabItemSchema = () =>
   z
     .object({
       title: z.array(z.string()).transform((arr) => arr[0]),
-      link: z.array(z.string()).transform((arr) => arr[0]),
+      link: z
+        .array(z.string())
+        .optional()
+        .transform((arr) => arr?.[0]),
       guid: z
         .array(z.union([z.string(), z.object({ _: z.string() })]))
         .transform((arr) => (typeof arr[0] === 'string' ? arr[0] : arr[0]._)),
