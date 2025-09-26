@@ -271,7 +271,7 @@ export class MetadataService {
         };
       },
       {
-        timeout: 2500, // metadata does not take long to fetch so keep it low
+        timeout: 5000,
         ttl: 5000,
         retryInterval: 100,
       }

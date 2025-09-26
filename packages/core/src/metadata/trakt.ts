@@ -49,7 +49,7 @@ export async function getTraktAliases(
     const data = await makeRequest(
       `${TRAKT_API_BASE_URL}/${parsedId.mediaType === 'movie' ? 'movies' : 'shows'}/${imdbId}/aliases`,
       {
-        timeout: 1000,
+        timeout: 2000,
         headers: {
           'Content-Type': 'application/json',
           'trakt-api-version': '1',
