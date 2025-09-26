@@ -216,6 +216,8 @@ function shouldProxy(url: URL): {
             : -1;
       }
     }
+  } else {
+    proxyIndex = 0;
   }
 
   if (useProxy && Env.ADDON_PROXY[proxyIndex] === undefined) {
