@@ -119,9 +119,12 @@ const TVDBSeriesSchema = z.object({
   year: z.string(),
 });
 
+const TVDBEpisodeSchema = z.looseObject({});
+
 const TVDBRemoteIdDataSchema = z.union([
   z.object({ movie: TVDBMovieSchema }),
   z.object({ series: TVDBSeriesSchema }),
+  z.object({ episode: TVDBEpisodeSchema }),
 ]);
 
 export const RemoteIdSearchResponseSchema = z.discriminatedUnion('status', [
@@ -173,7 +176,13 @@ export class TVDBMetadata {
         throw new Error(`No results found for ${id.value}`);
       }
 
-      const item = response.data[0];
+      const items = response.data;
+      const item = items.find((item) =>
+        id.mediaType === 'movie' ? 'movie' in item : 'series' in item
+      );
+      if (!item) {
+        throw new Error(`Could not find metadata for ${id.value}`);
+      }
       if ('movie' in item) {
         const movie = item.movie;
         return {
@@ -183,7 +192,7 @@ export class TVDBMetadata {
           tvdbId: movie.id,
           tmdbId: null,
         };
-      } else {
+      } else if ('series' in item) {
         const series = item.series;
         return {
           title: series.name,
@@ -195,6 +204,8 @@ export class TVDBMetadata {
           tvdbId: series.id,
           tmdbId: null,
         };
+      } else {
+        throw new Error(`Could not find metadata for ${id.value}`);
       }
     } else {
       // Direct TVDB ID lookup
