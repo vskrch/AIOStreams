@@ -94,7 +94,20 @@ export class StremThruInterface implements DebridService {
               magnet: batch,
               sid,
             });
-            return result.data?.items ?? [];
+
+            if (!result.data) {
+              logger.warn(
+                `StremThru checkMagnets returned no data: ${JSON.stringify(result)}`
+              );
+              throw new DebridError('No data returned from StremThru', {
+                statusCode: result.meta.statusCode,
+                statusText: result.meta.statusText,
+                code: 'UNKNOWN',
+                headers: result.meta.headers,
+                body: result.data,
+              });
+            }
+            return result.data.items;
           })
         );
 
