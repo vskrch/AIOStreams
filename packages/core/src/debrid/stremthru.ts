@@ -94,7 +94,7 @@ export class StremThruInterface implements DebridService {
               magnet: batch,
               sid,
             });
-            return result.data.items;
+            return result.data?.items ?? [];
           })
         );
 
