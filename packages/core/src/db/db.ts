@@ -58,7 +58,7 @@ export class DB {
 
   getRowsAffected(result: any): number {
     if (this.isSQLite()) {
-      return result.changes || 0;
+      return result.changes || result.rowCount || 0;
     }
     return result.rowCount || 0;
   }
