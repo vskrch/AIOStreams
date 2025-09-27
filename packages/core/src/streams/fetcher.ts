@@ -167,7 +167,7 @@ class StreamFetcher {
     };
 
     // Helper function to fetch from a group of addons and track time
-    const fetchFromGroup = async (addons: Addon[]) => {
+    const fetchAndProcessAddons = async (addons: Addon[]) => {
       const groupStart = Date.now();
       const results = await Promise.all(addons.map(fetchFromAddon));
 
@@ -282,7 +282,7 @@ class StreamFetcher {
           logger.info(
             `Queueing parallel fetch for group with ${groupAddons.length} addons.`
           );
-          return fetchFromGroup(groupAddons);
+          return fetchAndProcessAddons(groupAddons);
         });
 
         for (let i = 0; i < this.userData.groups.groupings.length; i++) {
@@ -365,7 +365,7 @@ class StreamFetcher {
             `Fetching from sequential group ${i + 1} with ${groupAddons.length} addons.`
           );
 
-          const groupResult = await fetchFromGroup(groupAddons);
+          const groupResult = await fetchAndProcessAddons(groupAddons);
 
           allStreams.push(...groupResult.streams);
           allErrors.push(...groupResult.errors);
@@ -377,7 +377,7 @@ class StreamFetcher {
       }
     } else {
       // If no groups configured, fetch from all addons in parallel
-      const result = await fetchFromGroup(addons);
+      const result = await fetchAndProcessAddons(addons);
       allStreams.push(...result.streams);
       allErrors.push(...result.errors);
       allStatisticStreams.push(...result.statistics);
