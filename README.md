@@ -1,6 +1,10 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Viren070/AIOStreams/main/packages/frontend/public/assets/logo.png" alt="AIOStreams Logo" width="200"/>
+    <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://cdn.jsdelivr.net/gh/selfhst/icons/png/aiostreams-light.png">
+          <img alt="AIOStreams Logo" src="https://cdn.jsdelivr.net/gh/selfhst/icons/png/aiostreams.png" width=256 height=256>
+    </picture>
 </p>
+
 
 <h1 align="center">AIOStreams</h1>
 
