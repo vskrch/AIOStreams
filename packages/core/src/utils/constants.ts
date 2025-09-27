@@ -883,6 +883,14 @@ export const TYPES = [
   ANIME_TYPE,
 ] as const;
 
+export const TYPE_LABELS: Record<(typeof TYPES)[number], string> = {
+  [MOVIE_TYPE]: 'Movie',
+  [SERIES_TYPE]: 'Series',
+  [CHANNEL_TYPE]: 'Channel',
+  [TV_TYPE]: 'TV',
+  [ANIME_TYPE]: 'Anime',
+};
+
 const RESOURCES = [
   STREAM_RESOURCE,
   SUBTITLES_RESOURCE,

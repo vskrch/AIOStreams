@@ -60,6 +60,25 @@ class StreamFetcher {
       queryType = 'anime';
     }
 
+    addons = addons.filter((addon) => {
+      if (
+        addon.mediaTypes &&
+        addon.mediaTypes.length > 0 &&
+        ['movie', 'series', 'anime'].includes(queryType)
+      ) {
+        const result = addon.mediaTypes.includes(
+          queryType as 'movie' | 'series' | 'anime'
+        );
+        if (!result) {
+          logger.debug(
+            `Skipping ${getAddonName(addon)} because its specified media types do not include ${queryType}`
+          );
+        }
+        return result;
+      }
+      return true;
+    });
+
     // Helper function to fetch streams from an addon and log summary
     const fetchFromAddon = async (addon: Addon) => {
       let summaryMsg = '';

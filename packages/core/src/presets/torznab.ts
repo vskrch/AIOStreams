@@ -124,6 +124,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
       enabled: true,
       library: options.libraryAddon ?? false,
       resources: options.resources || undefined,
+      mediaTypes: options.mediaTypes || [],
       timeout: options.timeout || this.METADATA.TIMEOUT,
       preset: {
         id: '',

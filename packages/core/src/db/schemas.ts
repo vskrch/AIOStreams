@@ -115,6 +115,7 @@ const AddonSchema = z.object({
   manifestUrl: z.string().url(),
   enabled: z.boolean(),
   resources: ResourceList.optional(),
+  mediaTypes: z.array(z.enum(constants.TYPES)).optional(),
   name: z.string(),
   identifier: z.string().optional(), // true identifier for generating IDs
   displayIdentifier: z.string().optional(), // identifier for display purposes

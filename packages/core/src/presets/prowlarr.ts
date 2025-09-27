@@ -76,6 +76,30 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
           'Optionally provide a comma separated list of tags here to limit the indexers to be used. Only indexers with these tags will be used.',
         type: 'string',
       },
+      {
+        id: 'mediaTypes',
+        name: 'Media Types',
+        description:
+          'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
+        type: 'multi-select',
+        required: false,
+        showInNoobMode: false,
+        default: [],
+        options: [
+          {
+            label: 'Movie',
+            value: 'movie',
+          },
+          {
+            label: 'Series',
+            value: 'series',
+          },
+          {
+            label: 'Anime',
+            value: 'anime',
+          },
+        ],
+      },
     ];
 
     return {
@@ -129,6 +153,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       enabled: true,
       library: options.libraryAddon ?? false,
       resources: options.resources || undefined,
+      mediaTypes: options.mediaTypes || [],
       timeout: options.timeout || this.METADATA.TIMEOUT,
       preset: {
         id: '',
