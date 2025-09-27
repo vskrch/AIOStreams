@@ -1810,7 +1810,11 @@ export const Env = cleanEnv(process.env, {
     default: false,
     desc: 'Disable rate limiting',
   }),
-
+  RATE_LIMIT_STORE: str({
+    choices: ['memory', 'redis'],
+    default: 'memory',
+    desc: 'The store to use for rate limiting',
+  }),
   STATIC_RATE_LIMIT_WINDOW: num({
     default: 5, // 1 minute
     desc: 'Time window for static file serving rate limiting in seconds',
