@@ -607,6 +607,26 @@ export abstract class StreamExpressionEngine {
   }
 }
 
+export class ExitConditionEvaluator extends StreamExpressionEngine {
+  constructor(
+    private totalStreams: ParsedStream[],
+    private totalTimeTaken: number
+  ) {
+    super();
+    this.parser.consts.totalStreams = this.totalStreams;
+    this.parser.consts.totalTimeTaken = this.totalTimeTaken;
+  }
+
+  async evaluate(condition: string) {
+    return await this.evaluateCondition(condition);
+  }
+
+  static async testEvaluate(condition: string) {
+    const parser = new ExitConditionEvaluator([], 0);
+    return await parser.evaluate(condition);
+  }
+}
+
 export class GroupConditionEvaluator extends StreamExpressionEngine {
   private previousStreams: ParsedStream[];
   private totalStreams: ParsedStream[];

@@ -370,6 +370,12 @@ export const UserDataSchema = z.object({
   //     })
   //   )
   //   .optional(),
+  dynamicAddonFetching: z
+    .object({
+      enabled: z.boolean().optional(),
+      condition: z.string().min(1).max(200).optional(),
+    })
+    .optional(),
   groups: z
     .object({
       enabled: z.boolean().optional(),

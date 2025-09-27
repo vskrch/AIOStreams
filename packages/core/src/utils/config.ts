@@ -24,6 +24,7 @@ import {
 } from './index.js';
 import { ZodError } from 'zod';
 import {
+  ExitConditionEvaluator,
   GroupConditionEvaluator,
   StreamSelector,
 } from '../parser/streamExpression.js';
@@ -361,6 +362,19 @@ export async function validateConfig(
   if (config.groups?.groupings) {
     for (const group of config.groups.groupings) {
       await validateGroup(group);
+    }
+  }
+
+  if (
+    config.dynamicAddonFetching?.condition &&
+    config.dynamicAddonFetching.enabled
+  ) {
+    try {
+      await ExitConditionEvaluator.testEvaluate(
+        config.dynamicAddonFetching.condition
+      );
+    } catch (error) {
+      throw new Error(`Invalid dynamic addon fetching condition: ${error}`);
     }
   }
 

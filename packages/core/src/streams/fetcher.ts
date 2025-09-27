@@ -7,7 +7,10 @@ import {
   getTimeTakenSincePoint,
 } from '../utils/index.js';
 import { Wrapper } from '../wrapper.js';
-import { GroupConditionEvaluator } from '../parser/streamExpression.js';
+import {
+  ExitConditionEvaluator,
+  GroupConditionEvaluator,
+} from '../parser/streamExpression.js';
 import StreamFilter from './filterer.js';
 import StreamPrecompute from './precomputer.js';
 import StreamDeduplicator from './deduplicator.js';
@@ -135,7 +138,7 @@ class StreamFetcher {
             (s) => s.type !== constants.ERROR_STREAM_TYPE
           ),
           errors: addonErrors,
-          statistics: statisticStream,
+          statistic: statisticStream,
           timeTaken: Date.now() - start,
         };
       } catch (error) {
@@ -155,7 +158,6 @@ class StreamFetcher {
         return {
           success: false as const,
           errors: [addonErrors],
-          statistics: [],
           timeTaken: 0,
           streams: [],
         };
@@ -171,7 +173,9 @@ class StreamFetcher {
 
       const groupStreams = results.flatMap((r) => r.streams);
       const groupErrors = results.flatMap((r) => r.errors);
-      const groupStatistics = results.flatMap((r) => r.statistics);
+      const groupStatistics = results
+        .flatMap((r) => r.statistic)
+        .filter((s) => s !== undefined);
 
       const filteredStreams = await this.deduplicate.deduplicate(
         await this.filter.filter(groupStreams, type, id)
@@ -190,7 +194,62 @@ class StreamFetcher {
     };
 
     // If groups are configured, handle group-based fetching
-    if (
+    if (this.userData.dynamicAddonFetching?.enabled) {
+      const condition = this.userData.dynamicAddonFetching.condition;
+      if (!condition) {
+        throw new Error('Dynamic addon fetching condition is not set');
+      }
+
+      await new Promise<void>((resolve) => {
+        let activePromises = addons.length;
+        if (activePromises === 0) {
+          resolve();
+          return;
+        }
+
+        const checkExit = async () => {
+          const timeTaken = Date.now() - start;
+          const evaluator = new ExitConditionEvaluator(allStreams, timeTaken);
+          const shouldExit = await evaluator.evaluate(condition);
+
+          if (shouldExit) {
+            logger.info(
+              `Exit condition met with results from ${addons.length - activePromises} addons. (${activePromises} addons still fetching) Returning results.`
+            );
+            resolve();
+          }
+        };
+
+        addons.forEach((addon) => {
+          fetchFromAddon(addon)
+            .then(async (result) => {
+              allStreams.push(...result.streams);
+              allErrors.push(...result.errors);
+              if (result.statistic) {
+                allStatisticStreams.push(result.statistic);
+              }
+              await checkExit();
+            })
+            .catch((error) => {
+              logger.error(
+                `Unhandled error from fetchFromAddon for ${getAddonName(addon)}:`,
+                error
+              );
+              allErrors.push({
+                title: `[❌] ${getAddonName(addon)}`,
+                description:
+                  error instanceof Error ? error.message : String(error),
+              });
+            })
+            .finally(() => {
+              activePromises--;
+              if (activePromises === 0) {
+                resolve();
+              }
+            });
+        });
+      });
+    } else if (
       this.userData.groups?.groupings &&
       this.userData.groups.groupings.length > 0 &&
       this.userData.groups.enabled !== false
@@ -219,6 +278,7 @@ class StreamFetcher {
           const groupAddons = addons.filter(
             (addon) => addon.preset.id && group.addons.includes(addon.preset.id)
           );
+          if (groupAddons.length === 0) return Promise.resolve(null);
           logger.info(
             `Queueing parallel fetch for group with ${groupAddons.length} addons.`
           );
@@ -226,48 +286,52 @@ class StreamFetcher {
         });
 
         for (let i = 0; i < this.userData.groups.groupings.length; i++) {
-          const groupResult = await groupPromises[i];
-          const group = this.userData.groups.groupings[i];
+          const groupPromise = groupPromises[i];
 
           if (i === 0) {
+            const groupResult = await groupPromise;
+            if (!groupResult) continue;
             allStreams.push(...groupResult.streams);
             allErrors.push(...groupResult.errors);
             allStatisticStreams.push(...groupResult.statistics);
             totalTimeTaken = groupResult.totalTime;
             previousGroupStreams = groupResult.streams;
             previousGroupTimeTaken = groupResult.totalTime;
+            continue;
+          }
+          // For groups other than the first, check their condition
+          const group = this.userData.groups.groupings[i];
+          if (!group.condition || !group.addons.length) continue;
+
+          const evaluator = new GroupConditionEvaluator(
+            previousGroupStreams,
+            allStreams,
+            previousGroupTimeTaken,
+            totalTimeTaken,
+            queryType
+          );
+          const shouldIncludeAndContinue = await evaluator.evaluate(
+            group.condition
+          );
+
+          if (shouldIncludeAndContinue) {
+            logger.info(
+              `Condition met for parallel group ${i + 1}, awaiting its streams and continuing.`
+            );
+            const groupResult = await groupPromise;
+            if (!groupResult) continue;
+            allStreams.push(...groupResult.streams);
+            allErrors.push(...groupResult.errors);
+            allStatisticStreams.push(...groupResult.statistics);
+            totalTimeTaken = Math.max(totalTimeTaken, groupResult.totalTime);
+            previousGroupStreams = groupResult.streams;
+            previousGroupTimeTaken = groupResult.totalTime;
           } else {
-            // For groups other than the first, check their condition
-            if (!group.condition || !group.addons.length) continue;
-
-            const evaluator = new GroupConditionEvaluator(
-              previousGroupStreams,
-              allStreams,
-              previousGroupTimeTaken,
-              totalTimeTaken,
-              queryType
+            logger.info(
+              `Condition not met for parallel group ${i + 1}, skipping remaining groups.`
             );
-            const shouldIncludeAndContinue = await evaluator.evaluate(
-              group.condition
-            );
-
-            if (shouldIncludeAndContinue) {
-              logger.info(
-                `Condition met for parallel group ${i + 1}, including streams and continuing.`
-              );
-              allStreams.push(...groupResult.streams);
-              allErrors.push(...groupResult.errors);
-              allStatisticStreams.push(...groupResult.statistics);
-              totalTimeTaken = Math.max(totalTimeTaken, groupResult.totalTime);
-              previousGroupStreams = groupResult.streams;
-              previousGroupTimeTaken = groupResult.totalTime;
-            } else {
-              logger.info(
-                `Condition not met for parallel group ${i + 1}, skipping remaining groups.`
-              );
-              // exit early.
-              break;
-            }
+            // exit early.
+            break;
           }
         }
       } else {
