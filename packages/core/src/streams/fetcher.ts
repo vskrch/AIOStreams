@@ -221,18 +221,18 @@ class StreamFetcher {
         };
 
         addons.forEach((addon) => {
-          fetchFromAddon(addon)
+          fetchAndProcessAddons([addon])
             .then(async (result) => {
               allStreams.push(...result.streams);
               allErrors.push(...result.errors);
-              if (result.statistic) {
-                allStatisticStreams.push(result.statistic);
+              if (result.statistics) {
+                allStatisticStreams.push(...result.statistics);
               }
               await checkExit();
             })
             .catch((error) => {
               logger.error(
-                `Unhandled error from fetchFromAddon for ${getAddonName(addon)}:`,
+                `Unhandled error from fetchAndProcessAddons for ${getAddonName(addon)}:`,
                 error
               );
               allErrors.push({
