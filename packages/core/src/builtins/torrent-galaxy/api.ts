@@ -166,7 +166,7 @@ class TorrentGalaxyAPI {
   }
 }
 
-export { TorrentGalaxyCategory };
+export { TorrentGalaxyCategory, API_BASE_URL as torrentGalaxyUrl };
 export type {
   TorrentGalaxySearchOptions,
   TorrentGalaxySearchResponse,

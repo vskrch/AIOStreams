@@ -244,42 +244,53 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     options?: {
       addYear?: boolean;
       addSeasonEpisode?: boolean;
+      useAllTitles?: boolean;
     }
   ): string[] {
-    const { addYear, addSeasonEpisode } = {
+    const { addYear, addSeasonEpisode, useAllTitles } = {
       addYear: true,
       addSeasonEpisode: true,
+      useAllTitles: false,
       ...options,
     };
     let queries: string[] = [];
     if (!metadata.primaryTitle) {
       return [];
     }
+    const titles = useAllTitles
+      ? metadata.titles.slice(0, Env.BUILTIN_SCRAPE_TITLE_LIMIT).map(cleanTitle)
+      : [metadata.primaryTitle];
+    const titlePlaceholder = '<___title___>';
+    const addQuery = (query: string) => {
+      titles.forEach((title) => {
+        queries.push(query.replace(titlePlaceholder, title));
+      });
+    };
     if (parsedId.mediaType === 'movie' || !addSeasonEpisode) {
-      queries.push(
-        `${metadata.primaryTitle}${metadata.year && addYear ? ` ${metadata.year}` : ''}`
+      addQuery(
+        `${titlePlaceholder}${metadata.year && addYear ? ` ${metadata.year}` : ''}`
       );
     } else {
       if (
         parsedId.season &&
         (parsedId.episode ? Number(parsedId.episode) < 100 : true)
       ) {
-        queries.push(
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}`
+        addQuery(
+          `${titlePlaceholder} S${parsedId.season!.toString().padStart(2, '0')}`
         );
       }
       if (metadata.absoluteEpisode) {
-        queries.push(
-          `${metadata.primaryTitle} ${metadata.absoluteEpisode.toString().padStart(2, '0')}`
+        addQuery(
+          `${titlePlaceholder} ${metadata.absoluteEpisode!.toString().padStart(2, '0')}`
         );
       } else if (parsedId.episode && !parsedId.season) {
-        queries.push(
-          `${metadata.primaryTitle} E${parsedId.episode.toString().padStart(2, '0')}`
+        addQuery(
+          `${titlePlaceholder} E${parsedId.episode!.toString().padStart(2, '0')}`
         );
       }
       if (parsedId.season && parsedId.episode) {
-        queries.push(
-          `${metadata.primaryTitle} S${parsedId.season.toString().padStart(2, '0')}E${parsedId.episode.toString().padStart(2, '0')}`
+        addQuery(
+          `${titlePlaceholder} S${parsedId.season!.toString().padStart(2, '0')}E${parsedId.episode!.toString().padStart(2, '0')}`
         );
       }
     }

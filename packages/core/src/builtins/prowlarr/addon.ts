@@ -19,6 +19,7 @@ import {
   extractTrackersFromMagnet,
   validateInfoHash,
 } from '../utils/debrid.js';
+import { createQueryLimit, useAllTitles } from '../utils/general.js';
 
 export const ProwlarrAddonConfigSchema = BaseDebridConfigSchema.extend({
   url: z.string(),
@@ -55,6 +56,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     parsedId: ParsedId,
     metadata: SearchMetadata
   ): Promise<UnprocessedTorrent[]> {
+    const queryLimit = createQueryLimit();
     let availableIndexers: ProwlarrApiIndexer[] = [];
     let chosenTags: number[] = [];
     try {
@@ -92,26 +94,30 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
       `Chosen indexers: ${chosenIndexers.map((indexer) => indexer.name).join(', ')}`
     );
 
-    const queries = this.buildQueries(parsedId, metadata);
+    const queries = this.buildQueries(parsedId, metadata, {
+      useAllTitles: useAllTitles(this.userData.url),
+    });
     if (queries.length === 0) {
       return [];
     }
 
-    const searchPromises = queries.map(async (q) => {
-      const start = Date.now();
-      const { data } = await this.api.search({
-        query: q,
-        indexerIds: chosenIndexers.map((indexer) => indexer.id),
-        type: 'search',
-      });
-      this.logger.info(
-        `Prowlarr search for ${q} took ${getTimeTakenSincePoint(start)}`,
-        {
-          results: data.length,
-        }
-      );
-      return data;
-    });
+    const searchPromises = queries.map((q) =>
+      queryLimit(async () => {
+        const start = Date.now();
+        const { data } = await this.api.search({
+          query: q,
+          indexerIds: chosenIndexers.map((indexer) => indexer.id),
+          type: 'search',
+        });
+        this.logger.info(
+          `Prowlarr search for ${q} took ${getTimeTakenSincePoint(start)}`,
+          {
+            results: data.length,
+          }
+        );
+        return data;
+      })
+    );
     const allResults = await Promise.all(searchPromises);
     const results = allResults.flat();
 

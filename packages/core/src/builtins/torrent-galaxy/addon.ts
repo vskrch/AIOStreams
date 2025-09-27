@@ -9,13 +9,17 @@ import {
   getTimeTakenSincePoint,
   ParsedId,
 } from '../../utils/index.js';
-import TorrentGalaxyAPI, { TorrentGalaxyCategory } from './api.js';
+import TorrentGalaxyAPI, {
+  TorrentGalaxyCategory,
+  torrentGalaxyUrl,
+} from './api.js';
 import { NZB, UnprocessedTorrent } from '../../debrid/utils.js';
 import {
   extractTrackersFromMagnet,
   validateInfoHash,
 } from '../utils/debrid.js';
 import { Env } from '../../utils/env.js';
+import { createQueryLimit, useAllTitles } from '../utils/general.js';
 
 const logger = createLogger('torrent-galaxy');
 
@@ -54,11 +58,14 @@ export class TorrentGalaxyAddon extends BaseDebridAddon<TorrentGalaxyAddonConfig
     parsedId: ParsedId,
     metadata: SearchMetadata
   ): Promise<UnprocessedTorrent[]> {
+    const queryLimit = createQueryLimit();
     if (!metadata.primaryTitle) {
       return [];
     }
 
-    const queries = this.buildQueries(parsedId, metadata);
+    const queries = this.buildQueries(parsedId, metadata, {
+      useAllTitles: useAllTitles(torrentGalaxyUrl),
+    });
     if (metadata.imdbId) {
       queries.push(metadata.imdbId);
     }
@@ -69,70 +76,72 @@ export class TorrentGalaxyAddon extends BaseDebridAddon<TorrentGalaxyAddonConfig
 
     logger.info(`Performing torrent galaxy search`, { queries });
 
-    const searchPromises = queries.map(async (q) => {
-      const start = Date.now();
+    const searchPromises = queries.map((q) =>
+      queryLimit(async () => {
+        const start = Date.now();
 
-      // First fetch to get total and page size
-      logger.debug(`Fetching first page for query "${q}"`);
-      const firstPageResponse = await this.api.search({
-        query: q,
-        page: 1,
-      });
+        // First fetch to get total and page size
+        logger.debug(`Fetching first page for query "${q}"`);
+        const firstPageResponse = await this.api.search({
+          query: q,
+          page: 1,
+        });
 
-      const { total, pageSize } = firstPageResponse;
-      let allResults = [...firstPageResponse.results];
+        const { total, pageSize } = firstPageResponse;
+        let allResults = [...firstPageResponse.results];
 
-      // Calculate required pages
-      const totalPages = Math.min(
-        Math.ceil(total / pageSize),
-        Env.BUILTIN_TORRENT_GALAXY_PAGE_LIMIT
-      );
+        // Calculate required pages
+        const totalPages = Math.min(
+          Math.ceil(total / pageSize),
+          Env.BUILTIN_TORRENT_GALAXY_PAGE_LIMIT
+        );
 
-      if (totalPages <= 1) {
+        if (totalPages <= 1) {
+          logger.info(
+            `Torrent Galaxy search for ${q} took ${getTimeTakenSincePoint(start)}`,
+            {
+              results: allResults.length,
+              pages: 1,
+            }
+          );
+          return allResults;
+        }
+
+        // Create array of page numbers to fetch (skip page 1 as we already have it)
+        const pageNumbers = Array.from(
+          { length: totalPages - 1 },
+          (_, i) => i + 2
+        );
+
+        logger.debug(
+          `Fetching ${pageNumbers.length} additional pages in parallel for query "${q}"`
+        );
+
+        // Fetch all remaining pages in parallel
+        const pagePromises = pageNumbers.map(async (pageNum) => {
+          const { results } = await this.api.search({
+            query: q,
+            page: pageNum,
+          });
+          logger.debug(`Fetched page ${pageNum} for query "${q}"`, {
+            newResults: results.length,
+          });
+          return results;
+        });
+
+        const remainingResults = await Promise.all(pagePromises);
+        allResults.push(...remainingResults.flat());
+
         logger.info(
           `Torrent Galaxy search for ${q} took ${getTimeTakenSincePoint(start)}`,
           {
             results: allResults.length,
-            pages: 1,
+            pages: totalPages,
           }
         );
         return allResults;
-      }
-
-      // Create array of page numbers to fetch (skip page 1 as we already have it)
-      const pageNumbers = Array.from(
-        { length: totalPages - 1 },
-        (_, i) => i + 2
-      );
-
-      logger.debug(
-        `Fetching ${pageNumbers.length} additional pages in parallel for query "${q}"`
-      );
-
-      // Fetch all remaining pages in parallel
-      const pagePromises = pageNumbers.map(async (pageNum) => {
-        const { results } = await this.api.search({
-          query: q,
-          page: pageNum,
-        });
-        logger.debug(`Fetched page ${pageNum} for query "${q}"`, {
-          newResults: results.length,
-        });
-        return results;
-      });
-
-      const remainingResults = await Promise.all(pagePromises);
-      allResults.push(...remainingResults.flat());
-
-      logger.info(
-        `Torrent Galaxy search for ${q} took ${getTimeTakenSincePoint(start)}`,
-        {
-          results: allResults.length,
-          pages: totalPages,
-        }
-      );
-      return allResults;
-    });
+      })
+    );
 
     const allResults = await Promise.all(searchPromises);
     const results = allResults

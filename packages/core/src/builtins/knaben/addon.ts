@@ -9,13 +9,14 @@ import {
   getTimeTakenSincePoint,
   ParsedId,
 } from '../../utils/index.js';
-import KnabenAPI, { KnabenCategory } from './api.js';
+import KnabenAPI, { KnabenCategory, knabenApiUrl } from './api.js';
 import { NZB, UnprocessedTorrent } from '../../debrid/utils.js';
 import {
   extractInfoHashFromMagnet,
   extractTrackersFromMagnet,
   validateInfoHash,
 } from '../utils/debrid.js';
+import { createQueryLimit, useAllTitles } from '../utils/general.js';
 
 const logger = createLogger('knaben');
 
@@ -52,12 +53,15 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
     parsedId: ParsedId,
     metadata: SearchMetadata
   ): Promise<UnprocessedTorrent[]> {
+    const queryLimit = createQueryLimit();
     let categories: number[] = [];
     if (!metadata.primaryTitle) {
       return [];
     }
 
-    const queries = this.buildQueries(parsedId, metadata);
+    const queries = this.buildQueries(parsedId, metadata, {
+      useAllTitles: useAllTitles(knabenApiUrl),
+    });
 
     if (queries.length === 0) {
       return [];
@@ -73,22 +77,24 @@ export class KnabenAddon extends BaseDebridAddon<KnabenAddonConfig> {
 
     logger.info(`Performing knaben search`, { queries, categories });
 
-    const searchPromises = queries.map(async (q) => {
-      const start = Date.now();
-      const { hits } = await this.api.search({
-        query: q,
-        categories,
-        size: 300,
-        hideUnsafe: false,
-      });
-      logger.info(
-        `Knaben search for ${q} took ${getTimeTakenSincePoint(start)}`,
-        {
-          results: hits.length,
-        }
-      );
-      return hits;
-    });
+    const searchPromises = queries.map((q) =>
+      queryLimit(async () => {
+        const start = Date.now();
+        const { hits } = await this.api.search({
+          query: q,
+          categories,
+          size: 300,
+          hideUnsafe: false,
+        });
+        logger.info(
+          `Knaben search for ${q} took ${getTimeTakenSincePoint(start)}`,
+          {
+            results: hits.length,
+          }
+        );
+        return hits;
+      })
+    );
 
     const allResults = await Promise.all(searchPromises);
     const hits = allResults

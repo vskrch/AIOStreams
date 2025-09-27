@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ParsedId } from '../../../utils/id-parser.js';
-import { getTimeTakenSincePoint } from '../../../utils/index.js';
+import { Env, getTimeTakenSincePoint } from '../../../utils/index.js';
 import { Logger } from 'winston';
 import {
   BaseDebridAddon,
@@ -8,6 +8,7 @@ import {
   SearchMetadata,
 } from '../debrid.js';
 import { BaseNabApi, Capabilities, SearchResultItem } from './api.js';
+import { createQueryLimit, useAllTitles } from '../../utils/general.js';
 
 export const NabAddonConfigSchema = BaseDebridConfigSchema.extend({
   url: z.string(),
@@ -29,6 +30,7 @@ export abstract class BaseNabAddon<
   ): Promise<SearchResultItem<A['namespace']>[]> {
     const start = Date.now();
     const queryParams: Record<string, string> = {};
+    const queryLimit = createQueryLimit();
     let capabilities: Capabilities;
     try {
       capabilities = await this.api.getCapabilities();
@@ -114,13 +116,14 @@ export abstract class BaseNabAddon<
         addYear: !queryParams.year,
         // add season and episode if they are not already in the query params
         addSeasonEpisode: !queryParams.season && !queryParams.ep,
+        useAllTitles: useAllTitles(this.userData.url),
       });
     }
     let results: SearchResultItem<A['namespace']>[] = [];
     if (queries.length > 0) {
       this.logger.debug('Performing queries', { queries });
       const searchPromises = queries.map((q) =>
-        this.api.search(searchFunction, { ...queryParams, q })
+        queryLimit(() => this.api.search(searchFunction, { ...queryParams, q }))
       );
       const allResults = await Promise.all(searchPromises);
       results = allResults.flat() as SearchResultItem<A['namespace']>[];

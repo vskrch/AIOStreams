@@ -183,6 +183,6 @@ class KnabenAPI {
   }
 }
 
-export { KnabenCategory };
+export { KnabenCategory, API_BASE_URL as knabenApiUrl };
 export type { KnabenSearchOptions, KnabenSearchResponse, KnabenSearchHit };
 export default KnabenAPI;
