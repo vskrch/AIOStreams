@@ -202,7 +202,7 @@ export class StremThruInterface implements DebridService {
     }
 
     const { hash, file: chosenFile, metadata } = playbackInfo;
-    const cacheKey = `${this.serviceName}:${this.config.token}:${this.config.clientIp}:${JSON.stringify(playbackInfo)}`;
+    const cacheKey = `${this.serviceName}:${this.config.token}:${this.config.clientIp}:${playbackInfo.hash}:${playbackInfo.metadata?.season}:${playbackInfo.metadata?.episode}:${playbackInfo.metadata?.absoluteEpisode}`;
     const cachedLink = await StremThruInterface.playbackLinkCache.get(cacheKey);
 
     let magnet = `magnet:?xt=urn:btih:${hash}`;

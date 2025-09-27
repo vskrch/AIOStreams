@@ -11,8 +11,9 @@ import { normaliseTitle } from './utils.js';
 const logger = createLogger('parser');
 
 const parseCache = Cache.getInstance<string, ParseResult | null>(
-  'parseCache',
-  10000
+  'ptt',
+  10000,
+  true
 );
 
 class PTT {
