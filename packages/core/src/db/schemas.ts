@@ -533,7 +533,7 @@ export const ManifestSchema = z
     types: z.array(z.string()),
     idPrefixes: z.array(z.string()).or(z.null()).optional(),
     resources: z.array(ManifestResourceSchema),
-    catalogs: z.array(ManifestCatalogSchema),
+    catalogs: z.array(ManifestCatalogSchema).optional().default([]),
     addonCatalogs: z.array(AddonCatalogDefinitionSchema).optional(),
     background: z.string().or(z.null()).optional(),
     logo: z.string().or(z.null()).optional(),
