@@ -63,7 +63,10 @@ router.get(
               staticFile = StaticFiles.UNAVAILABLE_FOR_LEGAL_REASONS;
               break;
             case 'STORE_LIMIT_EXCEEDED':
-              staticFile = StaticFiles.CONTENT_PROXY_LIMIT_REACHED;
+              staticFile = StaticFiles.STORE_LIMIT_EXCEEDED;
+              break;
+            case 'PAYMENT_REQUIRED':
+              staticFile = StaticFiles.PAYMENT_REQUIRED;
               break;
             case 'FORBIDDEN':
               staticFile = StaticFiles.FORBIDDEN;
