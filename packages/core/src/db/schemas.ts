@@ -373,7 +373,7 @@ export const UserDataSchema = z.object({
   dynamicAddonFetching: z
     .object({
       enabled: z.boolean().optional(),
-      condition: z.string().min(1).max(1500).optional(),
+      condition: z.string().max(3000).optional(),
     })
     .optional(),
   groups: z
@@ -383,7 +383,7 @@ export const UserDataSchema = z.object({
         .array(
           z.object({
             addons: z.array(z.string().min(1)),
-            condition: z.string().min(1).max(1500),
+            condition: z.string().min(1).max(3000),
           })
         )
         .optional(),
