@@ -272,7 +272,7 @@ export class MetadataService {
       },
       {
         timeout: 5000,
-        ttl: 5000,
+        ttl: 10000,
         retryInterval: 100,
       }
     );
