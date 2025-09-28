@@ -615,13 +615,15 @@ export class ExitConditionEvaluator extends StreamExpressionEngine {
     private totalStreams: ParsedStream[],
     private totalTimeTaken: number,
     private queryType: string,
-    private queriedAddons: string[]
+    private queriedAddons: string[],
+    private allAddons: string[]
   ) {
     super();
     this.parser.consts.totalStreams = this.totalStreams;
     this.parser.consts.totalTimeTaken = this.totalTimeTaken;
     this.parser.consts.queryType = this.queryType;
     this.parser.consts.queriedAddons = this.queriedAddons;
+    this.parser.consts.allAddons = this.allAddons;
   }
 
   async evaluate(condition: string) {
@@ -629,7 +631,13 @@ export class ExitConditionEvaluator extends StreamExpressionEngine {
   }
 
   static async testEvaluate(condition: string) {
-    const parser = new ExitConditionEvaluator([], 200, 'movie', ['Test Addon']);
+    const parser = new ExitConditionEvaluator(
+      [],
+      200,
+      'movie',
+      ['Test Addon'],
+      ['Test Addon']
+    );
     return await parser.evaluate(condition);
   }
 }

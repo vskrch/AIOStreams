@@ -1261,6 +1261,15 @@ function AddonFetchingBehaviorCard() {
       'All addons start fetching at the same time. As soon as any addon returns results, the exit condition is evaluated. If the condition is met, results are returned immediately and any remaining addon results are ignored.',
   };
 
+  const placeholderExitConditions = [
+    'count(resolution(totalStreams, "2160p")) > 0 or totalTimeTaken > 5000',
+    "queryType == 'anime' ? (count(resolution(totalStreams, '1080p')) > 0 or totalTimeTaken > 5000) : false",
+    "'addon' in queriedAddons and (totalTimeTaken >= 6000 or count(totalStreams) >= 5)",
+    "count(seeders(size(totalStreams, '5GB', '20GB'), 50)) > 0",
+    "queryType == 'movie' ? count(cached(resolution(totalStreams, '2160p'))) > 0 : count(resolution(totalStreams, '1080p')) >= 2",
+    "count(cached(quality(totalStreams, 'Bluray REMUX', 'Bluray', 'WEB-DL'))) > 0",
+  ];
+
   return (
     <SettingsCard
       title="Addon Fetching Strategy"
@@ -1382,6 +1391,11 @@ function AddonFetchingBehaviorCard() {
       {mode === 'dynamic' && (
         <TextInput
           label="Exit Condition"
+          placeholder={
+            placeholderExitConditions[
+              Math.floor(Math.random() * placeholderExitConditions.length)
+            ]
+          }
           value={userData.dynamicAddonFetching?.condition ?? ''}
           onValueChange={(value) => {
             setUserData((prev) => ({
@@ -1420,6 +1434,10 @@ function AddonFetchingBehaviorCard() {
                   <code>queriedAddons</code>: The addons that have been queried.
                   Tip: use the <code>in</code> operator to check if a specific
                   addon has been queried.
+                </li>
+                <li>
+                  <code>allAddons</code>: All addons that were intended to be
+                  used for that query.
                 </li>
               </ul>
             </p>

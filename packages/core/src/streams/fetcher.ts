@@ -202,6 +202,9 @@ class StreamFetcher {
 
       await new Promise<void>((resolve) => {
         const queriedAddons: string[] = [];
+        const allAddons: string[] = Array.from(
+          new Set(addons.map((addon) => addon.name))
+        );
         const presetProgress = addons.reduce(
           (acc, addon) => {
             const id = addon.preset.id;
@@ -227,7 +230,8 @@ class StreamFetcher {
             allStreams,
             timeTaken,
             queryType,
-            queriedAddons
+            queriedAddons,
+            allAddons
           );
 
           const shouldExit = await evaluator.evaluate(condition);
