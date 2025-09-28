@@ -34,7 +34,7 @@ export class MetadataService {
     return withRetry(
       async () => {
         const { result } = await this.lock.withLock(
-          `metadata:${id.mediaType}:${id.type}:${id.value}`,
+          `metadata:${id.mediaType}:${id.type}:${id.value}${this.config.tmdbAccessToken || this.config.tmdbApiKey ? ':tmdb' : ''}${this.config.tvdbApiKey ? ':tvdb' : ''}`,
           async () => {
             const start = Date.now();
             const titles: string[] = [];
