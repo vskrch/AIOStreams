@@ -524,6 +524,9 @@ export abstract class StreamExpressionEngine {
         resolve(result);
       } catch (error) {
         clearTimeout(timeout);
+        if (error instanceof Error) {
+          error.message = `Expression could not be evaluated: ${error.message}`;
+        }
         reject(error);
       }
     });
