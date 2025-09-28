@@ -48,7 +48,7 @@ export abstract class StreamExpressionEngine {
         trunc: false,
         exp: false,
         length: false,
-        in: false,
+        in: true,
         random: false,
         min: true,
         max: true,
@@ -610,11 +610,15 @@ export abstract class StreamExpressionEngine {
 export class ExitConditionEvaluator extends StreamExpressionEngine {
   constructor(
     private totalStreams: ParsedStream[],
-    private totalTimeTaken: number
+    private totalTimeTaken: number,
+    private queryType: string,
+    private queriedAddons: string[]
   ) {
     super();
     this.parser.consts.totalStreams = this.totalStreams;
     this.parser.consts.totalTimeTaken = this.totalTimeTaken;
+    this.parser.consts.queryType = this.queryType;
+    this.parser.consts.queriedAddons = this.queriedAddons;
   }
 
   async evaluate(condition: string) {
@@ -622,7 +626,7 @@ export class ExitConditionEvaluator extends StreamExpressionEngine {
   }
 
   static async testEvaluate(condition: string) {
-    const parser = new ExitConditionEvaluator([], 0);
+    const parser = new ExitConditionEvaluator([], 200, 'movie', ['Test Addon']);
     return await parser.evaluate(condition);
   }
 }
