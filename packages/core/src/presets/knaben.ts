@@ -63,7 +63,8 @@ export class KnabenPreset extends TorznabPreset {
     options: Record<string, any>
   ): string {
     return `${Env.INTERNAL_URL}/builtins/knaben/${this.base64EncodeJSON(
-      this.getBaseConfig(userData, services)
+      this.getBaseConfig(userData, services),
+      'urlSafe'
     )}/manifest.json`;
   }
 }

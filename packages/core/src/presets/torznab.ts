@@ -154,7 +154,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
       forceQuerySearch: options.forceQuerySearch ?? false,
     };
 
-    const configString = this.base64EncodeJSON(config);
+    const configString = this.base64EncodeJSON(config, 'urlSafe');
     return `${this.METADATA.URL}/${configString}/manifest.json`;
   }
 }

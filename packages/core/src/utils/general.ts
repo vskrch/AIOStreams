@@ -83,3 +83,32 @@ export async function withRetry<T>(
   // This line should never be reached due to the throw in the catch block
   throw new Error('Unexpected state in retry logic');
 }
+
+/**
+ * Base64 URL safe encoding
+ * @param data - The data to encode
+ * @returns The base64 URL safe encoded data
+ */
+export function toUrlSafeBase64(string: string): string {
+  return Buffer.from(string)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+/**
+ * Base64 URL safe decoding
+ * @param data - The data to decode
+ * @returns The base64 URL safe decoded data
+ */
+export function fromUrlSafeBase64(data: string): string {
+  // Add padding if needed
+  const padding = data.length % 4;
+  const paddedData = padding ? data + '='.repeat(4 - padding) : data;
+
+  return Buffer.from(
+    paddedData.replace(/-/g, '+').replace(/_/g, '/'),
+    'base64'
+  ).toString('utf-8');
+}

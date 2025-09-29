@@ -64,7 +64,8 @@ export class TorrentGalaxyPreset extends TorznabPreset {
     options: Record<string, any>
   ): string {
     return `${Env.INTERNAL_URL}/builtins/torrent-galaxy/${this.base64EncodeJSON(
-      this.getBaseConfig(userData, services)
+      this.getBaseConfig(userData, services),
+      'urlSafe'
     )}/manifest.json`;
   }
 }

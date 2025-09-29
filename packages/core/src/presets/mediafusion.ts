@@ -521,8 +521,7 @@ export class MediaFusionPreset extends Preset {
         contribution_streams: options.contributorStreams ?? false,
         mdblist_config: null,
       },
-      false,
-      true
+      'urlSafe'
     );
 
     return encodedUserData;

@@ -198,7 +198,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       tags: typeof options.tags === 'string' ? options.tags.split(',') : [],
     };
 
-    const configString = this.base64EncodeJSON(config);
+    const configString = this.base64EncodeJSON(config, 'urlSafe');
     return `${this.METADATA.URL}/${configString}/manifest.json`;
   }
 }

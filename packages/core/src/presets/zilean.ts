@@ -67,7 +67,7 @@ export class ZileanPreset extends TorznabPreset {
       apiPath: '/api',
     };
 
-    const configString = this.base64EncodeJSON(config);
+    const configString = this.base64EncodeJSON(config, 'urlSafe');
     return `${Env.INTERNAL_URL}/builtins/torznab/${configString}/manifest.json`;
   }
 }

@@ -488,6 +488,13 @@ export const TABLES = {
       expires_at BIGINT NOT NULL,
       result TEXT
     `,
+  cache: `
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      expires_at BIGINT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    `,
 };
 
 const strictManifestResourceSchema = z.object({
