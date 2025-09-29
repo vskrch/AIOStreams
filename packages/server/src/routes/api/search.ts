@@ -185,15 +185,6 @@ router.get(
         })
       );
     } catch (error) {
-      if (error instanceof ZodError) {
-        next(
-          new APIError(
-            constants.ErrorCode.BAD_REQUEST,
-            undefined,
-            formatZodError(error)
-          )
-        );
-      }
       next(error);
     }
   }
