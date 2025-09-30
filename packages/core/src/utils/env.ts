@@ -347,7 +347,7 @@ export const Env = cleanEnv(process.env, {
     desc: 'Redis URI for the addon',
   }),
   REDIS_TIMEOUT: num({
-    default: 500,
+    default: 5000,
     desc: 'Redis timeout for the addon',
   }),
   ADDON_PROXY: urlOrUrlList({
