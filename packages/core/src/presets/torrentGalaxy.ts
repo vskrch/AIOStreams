@@ -39,6 +39,15 @@ export class TorrentGalaxyPreset extends TorznabPreset {
         default: undefined,
         emptyIsUndefined: true,
       },
+      {
+        id: 'useMultipleInstances',
+        name: 'Use Multiple Instances',
+        description:
+          'TorrentGalaxy supports multiple services in one instance of the addon - which is used by default. If this is enabled, then the addon will be created for each service.',
+        type: 'boolean',
+        default: false,
+        showInNoobMode: false,
+      },
     ];
 
     return {
