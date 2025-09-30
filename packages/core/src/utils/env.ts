@@ -1601,6 +1601,15 @@ export const Env = cleanEnv(process.env, {
     default: 60 * 60, // 1 hour
     desc: 'Builtin Debrid playback link cache TTL',
   }),
+  BUILTIN_PLAYBACK_LINK_STORE: str({
+    choices: ['redis', 'sql'],
+    default: 'sql',
+    desc: 'Builtin Debrid playback link store',
+  }),
+  BUILTIN_PLAYBACK_LINK_VALIDITY: num({
+    default: 1 * 24 * 60 * 60, // 1 day
+    desc: 'Builtin Debrid playback link validity',
+  }),
   BUILTIN_SCRAPE_WITH_ALL_TITLES: boolOrList({
     default: false,
     desc: 'Whether to use alternative titles during scraping for built-in addons. Set to true, false, or a comma separated list of hostnames',

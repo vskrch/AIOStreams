@@ -312,7 +312,7 @@ export function isVideoFile(file: DebridFile): boolean {
 
 export const pbiCache = () => {
   const prefix = 'pbi';
-  if (Env.REDIS_URI) {
+  if (Env.REDIS_URI && Env.BUILTIN_PLAYBACK_LINK_STORE === 'redis') {
     return Cache.getInstance<string, PlaybackInfo>(
       prefix,
       1_000_000_000,
@@ -332,6 +332,6 @@ export function generatePlaybackUrl(
     throw new Error('Failed to encrypt store auth');
   }
   const playbackId = getSimpleTextHash(JSON.stringify(playbackInfo));
-  pbiCache().set(playbackId, playbackInfo, 2 * 24 * 60 * 60);
+  pbiCache().set(playbackId, playbackInfo, Env.BUILTIN_PLAYBACK_LINK_VALIDITY);
   return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth.data}/${playbackId}/${encodeURIComponent(filename)}`;
 }
