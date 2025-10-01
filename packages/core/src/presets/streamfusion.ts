@@ -29,6 +29,21 @@ export class StreamFusionPreset extends Preset {
         Env.DEFAULT_STREAMFUSION_TIMEOUT
       ),
       {
+        id: 'mediaTypes',
+        name: 'Media Types',
+        description:
+          'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
+        type: 'multi-select',
+        required: false,
+        showInNoobMode: false,
+        options: [
+          { label: 'Movie', value: 'movie' },
+          { label: 'Series', value: 'series' },
+          { label: 'Anime', value: 'anime' },
+        ],
+        default: [],
+      },
+      {
         id: 'streamFusionApiKey',
         name: 'StreamFusion API Key',
         description:
@@ -97,6 +112,7 @@ export class StreamFusionPreset extends Preset {
         default: undefined,
         emptyIsUndefined: true,
       },
+
       {
         id: 'socials',
         name: '',
@@ -173,6 +189,7 @@ export class StreamFusionPreset extends Preset {
           : 'P2P',
       manifestUrl: this.generateManifestUrl(userData, options, serviceIds),
       enabled: true,
+      mediaTypes: options.mediaTypes || [],
       resources: options.resources || this.METADATA.SUPPORTED_RESOURCES,
       timeout: options.timeout || this.METADATA.TIMEOUT,
       preset: {

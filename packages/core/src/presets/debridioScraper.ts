@@ -44,6 +44,21 @@ export class DebridioPreset extends Preset {
         default: undefined,
         emptyIsUndefined: true,
       },
+      {
+        id: 'mediaTypes',
+        name: 'Media Types',
+        description:
+          'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
+        type: 'multi-select',
+        required: false,
+        options: [
+          { label: 'Movie', value: 'movie' },
+          { label: 'Series', value: 'series' },
+          { label: 'Anime', value: 'anime' },
+        ],
+        default: [],
+        showInNoobMode: false,
+      },
       debridioSocialOption,
     ];
 
@@ -107,6 +122,7 @@ export class DebridioPreset extends Preset {
         : 'custom',
       manifestUrl: this.generateManifestUrl(userData, options, service),
       enabled: true,
+      mediaTypes: options.mediaTypes || [],
       resources: options.resources || this.METADATA.SUPPORTED_RESOURCES,
       timeout: options.timeout || this.METADATA.TIMEOUT,
       preset: {

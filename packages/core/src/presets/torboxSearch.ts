@@ -116,6 +116,30 @@ export class TorBoxSearchPreset extends StremThruPreset {
         emptyIsUndefined: true,
       },
       {
+        id: 'mediaTypes',
+        name: 'Media Types',
+        description:
+          'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
+        type: 'multi-select',
+        required: false,
+        showInNoobMode: false,
+        default: [],
+        options: [
+          {
+            label: 'Movie',
+            value: 'movie',
+          },
+          {
+            label: 'Series',
+            value: 'series',
+          },
+          {
+            label: 'Anime',
+            value: 'anime',
+          },
+        ],
+      },
+      {
         id: 'userSearchEngines',
         name: 'Use User Search Engines',
         description:
@@ -209,6 +233,7 @@ export class TorBoxSearchPreset extends StremThruPreset {
           ? 'multi'
           : constants.SERVICE_DETAILS[services[0]].shortName,
       manifestUrl: this.generateManifestUrl(userData, services, options),
+      mediaTypes: options.mediaTypes || [],
       enabled: true,
       resources: this.METADATA.SUPPORTED_RESOURCES,
       timeout: options.timeout || this.METADATA.TIMEOUT,

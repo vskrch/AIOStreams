@@ -51,6 +51,22 @@ export class NewznabPreset extends BuiltinAddonPreset {
         },
       },
       {
+        id: 'mediaTypes',
+        name: 'Media Types',
+        description:
+          'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
+        type: 'multi-select',
+        required: false,
+        showInNoobMode: false,
+        default: [],
+        options: [
+          {
+            label: 'Movie',
+            value: 'movie',
+          },
+        ],
+      },
+      {
         id: 'forceQuerySearch',
         name: 'Force Query Search',
         description: 'Force the addon to use the query search parameter',

@@ -162,6 +162,13 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       name: options.name || this.METADATA.NAME,
       manifestUrl: this.generateManifestUrl(userData, services, options),
       enabled: true,
+      displayIdentifier: services
+        .map((id) => constants.SERVICE_DETAILS[id].shortName)
+        .join(' | '),
+      identifier:
+        services.length > 1
+          ? 'multi'
+          : constants.SERVICE_DETAILS[services[0]].shortName,
       library: options.libraryAddon ?? false,
       resources: options.resources || undefined,
       mediaTypes: options.mediaTypes || [],
