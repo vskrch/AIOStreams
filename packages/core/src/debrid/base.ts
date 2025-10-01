@@ -108,6 +108,7 @@ const BasePlaybackInfoSchema = z.object({
   metadata: z
     .object({
       titles: z.array(z.string()),
+      year: z.number().optional(),
       season: z.number().optional(),
       episode: z.number().optional(),
       absoluteEpisode: z.number().optional(),

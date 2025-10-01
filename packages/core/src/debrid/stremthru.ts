@@ -17,6 +17,7 @@ import {
 import { StremThruServiceId } from '../presets/stremthru.js';
 import { PTT } from '../parser/index.js';
 import { ParseResult } from 'go-ptt';
+import assert from 'assert';
 
 const logger = createLogger('debrid:stremthru');
 
@@ -95,18 +96,11 @@ export class StremThruInterface implements DebridService {
               sid,
             });
 
-            if (!result.data) {
-              logger.warn(
-                `StremThru checkMagnets returned no data: ${JSON.stringify(result)}`
-              );
-              throw new DebridError('No data returned from StremThru', {
-                statusCode: result.meta.statusCode,
-                statusText: result.meta.statusText,
-                code: 'UNKNOWN',
-                headers: result.meta.headers,
-                body: result.data,
-              });
-            }
+            assert.ok(
+              result?.data,
+              `StremThru checkMagnets returned no data: ${JSON.stringify(result)}`
+            );
+
             return result.data.items;
           })
         );
@@ -155,6 +149,10 @@ export class StremThruInterface implements DebridService {
       const result = await this.stremthru.store.addMagnet({
         magnet,
       });
+      assert.ok(
+        result?.data,
+        `Missing data from StremThru addMagnet: ${JSON.stringify(result)}`
+      );
 
       return {
         id: result.data.id,
@@ -185,6 +183,10 @@ export class StremThruInterface implements DebridService {
         link,
         clientIp,
       });
+      assert.ok(
+        result?.data,
+        `Missing data from StremThru generateTorrentLink: ${JSON.stringify(result)}`
+      );
       return result.data.link;
     } catch (error) {
       throw error instanceof StremThruError

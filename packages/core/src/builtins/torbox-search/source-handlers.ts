@@ -32,6 +32,7 @@ const logger = createLogger('torbox-search');
 
 export interface TitleMetadata {
   titles: string[];
+  year?: number;
   season?: number;
   episode?: number;
   absoluteEpisode?: number;

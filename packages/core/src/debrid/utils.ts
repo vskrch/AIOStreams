@@ -144,11 +144,13 @@ export async function selectFileInTorrentOrNZB(
       title?: string;
       seasons?: number[];
       episodes?: number[];
+      year?: string;
     }
   >,
 
   metadata?: {
     titles: string[];
+    year?: number;
     season?: number;
     episode?: number;
     absoluteEpisode?: number;
@@ -180,6 +182,16 @@ export async function selectFileInTorrentOrNZB(
     // Base score from video file status (highest priority)
     if (isVideo[index]) {
       score += 1000;
+    }
+
+    if (
+      !(metadata?.season && metadata?.episode && metadata?.absoluteEpisode) &&
+      metadata?.year &&
+      parsed?.year
+    ) {
+      if (metadata.year === Number(parsed.year)) {
+        score += 500;
+      }
     }
 
     // Season/Episode matching (second highest priority)
@@ -257,7 +269,9 @@ export async function selectFileInTorrentOrNZB(
     //   return undefined;
     // }
   }
-
+  logger.verbose(
+    `File selected with score ${bestMatch.score}: ${bestMatch.file.name}`
+  );
   return bestMatch.file;
 }
 
