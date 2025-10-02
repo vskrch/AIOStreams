@@ -10,6 +10,7 @@ import { Env } from '../utils/index.js';
 import { constants, ServiceId } from '../utils/index.js';
 import { StreamParser } from '../parser/index.js';
 import { Stream } from '../db/index.js';
+import { validateInfoHash } from '../builtins/utils/debrid.js';
 
 class TorboxStreamParser extends StreamParser {
   override getSeeders(
@@ -30,13 +31,31 @@ class TorboxStreamParser extends StreamParser {
     stream: Stream,
     currentParsedStream: ParsedStream
   ): string | undefined {
-    return stream.type !== 'usenet' ? (stream as any).hash : undefined;
+    const extractInfoHashFromUrl = (url: string) => {
+      try {
+        return validateInfoHash(
+          JSON.parse(
+            Buffer.from(new URL(url).pathname.split('/')[3], 'base64').toString(
+              'utf-8'
+            )
+          )[0]
+        );
+      } catch (e) {
+        console.warn('Failed to extract info hash from url', url, e);
+        return undefined;
+      }
+    };
+    return (
+      stream.behaviorHints?.bingeGroup?.match(
+        /torbox\|([a-f0-9]{40}$)/i
+      )?.[1] ?? extractInfoHashFromUrl(stream.url ?? '')
+    );
   }
   override getInLibrary(
     stream: Stream,
     currentParsedStream: ParsedStream
   ): boolean {
-    return (stream as any).is_your_media || stream.name?.includes('Your Media');
+    return stream.name?.includes('Your Media') ?? false;
   }
   protected override getService(
     stream: Stream,
@@ -44,7 +63,9 @@ class TorboxStreamParser extends StreamParser {
   ): ParsedStream['service'] | undefined {
     return {
       id: constants.TORBOX_SERVICE,
-      cached: (stream as any).is_cached ?? true,
+      cached: ['Your Media', 'Instant'].some((str) =>
+        stream.name?.includes(str)
+      ),
     };
   }
 
