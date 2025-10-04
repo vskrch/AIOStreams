@@ -1603,7 +1603,7 @@ export const Env = cleanEnv(process.env, {
   }),
   BUILTIN_DEBRID_METADATA_STORE: str({
     choices: ['redis', 'sql', 'memory'],
-    default: 'memory',
+    default: undefined,
     desc: 'Builtin Debrid metadata store',
   }),
   BUILTIN_PLAYBACK_LINK_VALIDITY: num({
