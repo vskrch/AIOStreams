@@ -13,7 +13,10 @@ import {
   PlaybackInfo,
   ServiceAuth,
   decryptString,
-  pbiCache,
+  metadataStore,
+  TitleMetadata,
+  FileInfoSchema,
+  getSimpleTextHash,
 } from '@aiostreams/core';
 import { ZodError } from 'zod';
 import { StaticFiles } from '../../app.js';
@@ -30,17 +33,26 @@ router.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 router.get(
-  '/playback/:encryptedStoreAuth/:playbackId/:filename',
+  '/playback/:encryptedStoreAuth/:fileInfo/:metadataId/:filename',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { encryptedStoreAuth, playbackId, filename } = req.params;
-      if (!playbackId || !filename) {
+      const {
+        encryptedStoreAuth,
+        fileInfo: encodedFileInfo,
+        metadataId,
+        filename,
+      } = req.params;
+      if (!encodedFileInfo || !metadataId || !filename) {
         throw new APIError(
           constants.ErrorCode.BAD_REQUEST,
           undefined,
-          'Encrypted store auth, playback info and filename are required'
+          'Encrypted store auth, file info, metadata id and filename are required'
         );
       }
+
+      const fileInfo = FileInfoSchema.parse(
+        JSON.parse(Buffer.from(encodedFileInfo, 'base64').toString('utf-8'))
+      );
 
       const decryptedStoreAuth = decryptString(encryptedStoreAuth);
       if (!decryptedStoreAuth.success) {
@@ -54,14 +66,36 @@ router.get(
       const storeAuth = ServiceAuthSchema.parse(
         JSON.parse(decryptedStoreAuth.data)
       );
-      const playbackInfo = await pbiCache().get(playbackId);
-      if (!playbackInfo) {
+      const metadata: TitleMetadata | undefined =
+        await metadataStore().get(metadataId);
+      if (!metadata) {
         throw new APIError(
           constants.ErrorCode.BAD_REQUEST,
           undefined,
-          'Playback info not found'
+          'Metadata not found'
         );
       }
+
+      logger.verbose(`Got metadata: ${JSON.stringify(metadata)}`);
+
+      const playbackInfo: PlaybackInfo =
+        fileInfo.type === 'torrent'
+          ? {
+              type: 'torrent',
+              metadata: metadata,
+              hash: fileInfo.hash,
+              sources: fileInfo.sources,
+              index: fileInfo.index,
+              filename: filename,
+            }
+          : {
+              type: 'usenet',
+              metadata: metadata,
+              hash: fileInfo.hash,
+              nzb: fileInfo.nzb,
+              index: fileInfo.index,
+              filename: filename,
+            };
 
       const debridInterface = getDebridService(
         storeAuth.id,

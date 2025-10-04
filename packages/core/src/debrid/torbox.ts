@@ -263,7 +263,7 @@ export class TorboxDebridService implements DebridService {
       return this.stremthru.resolve(playbackInfo, filename);
     }
 
-    const { nzb, file: chosenFile, metadata, title, hash } = playbackInfo;
+    const { nzb, metadata, hash } = playbackInfo;
     const cacheKey = `${this.serviceName}:${this.config.token}:${this.config.clientIp}:${JSON.stringify(playbackInfo)}`;
     const cachedLink =
       await TorboxDebridService.playbackLinkCache.get(cacheKey);
@@ -307,8 +307,8 @@ export class TorboxDebridService implements DebridService {
         type: 'usenet' as const,
         nzb: nzb,
         hash: hash,
-        title: title || usenetDownload.name,
-        file: chosenFile,
+        title: usenetDownload.name,
+        file: usenetDownload.files[playbackInfo.index ?? 0],
         metadata: metadata,
         size: usenetDownload.size || 0,
       };
@@ -330,8 +330,8 @@ export class TorboxDebridService implements DebridService {
         parsedFiles,
         metadata,
         {
-          chosenFilename: chosenFile?.name,
-          chosenIndex: chosenFile?.index,
+          chosenFilename: playbackInfo.filename,
+          chosenIndex: playbackInfo.index,
         }
       );
 

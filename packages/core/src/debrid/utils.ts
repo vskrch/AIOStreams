@@ -13,6 +13,8 @@ import {
   DebridDownload,
   PlaybackInfo,
   ServiceAuth,
+  FileInfo,
+  TitleMetadata,
 } from './base.js';
 import { normaliseTitle, titleMatch } from '../parser/utils.js';
 
@@ -269,9 +271,6 @@ export async function selectFileInTorrentOrNZB(
     //   return undefined;
     // }
   }
-  logger.verbose(
-    `File selected with score ${bestMatch.score}: ${bestMatch.file.name}`
-  );
   return bestMatch.file;
 }
 
@@ -324,28 +323,33 @@ export function isVideoFile(file: DebridFile): boolean {
   );
 }
 
-export const pbiCache = () => {
-  const prefix = 'pbi';
-  if (Env.REDIS_URI && Env.BUILTIN_PLAYBACK_LINK_STORE === 'redis') {
-    return Cache.getInstance<string, PlaybackInfo>(
-      prefix,
-      1_000_000_000,
-      'redis'
-    );
-  }
-  return Cache.getInstance<string, PlaybackInfo>(prefix, 1_000_000_000, 'sql');
+export const metadataStore = () => {
+  const prefix = 'mds';
+  const store: 'redis' | 'sql' | 'memory' =
+    Env.BUILTIN_DEBRID_METADATA_STORE || (Env.REDIS_URI ? 'redis' : 'sql');
+  return Cache.getInstance<string, TitleMetadata>(prefix, 1_000_000_000, store);
 };
 
+// export function generatePlaybackUrl(
+//   storeAuth: ServiceAuth,
+//   playbackInfo: MinimisedPlaybackInfo,
+//   filename: string
+// ) {
+//   const encryptedStoreAuth = encryptString(JSON.stringify(storeAuth));
+//   if (!encryptedStoreAuth.success) {
+//     throw new Error('Failed to encrypt store auth');
+//   }
+//   const playbackId = getSimpleTextHash(JSON.stringify(playbackInfo));
+//   pbiCache().set(playbackId, playbackInfo, Env.BUILTIN_PLAYBACK_LINK_VALIDITY);
+//   return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth.data}/${playbackId}/${encodeURIComponent(filename)}`;
+// }
+
 export function generatePlaybackUrl(
-  storeAuth: ServiceAuth,
-  playbackInfo: PlaybackInfo,
-  filename: string
-) {
-  const encryptedStoreAuth = encryptString(JSON.stringify(storeAuth));
-  if (!encryptedStoreAuth.success) {
-    throw new Error('Failed to encrypt store auth');
-  }
-  const playbackId = getSimpleTextHash(JSON.stringify(playbackInfo));
-  pbiCache().set(playbackId, playbackInfo, Env.BUILTIN_PLAYBACK_LINK_VALIDITY);
-  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth.data}/${playbackId}/${encodeURIComponent(filename)}`;
+  encryptedStoreAuth: string,
+  metadataId: string,
+  fileInfo: FileInfo,
+  title?: string,
+  filename?: string
+): string {
+  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth}/${Buffer.from(JSON.stringify(fileInfo)).toString('base64')}/${metadataId}/${encodeURIComponent(filename ?? title ?? 'unknown')}`;
 }

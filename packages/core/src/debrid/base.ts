@@ -102,37 +102,50 @@ export interface DebridDownload {
   files?: DebridFile[];
 }
 
-const BasePlaybackInfoSchema = z.object({
-  // hash: z.string(),
-  title: z.string().optional(),
-  metadata: z
-    .object({
-      titles: z.array(z.string()),
-      year: z.number().optional(),
-      season: z.number().optional(),
-      episode: z.number().optional(),
-      absoluteEpisode: z.number().optional(),
-    })
-    .optional(),
-  file: DebridFileSchema.optional(),
+const TitleMetadataSchema = z.object({
+  titles: z.array(z.string()),
+  year: z.number().optional(),
+  season: z.number().optional(),
+  episode: z.number().optional(),
+  absoluteEpisode: z.number().optional(),
 });
 
-const TorrentPlaybackInfoSchema = BasePlaybackInfoSchema.extend({
+const BasePlaybackInfoSchema = z.object({
+  // title: z.string().optional(),
+  metadata: TitleMetadataSchema.optional(),
+  filename: z.string().optional(),
+  index: z.number().optional(),
+});
+
+const BaseFileInfoSchema = z.object({
+  index: z.number().optional(),
+});
+
+const TorrentInfoSchema = BaseFileInfoSchema.extend({
   hash: z.string(),
   sources: z.array(z.string()),
-  // magnet: z.string().optional(),
   type: z.literal('torrent'),
 });
 
-const UsenetPlaybackInfoSchema = BasePlaybackInfoSchema.extend({
+const TorrentPlaybackInfoSchema =
+  BasePlaybackInfoSchema.merge(TorrentInfoSchema);
+
+const UsenetInfoSchema = BaseFileInfoSchema.extend({
   hash: z.string(),
   nzb: z.string(),
   type: z.literal('usenet'),
 });
 
+const UsenetPlaybackInfoSchema = BasePlaybackInfoSchema.merge(UsenetInfoSchema);
+
 export const PlaybackInfoSchema = z.discriminatedUnion('type', [
   TorrentPlaybackInfoSchema,
   UsenetPlaybackInfoSchema,
+]);
+
+export const FileInfoSchema = z.discriminatedUnion('type', [
+  TorrentInfoSchema,
+  UsenetInfoSchema,
 ]);
 
 export const ServiceAuthSchema = z.object({
@@ -142,6 +155,8 @@ export const ServiceAuthSchema = z.object({
 export type ServiceAuth = z.infer<typeof ServiceAuthSchema>;
 
 export type PlaybackInfo = z.infer<typeof PlaybackInfoSchema>;
+export type FileInfo = z.infer<typeof FileInfoSchema>;
+export type TitleMetadata = z.infer<typeof TitleMetadataSchema>;
 
 export interface DebridService {
   // Common methods

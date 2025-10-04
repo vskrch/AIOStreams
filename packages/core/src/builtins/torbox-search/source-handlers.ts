@@ -2,10 +2,13 @@ import { number, z } from 'zod';
 import { Stream } from '../../db/index.js';
 import {
   AnimeDatabase,
+  BuiltinServiceId,
   Cache,
   Env,
   SERVICE_DETAILS,
   createLogger,
+  encryptString,
+  getSimpleTextHash,
   getTimeTakenSincePoint,
 } from '../../utils/index.js';
 // import { DebridService, DebridFile } from './debrid-service';
@@ -24,8 +27,9 @@ import {
   NZBWithSelectedFile,
   TorrentWithSelectedFile,
   generatePlaybackUrl,
+  metadataStore,
 } from '../../debrid/utils.js';
-import { DebridFile, PlaybackInfo } from '../../debrid/index.js';
+import { DebridFile, FileInfo, PlaybackInfo } from '../../debrid/index.js';
 import { getTraktAliases } from '../../metadata/trakt.js';
 
 const logger = createLogger('torbox-search');
@@ -75,70 +79,69 @@ abstract class SourceHandler {
   }
 
   protected createStream(
-    id: ParsedId,
-    torrentOrNZB: TorrentWithSelectedFile | NZBWithSelectedFile,
-    userData: z.infer<typeof TorBoxSearchAddonUserDataSchema>,
-    titleMetadata?: TitleMetadata
-  ): Stream & { type: 'torrent' | 'usenet' } {
-    if (!torrentOrNZB.service) {
-      throw new Error('Torrent or NZB has no service');
-    }
-    const storeAuth = {
-      id: torrentOrNZB.service.id,
-      credential:
-        userData.services.find(
-          (service) => service.id === torrentOrNZB.service!.id
-        )?.credential ?? '',
-    };
+    torrentOrNzb: TorrentWithSelectedFile | NZBWithSelectedFile,
+    encryptedStoreAuths: Record<BuiltinServiceId, string>,
+    metadataId: string
+  ): Stream {
+    // Handle debrid streaming
+    const encryptedStoreAuth = torrentOrNzb.service
+      ? encryptedStoreAuths?.[torrentOrNzb.service?.id]
+      : undefined;
 
-    // const playbackInfo: PlaybackInfo = {
-    //   type: 'usenet',
-    //   hash: torrent.hash,
-    //   magnet: torrent.type === 'torrent' ? torrent.magnet : undefined,
-    //   title: torrent.title,
-    //   nzb: torrent.type === 'usenet' ? torrent.nzb : undefined,
-    //   file: torrent.file,
-    //   metadata: titleMetadata,
-    // };
-    const playbackInfo: PlaybackInfo =
-      torrentOrNZB.type === 'torrent'
+    const fileInfo: FileInfo | undefined = torrentOrNzb.service
+      ? torrentOrNzb.type === 'torrent'
         ? {
             type: 'torrent',
-            hash: torrentOrNZB.hash,
-            sources: torrentOrNZB.sources,
-            // magnet: torrentOrNZB.magnet,
-            title: torrentOrNZB.title,
-            file: torrentOrNZB.file,
-            metadata: titleMetadata,
+            hash: torrentOrNzb.hash,
+            sources: torrentOrNzb.sources,
+            index: torrentOrNzb.file.index,
           }
         : {
             type: 'usenet',
-            nzb: torrentOrNZB.nzb,
-            title: torrentOrNZB.title,
-            hash: torrentOrNZB.hash,
-            file: torrentOrNZB.file,
-            metadata: titleMetadata,
-          };
+            nzb: torrentOrNzb.nzb,
+            hash: torrentOrNzb.hash,
+            index: torrentOrNzb.file.index,
+          }
+      : undefined;
 
-    const svcMeta = SERVICE_DETAILS[torrentOrNZB.service.id];
-    const name = `[${svcMeta.shortName} ${torrentOrNZB.service.cached ? '⚡' : '⏳'}${torrentOrNZB.service.owned ? ' ☁️' : ''}] TorBox Search`;
-    const description = `${torrentOrNZB.title}\n${torrentOrNZB.file.name}\n${torrentOrNZB.indexer ? `🔍 ${torrentOrNZB.indexer}` : ''} ${torrentOrNZB.seeders ? `👤 ${torrentOrNZB.seeders}` : ''} ${torrentOrNZB.age && torrentOrNZB.age !== '0d' ? `🕒 ${torrentOrNZB.age}` : ''}`;
+    const svcMeta = torrentOrNzb.service
+      ? SERVICE_DETAILS[torrentOrNzb.service.id]
+      : undefined;
+    // const svcMeta = SERVICE_DETAILS[torrentOrNzb.service.id];
+    const shortCode = svcMeta?.shortName || 'P2P';
+    const cacheIndicator = torrentOrNzb.service
+      ? torrentOrNzb.service.cached
+        ? '⚡'
+        : '⏳'
+      : '';
+
+    const name = `[${shortCode} ${cacheIndicator}${torrentOrNzb.service?.owned ? ' ☁️' : ''}] TorBox Search`;
+    const description = `${torrentOrNzb.title}\n${torrentOrNzb.file.name}\n${
+      torrentOrNzb.indexer ? `🔍 ${torrentOrNzb.indexer}` : ''
+    } ${'seeders' in torrentOrNzb && torrentOrNzb.seeders ? `👤 ${torrentOrNzb.seeders}` : ''} ${
+      torrentOrNzb.age && torrentOrNzb.age !== '0d'
+        ? `🕒 ${torrentOrNzb.age}`
+        : ''
+    }`;
 
     return {
-      url: torrentOrNZB.service
+      url: torrentOrNzb.service
         ? generatePlaybackUrl(
-            storeAuth!,
-            playbackInfo!,
-            torrentOrNZB.file.name || torrentOrNZB.title || 'unknown'
+            encryptedStoreAuth!,
+            metadataId!,
+            fileInfo!,
+            torrentOrNzb.title,
+            torrentOrNzb.file.name
           )
         : undefined,
       name,
       description,
-      type: torrentOrNZB.type,
-      infoHash: torrentOrNZB.hash,
+      type: torrentOrNzb.type,
+      infoHash: torrentOrNzb.hash,
+      fileIdx: torrentOrNzb.file.index,
       behaviorHints: {
-        videoSize: torrentOrNZB.file.size,
-        filename: torrentOrNZB.file.name,
+        videoSize: torrentOrNzb.file.size,
+        filename: torrentOrNzb.file.name,
       },
     };
   }
@@ -333,8 +336,29 @@ export class TorrentSourceHandler extends SourceHandler {
           ?.owned ?? false;
     });
 
+    const encryptedStoreAuths = userData.services.reduce(
+      (acc, service) => {
+        const auth = {
+          id: service.id,
+          credential: service.credential,
+        };
+        acc[service.id] = encryptString(JSON.stringify(auth)).data ?? '';
+        return acc;
+      },
+      {} as Record<BuiltinServiceId, string>
+    );
+
+    const metadataId = getSimpleTextHash(JSON.stringify(fetchResult.metadata));
+    if (fetchResult.metadata) {
+      await metadataStore().set(
+        metadataId,
+        fetchResult.metadata,
+        Env.BUILTIN_PLAYBACK_LINK_VALIDITY
+      );
+    }
+
     return results.map((result) =>
-      this.createStream(parsedId, result, userData, fetchResult.metadata)
+      this.createStream(result, encryptedStoreAuths, metadataId)
     );
   }
 
@@ -440,7 +464,7 @@ export class UsenetSourceHandler extends SourceHandler {
       `metadata:${type}:${value}`
     );
 
-    if (!torrents) {
+    if (!torrents || !titleMetadata) {
       const start = Date.now();
       try {
         const data = await this.searchApi.getUsenetById(
@@ -541,8 +565,29 @@ export class UsenetSourceHandler extends SourceHandler {
         nzbs.find((nzb) => nzb.hash === result.hash)?.owned ?? false;
     });
 
+    const encryptedStoreAuths = userData.services.reduce(
+      (acc, service) => {
+        const auth = {
+          id: service.id,
+          credential: service.credential,
+        };
+        acc[service.id] = encryptString(JSON.stringify(auth)).data ?? '';
+        return acc;
+      },
+      {} as Record<BuiltinServiceId, string>
+    );
+
+    const metadataId = getSimpleTextHash(JSON.stringify(titleMetadata));
+    if (titleMetadata) {
+      await metadataStore().set(
+        metadataId,
+        titleMetadata,
+        Env.BUILTIN_PLAYBACK_LINK_VALIDITY
+      );
+    }
+
     return results.map((result) =>
-      this.createStream(parsedId, result, userData, titleMetadata)
+      this.createStream(result, encryptedStoreAuths, metadataId)
     );
   }
 }

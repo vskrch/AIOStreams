@@ -209,7 +209,7 @@ export class StremThruInterface implements DebridService {
       });
     }
 
-    const { hash, file: chosenFile, metadata } = playbackInfo;
+    const { hash, metadata } = playbackInfo;
     const cacheKey = `${this.serviceName}:${this.config.token}:${this.config.clientIp}:${playbackInfo.hash}:${playbackInfo.metadata?.season}:${playbackInfo.metadata?.episode}:${playbackInfo.metadata?.absoluteEpisode}`;
     const cachedLink = await StremThruInterface.playbackLinkCache.get(cacheKey);
 
@@ -249,7 +249,7 @@ export class StremThruInterface implements DebridService {
     }
 
     const torrent: Torrent = {
-      title: magnetDownload.name || playbackInfo.title || '',
+      title: magnetDownload.name || '',
       hash: hash,
       size: magnetDownload.size || 0,
       type: 'torrent',
@@ -273,8 +273,8 @@ export class StremThruInterface implements DebridService {
       parsedFiles,
       metadata,
       {
-        chosenFilename: chosenFile?.name,
-        chosenIndex: chosenFile?.index,
+        chosenFilename: playbackInfo.filename,
+        chosenIndex: playbackInfo.index,
       }
     );
 

@@ -3,9 +3,12 @@ import { z, ZodError } from 'zod';
 import { IdParser, IdType, ParsedId } from '../../utils/id-parser.js';
 import {
   AnimeDatabase,
+  BuiltinServiceId,
   constants,
+  encryptString,
   Env,
   formatZodError,
+  getSimpleTextHash,
   getTimeTakenSincePoint,
   SERVICE_DETAILS,
 } from '../../utils/index.js';
@@ -21,6 +24,9 @@ import {
   ServiceAuth,
   DebridError,
   generatePlaybackUrl,
+  TitleMetadata as DebridTitleMetadata,
+  metadataStore,
+  FileInfo,
 } from '../../debrid/index.js';
 import { processTorrents, processNZBs } from '../utils/debrid.js';
 import { calculateAbsoluteEpisode } from '../utils/general.js';
@@ -212,9 +218,34 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       ),
     ]);
 
+    const encryptedStoreAuths = this.userData.services.reduce(
+      (acc, service) => {
+        const auth = {
+          id: service.id,
+          credential: service.credential,
+        };
+        acc[service.id] = encryptString(JSON.stringify(auth)).data ?? '';
+        return acc;
+      },
+      {} as Record<BuiltinServiceId, string>
+    );
+    const debridTitleMetadata: DebridTitleMetadata = {
+      titles: searchMetadata.titles,
+      year: searchMetadata.year,
+      season: searchMetadata.season,
+      episode: searchMetadata.episode,
+      absoluteEpisode: searchMetadata.absoluteEpisode,
+    };
+    const metadataId = getSimpleTextHash(JSON.stringify(debridTitleMetadata));
+    await metadataStore().set(
+      metadataId,
+      debridTitleMetadata,
+      Env.BUILTIN_PLAYBACK_LINK_VALIDITY
+    );
+
     const resultStreams = await Promise.all(
       [...processedTorrents.results, ...processedNzbs.results].map((result) =>
-        this._createStream(result, this.userData, searchMetadata)
+        this._createStream(result, encryptedStoreAuths, metadataId)
       )
     );
 
@@ -414,37 +445,27 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
 
   protected _createStream(
     torrentOrNzb: TorrentWithSelectedFile | NZBWithSelectedFile,
-    userData: T,
-    titleMetadata?: TitleMetadata
+    encryptedStoreAuths: Record<BuiltinServiceId, string>,
+    metadataId: string
   ): Stream {
     // Handle debrid streaming
-    const storeAuth: ServiceAuth | undefined = torrentOrNzb.service
-      ? {
-          id: torrentOrNzb.service!.id,
-          credential:
-            userData.services.find(
-              (service) => service.id === torrentOrNzb.service!.id
-            )?.credential ?? '',
-        }
+    const encryptedStoreAuth = torrentOrNzb.service
+      ? encryptedStoreAuths?.[torrentOrNzb.service?.id]
       : undefined;
 
-    const playbackInfo: PlaybackInfo | undefined = torrentOrNzb.service
+    const fileInfo: FileInfo | undefined = torrentOrNzb.service
       ? torrentOrNzb.type === 'torrent'
         ? {
             type: 'torrent',
             hash: torrentOrNzb.hash,
             sources: torrentOrNzb.sources,
-            title: torrentOrNzb.title,
-            file: torrentOrNzb.file,
-            metadata: titleMetadata,
+            index: torrentOrNzb.file.index,
           }
         : {
             type: 'usenet',
             nzb: torrentOrNzb.nzb,
-            title: torrentOrNzb.title,
             hash: torrentOrNzb.hash,
-            file: torrentOrNzb.file,
-            metadata: titleMetadata,
+            index: torrentOrNzb.file.index,
           }
       : undefined;
 
@@ -471,9 +492,11 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     return {
       url: torrentOrNzb.service
         ? generatePlaybackUrl(
-            storeAuth!,
-            playbackInfo!,
-            torrentOrNzb.file.name || torrentOrNzb.title || 'unknown'
+            encryptedStoreAuth!,
+            metadataId!,
+            fileInfo!,
+            torrentOrNzb.title,
+            torrentOrNzb.file.name
           )
         : undefined,
       name,

@@ -1601,10 +1601,10 @@ export const Env = cleanEnv(process.env, {
     default: 60 * 60, // 1 hour
     desc: 'Builtin Debrid playback link cache TTL',
   }),
-  BUILTIN_PLAYBACK_LINK_STORE: str({
-    choices: ['redis', 'sql'],
-    default: 'sql',
-    desc: 'Builtin Debrid playback link store',
+  BUILTIN_DEBRID_METADATA_STORE: str({
+    choices: ['redis', 'sql', 'memory'],
+    default: 'memory',
+    desc: 'Builtin Debrid metadata store',
   }),
   BUILTIN_PLAYBACK_LINK_VALIDITY: num({
     default: 1 * 24 * 60 * 60, // 1 day
