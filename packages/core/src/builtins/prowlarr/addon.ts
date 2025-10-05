@@ -94,6 +94,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     const chosenIndexers = availableIndexers.filter(
       (indexer) =>
         indexer.enable &&
+        indexer.protocol === 'torrent' &&
         ((!this.indexers.length && !chosenTags.length) ||
           (chosenTags.length &&
             indexer.tags.some((tag) => chosenTags.includes(tag))) ||

@@ -25,6 +25,20 @@ if (Env.BUILTIN_PROWLARR_URL && Env.BUILTIN_PROWLARR_API_KEY) {
         Env.BUILTIN_PROWLARR_URL!,
         Env.BUILTIN_PROWLARR_API_KEY!
       );
+      indexers = indexers.filter(
+        (indexer) =>
+          indexer.enable &&
+          indexer.protocol === 'torrent' &&
+          (Env.BUILTIN_PROWLARR_INDEXERS?.length
+            ? [indexer.name, indexer.sortName, indexer.definitionName]
+                .map((x) => x.toLowerCase())
+                .some((x) =>
+                  Env.BUILTIN_PROWLARR_INDEXERS!.map((x) =>
+                    x.toLowerCase()
+                  ).includes(x)
+                )
+            : true)
+      );
     } catch (e) {
       logger.error(`Failed to get indexers from Prowlarr: ${e}`);
     }

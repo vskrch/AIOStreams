@@ -1760,6 +1760,10 @@ export const Env = cleanEnv(process.env, {
     default: undefined,
     desc: 'Builtin Prowlarr API Key',
   }),
+  BUILTIN_PROWLARR_INDEXERS: commaSeparated({
+    default: undefined,
+    desc: 'Comma separated list of prowlarr indexers to use.',
+  }),
   BUILTIN_DEFAULT_PROWLARR_TIMEOUT: num({
     default: undefined,
     desc: 'Default timeout for the builtin Prowlarr addon.',
