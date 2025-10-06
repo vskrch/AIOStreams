@@ -39,6 +39,8 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
   readonly logger = logger;
   readonly api: ProwlarrApi;
 
+  public static predefinedIndexers: ProwlarrApiIndexer[] | undefined;
+
   private readonly indexers: string[] = [];
   private readonly tags: string[] = [];
   constructor(config: ProwlarrAddonConfig, clientIp?: string) {
@@ -52,17 +54,62 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     });
   }
 
-  static async getIndexers(
-    url: string,
-    apiKey: string
-  ): Promise<ProwlarrApiIndexer[]> {
+  public static async fetchPredefinedIndexers(): Promise<void> {
+    if (this.predefinedIndexers) return;
+    if (!Env.BUILTIN_PROWLARR_URL || !Env.BUILTIN_PROWLARR_API_KEY) return;
     const api = new ProwlarrApi({
-      baseUrl: url,
-      apiKey: apiKey,
-      timeout: Env.BUILTIN_PROWLARR_SEARCH_TIMEOUT,
+      baseUrl: Env.BUILTIN_PROWLARR_URL,
+      apiKey: Env.BUILTIN_PROWLARR_API_KEY,
+      timeout: 5000,
     });
     const { data } = await api.indexers();
-    return data;
+    logger.debug(`Fetched ${data.length} predefined indexers`);
+    let filterReasons: Map<string, number> = new Map();
+
+    this.predefinedIndexers = data.filter((indexer) => {
+      if (!indexer.enable) {
+        filterReasons.set(
+          'not enabled',
+          (filterReasons.get('not enabled') ?? 0) + 1
+        );
+        return false;
+      }
+      if (indexer.protocol !== 'torrent') {
+        filterReasons.set(
+          'not torrent protocol',
+          (filterReasons.get('not torrent protocol') ?? 0) + 1
+        );
+        return false;
+      }
+      if (Env.BUILTIN_PROWLARR_INDEXERS?.length) {
+        if (
+          ![
+            indexer.name.toLowerCase(),
+            indexer.sortName.toLowerCase(),
+            indexer.definitionName.toLowerCase(),
+          ].some((x) =>
+            Env.BUILTIN_PROWLARR_INDEXERS?.map((x) => x.toLowerCase()).includes(
+              x
+            )
+          )
+        ) {
+          filterReasons.set(
+            'not in predefined indexers',
+            (filterReasons.get('not in predefined indexers') ?? 0) + 1
+          );
+          return false;
+        }
+      }
+      return true;
+    });
+    logger.debug(`Set ${this.predefinedIndexers?.length} predefined indexers`);
+    if (filterReasons.size > 0) {
+      logger.debug(
+        `Filter reasons: ${Array.from(filterReasons.entries())
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ')}`
+      );
+    }
   }
 
   protected async _searchTorrents(
