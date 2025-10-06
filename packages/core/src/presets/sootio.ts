@@ -127,7 +127,7 @@ export class SootioPreset extends Preset {
     options: Record<string, any>
   ): Promise<Addon[]> {
     if (options?.url?.endsWith('/manifest.json')) {
-      return [this.generateAddon(userData, options, [])];
+      return [this.generateAddon(userData, options, undefined)];
     }
 
     const usableServices = this.getUsableServices(userData, options.services);
@@ -158,17 +158,21 @@ export class SootioPreset extends Preset {
   private static generateAddon(
     userData: UserData,
     options: Record<string, any>,
-    serviceIds: ServiceId[]
+    serviceIds?: ServiceId[]
   ): Addon {
     return {
       name: options.name || this.METADATA.NAME,
       identifier:
-        serviceIds.length > 1
+        serviceIds && serviceIds.length > 1
           ? 'multi'
-          : constants.SERVICE_DETAILS[serviceIds[0]].shortName,
+          : serviceIds
+            ? constants.SERVICE_DETAILS[serviceIds[0]].shortName
+            : undefined,
       displayIdentifier: serviceIds
-        .map((id) => constants.SERVICE_DETAILS[id].shortName)
-        .join(' | '),
+        ? serviceIds
+            .map((id) => constants.SERVICE_DETAILS[id].shortName)
+            .join(' | ')
+        : undefined,
       manifestUrl: this.generateManifestUrl(userData, options, serviceIds),
       enabled: true,
       mediaTypes: options.mediaTypes || [],
