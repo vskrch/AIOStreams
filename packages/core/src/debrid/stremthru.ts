@@ -62,6 +62,11 @@ export class StremThruInterface implements DebridService {
     });
   }
 
+  public async listMagnets(): Promise<DebridDownload[]> {
+    const result = await this.stremthru.store.listMagnets({});
+    return result.data.items;
+  }
+
   public async checkMagnets(
     magnets: string[],
     sid?: string
@@ -197,7 +202,8 @@ export class StremThruInterface implements DebridService {
 
   public async resolve(
     playbackInfo: PlaybackInfo,
-    filename: string
+    filename: string,
+    cacheAndPlay: boolean
   ): Promise<string | undefined> {
     if (playbackInfo.type === 'usenet') {
       throw new DebridError('StremThru does not support usenet operations', {
@@ -220,12 +226,18 @@ export class StremThruInterface implements DebridService {
 
     if (cachedLink !== undefined) {
       logger.debug(`Using cached link for ${hash}`);
-      return cachedLink ?? undefined;
+      if (cachedLink === null) {
+        if (!cacheAndPlay) {
+          return undefined;
+        }
+      } else {
+        return cachedLink;
+      }
     }
 
     logger.debug(`Adding magnet to ${this.serviceName} for ${magnet}`);
 
-    const magnetDownload = await this.addMagnet(magnet);
+    let magnetDownload = await this.addMagnet(magnet);
 
     logger.debug(`Magnet download added for ${magnet}`, {
       status: magnetDownload.status,
@@ -235,7 +247,32 @@ export class StremThruInterface implements DebridService {
     if (magnetDownload.status !== 'downloaded') {
       // temporarily cache the null value for 1m
       StremThruInterface.playbackLinkCache.set(cacheKey, null, 60);
-      return undefined;
+      if (!cacheAndPlay) {
+        return undefined;
+      }
+      // poll status when cacheAndPlay is true, max wait time is 110s
+      for (let i = 0; i < 10; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 11000));
+        const list = await this.listMagnets();
+        const magnetDownloadInList = list.find(
+          (magnet) => magnet.hash === hash
+        );
+        if (!magnetDownloadInList) {
+          logger.warn(`Failed to find ${hash} in list`);
+        } else {
+          logger.debug(`Polled status for ${hash}`, {
+            attempt: i + 1,
+            status: magnetDownloadInList.status,
+          });
+          if (magnetDownloadInList.status === 'downloaded') {
+            magnetDownload = magnetDownloadInList;
+            break;
+          }
+        }
+      }
+      if (magnetDownload.status !== 'downloaded') {
+        return undefined;
+      }
     }
 
     if (!magnetDownload.files?.length) {
