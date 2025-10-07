@@ -75,6 +75,9 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
         return false;
       }
       if (indexer.protocol !== 'torrent') {
+        logger.warn(
+          `Skipping ${indexer.name} (protocol was ${indexer.protocol})`
+        );
         filterReasons.set(
           'not torrent protocol',
           (filterReasons.get('not torrent protocol') ?? 0) + 1
