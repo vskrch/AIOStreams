@@ -169,7 +169,7 @@ class ProwlarrApi {
           },
           ProwlarrApiSearchSchema
         ),
-      `${this.baseUrl}:search:${query}`,
+      `${this.baseUrl}:${type}:${query}:${indexerIds.join(',')}:${limit}:${offset}`,
       Env.BUILTIN_PROWLARR_SEARCH_CACHE_TTL
     );
   }
