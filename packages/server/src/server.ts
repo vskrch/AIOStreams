@@ -60,7 +60,7 @@ async function initialiseAnimeDatabase() {
 
 async function initialiseProwlarr() {
   try {
-    await ProwlarrAddon.fetchPredefinedIndexers();
+    await ProwlarrAddon.fetchpreconfiguredIndexers();
   } catch (error) {
     logger.error('Failed to initialise Prowlarr:', error);
   }

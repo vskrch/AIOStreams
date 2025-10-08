@@ -61,7 +61,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
         type: 'password',
         required: !Env.BUILTIN_PROWLARR_URL || !Env.BUILTIN_PROWLARR_API_KEY,
       },
-      ...(ProwlarrAddon.predefinedIndexers
+      ...(ProwlarrAddon.preconfiguredIndexers
         ? [
             {
               id: 'indexers',
@@ -69,11 +69,11 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
               description:
                 'If using the preconfigured instance, select the indexers to use here.',
               type: 'multi-select',
-              options: ProwlarrAddon.predefinedIndexers.map((indexer) => ({
+              options: ProwlarrAddon.preconfiguredIndexers.map((indexer) => ({
                 label: indexer.name,
                 value: indexer.name,
               })),
-              default: ProwlarrAddon.predefinedIndexers.map(
+              default: ProwlarrAddon.preconfiguredIndexers.map(
                 (indexer) => indexer.name
               ),
             } as const,
