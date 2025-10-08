@@ -240,10 +240,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
     } else {
       prowlarrUrl = Env.BUILTIN_PROWLARR_URL;
       prowlarrApiKey = Env.BUILTIN_PROWLARR_API_KEY;
-      // only use indexer options when using the preconfigured instance.
-      indexers = Array.isArray(options.indexers)
-        ? options.indexers
-        : `${options.indexers}`.split(',');
+      indexers = Array.isArray(options.indexers) ? options.indexers : undefined;
     }
 
     if (!prowlarrUrl || !prowlarrApiKey) {
