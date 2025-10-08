@@ -21,7 +21,7 @@ class NewznabApi extends BaseNabApi<'newznab'> {
 }
 
 export const NewznabAddonConfigSchema = NabAddonConfigSchema.extend({
-  proxyAuth: z.string(),
+  proxyAuth: z.string().optional(),
 });
 export type NewznabAddonConfig = z.infer<typeof NewznabAddonConfigSchema>;
 
