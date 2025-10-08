@@ -451,6 +451,7 @@ export const UserDataSchema = z.object({
       mode: z.enum(['exact', 'contains']).optional(),
       matchYear: z.boolean().optional(),
       yearTolerance: z.number().min(0).max(100).optional(),
+      similarityThreshold: z.number().min(0).max(1).optional(),
       enabled: z.boolean().optional(),
       requestTypes: z.array(z.string()).optional(),
       addons: z.array(z.string()).optional(),
