@@ -5,6 +5,7 @@ import {
   createLogger,
   getSimpleTextHash,
   Cache,
+  DistributedLock,
 } from '../utils/index.js';
 import { selectFileInTorrentOrNZB, Torrent } from './utils.js';
 import {
@@ -201,6 +202,22 @@ export class StremThruInterface implements DebridService {
   }
 
   public async resolve(
+    playbackInfo: PlaybackInfo,
+    filename: string,
+    cacheAndPlay: boolean
+  ): Promise<string | undefined> {
+    const { result } = await DistributedLock.getInstance().withLock(
+      `stremthru:resolve:${playbackInfo.hash}:${playbackInfo.metadata?.season}:${playbackInfo.metadata?.episode}:${playbackInfo.metadata?.absoluteEpisode}:${filename}:${cacheAndPlay}:${this.config.clientIp}:${this.config.serviceName}:${this.config.token}`,
+      () => this._resolve(playbackInfo, filename, cacheAndPlay),
+      {
+        timeout: playbackInfo.cacheAndPlay ? 120000 : 30000,
+        ttl: 10000,
+      }
+    );
+    return result;
+  }
+
+  private async _resolve(
     playbackInfo: PlaybackInfo,
     filename: string,
     cacheAndPlay: boolean

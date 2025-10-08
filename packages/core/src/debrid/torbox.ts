@@ -7,6 +7,7 @@ import {
   createLogger,
   getSimpleTextHash,
   Cache,
+  DistributedLock,
 } from '../utils/index.js';
 import { PTT } from '../parser/index.js';
 import { selectFileInTorrentOrNZB } from './utils.js';
@@ -269,7 +270,6 @@ export class TorboxDebridService implements DebridService {
 
     return link.data.data;
   }
-
   public async resolve(
     playbackInfo: PlaybackInfo,
     filename: string,
@@ -278,7 +278,22 @@ export class TorboxDebridService implements DebridService {
     if (playbackInfo.type === 'torrent') {
       return this.stremthru.resolve(playbackInfo, filename, cacheAndPlay);
     }
+    const { result } = await DistributedLock.getInstance().withLock(
+      `torbox:resolve:${playbackInfo.hash}:${playbackInfo.metadata?.season}:${playbackInfo.metadata?.episode}:${playbackInfo.metadata?.absoluteEpisode}:${filename}:${cacheAndPlay}:${this.config.clientIp}:${this.config.token}`,
+      () => this._resolve(playbackInfo, filename, cacheAndPlay),
+      {
+        timeout: playbackInfo.cacheAndPlay ? 120000 : 30000,
+        ttl: 10000,
+      }
+    );
+    return result;
+  }
 
+  private async _resolve(
+    playbackInfo: PlaybackInfo & { type: 'usenet' },
+    filename: string,
+    cacheAndPlay: boolean
+  ): Promise<string | undefined> {
     const { nzb, metadata, hash } = playbackInfo;
     const cacheKey = `${this.serviceName}:${this.config.token}:${this.config.clientIp}:${JSON.stringify(playbackInfo)}`;
     const cachedLink =
