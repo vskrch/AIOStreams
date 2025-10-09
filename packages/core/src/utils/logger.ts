@@ -151,11 +151,28 @@ export const getTimeTakenSincePoint = (point: number) => {
   const duration = timeNow - point;
   if (duration < 1000) {
     return `${duration.toFixed(2)}ms`;
-  } else if (duration < 60000) {
-    return `${(duration / 1000).toFixed(2)}s`;
-  } else if (duration < 3600000) {
-    return `${(duration / 60000).toFixed(0)}m`;
-  } else {
-    return `${(duration / 3600000).toFixed(0)}h`;
   }
+  return formatDurationAsText(duration / 1000);
 };
+
+export function formatDurationAsText(seconds: number): string {
+  seconds = Math.floor(seconds);
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  if (seconds < 86400)
+    return `${Math.floor(seconds / 3600)}h ${seconds % 3600}m`;
+  if (seconds < 604800)
+    return `${Math.floor(seconds / 86400)}d ${seconds % 86400}h`;
+  const weeks = Math.floor(seconds / 604800);
+  const days = Math.floor((seconds % 604800) / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  let result = '';
+  if (weeks > 0) result += `${weeks}w `;
+  if (days > 0) result += `${days}d `;
+  if (hours > 0) result += `${hours}h `;
+  if (minutes > 0) result += `${minutes}m `;
+  if (secs > 0) result += `${secs}s`;
+  return result;
+}
