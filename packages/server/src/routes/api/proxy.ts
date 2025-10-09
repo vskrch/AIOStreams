@@ -93,30 +93,48 @@ router.get(
     }
 
     try {
-      const allConnections = await proxyStats.getAllActiveConnections();
+      const allUserStats = await proxyStats.getAllUserStats();
 
       // Convert Map to a more JSON-friendly format
       const stats = {
         timestamp: new Date().toISOString(),
-        totalUsers: allConnections.size,
-        activeConnections: Object.fromEntries(
-          Array.from(allConnections.entries()).map(([user, connections]) => [
+        totalUsers: allUserStats.size,
+        users: Object.fromEntries(
+          Array.from(allUserStats.entries()).map(([user, userStats]) => [
             user,
-            connections.map((conn) => ({
-              ...conn,
-              timestamp: new Date(conn.timestamp).toISOString(),
-              relativeTimestamp: `${getTimeTakenSincePoint(conn.timestamp)} ago`,
-            })),
+            {
+              active: userStats.active.map((conn) => ({
+                ...conn,
+                timestamp: new Date(conn.timestamp).toISOString(),
+                lastSeen: new Date(conn.lastSeen).toISOString(),
+                relativeTimestamp: `${getTimeTakenSincePoint(conn.timestamp)} ago`,
+                relativeLastSeen: `${getTimeTakenSincePoint(conn.lastSeen)} ago`,
+              })),
+              history: userStats.history.map((conn) => ({
+                ...conn,
+                timestamp: new Date(conn.timestamp).toISOString(),
+                lastSeen: new Date(conn.lastSeen).toISOString(),
+                relativeTimestamp: `${getTimeTakenSincePoint(conn.timestamp)} ago`,
+                relativeLastSeen: `${getTimeTakenSincePoint(conn.lastSeen)} ago`,
+              })),
+            },
           ])
         ),
         summary: {
-          totalActiveConnections: Array.from(allConnections.values()).reduce(
-            (total, connections) => total + connections.length,
+          totalActiveConnections: Array.from(allUserStats.values()).reduce(
+            (total, userStats) => total + userStats.active.length,
             0
           ),
-          usersWithActiveConnections: Array.from(
-            allConnections.entries()
-          ).filter(([_, connections]) => connections.length > 0).length,
+          totalHistoryConnections: Array.from(allUserStats.values()).reduce(
+            (total, userStats) => total + userStats.history.length,
+            0
+          ),
+          usersWithActiveConnections: Array.from(allUserStats.entries()).filter(
+            ([_, userStats]) => userStats.active.length > 0
+          ).length,
+          usersWithHistory: Array.from(allUserStats.entries()).filter(
+            ([_, userStats]) => userStats.history.length > 0
+          ).length,
         },
       };
 
@@ -175,16 +193,17 @@ router.all(
         );
       }
 
-      // Track the active connection
-      clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+      // Track the connection
+      clientIp =
+        req.requestIp || req.ip || req.socket.remoteAddress || 'unknown';
       const timestamp = Date.now();
-      proxyStats.addActiveConnection(
-        auth.username,
-        clientIp,
-        data.url,
-        timestamp,
-        filename
-      );
+      proxyStats
+        .addConnection(auth.username, clientIp, data.url, timestamp, filename)
+        .catch((error) =>
+          logger.warn(`[${requestId}] Failed to add connection to stats`, {
+            error: error instanceof Error ? error.message : String(error),
+          })
+        );
 
       // prepare and execute upstream request
       const { host, ...clientHeaders } = req.headers;
@@ -251,10 +270,10 @@ router.all(
     } catch (error) {
       const totalDuration = Date.now() - startTime;
 
-      // Remove the active connection tracking on error
+      // Remove the connection tracking on error
       if (auth && clientIp && data) {
         proxyStats
-          .removeActiveConnection(auth.username, clientIp, data.url)
+          .removeConnection(auth.username, clientIp, data.url)
           .catch((statsError) =>
             logger.warn(
               `[${requestId}] Failed to remove connection from stats on error`,
