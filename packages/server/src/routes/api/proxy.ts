@@ -20,6 +20,33 @@ const router: Router = Router();
 // Create a singleton instance of BuiltinProxyStats
 const proxyStats = new BuiltinProxyStats();
 
+function sanitiseHeaderValue(value: string): string {
+  return value.replace(/[^\t\x20-\x7e]/g, '');
+}
+
+// A helper to iterate over the headers object
+function sanitiseHeaders(
+  headers: Record<string, string | string[] | number | undefined>
+): Record<string, string | string[]> {
+  const sanitised: Record<string, string | string[]> = {};
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (value === undefined) {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      sanitised[key] = value.map((v) => sanitiseHeaderValue(v));
+    } else if (typeof value === 'number') {
+      sanitised[key] = String(value);
+    } else {
+      sanitised[key] = sanitiseHeaderValue(value);
+    }
+  }
+
+  return sanitised;
+}
+
 export default router;
 
 const ProxyAuthSchema = z.object({
@@ -207,7 +234,7 @@ router.all(
       });
 
       // forward upstream response to client
-      res.set(upstreamResponse.headers);
+      res.set(sanitiseHeaders(upstreamResponse.headers));
       if (data.responseHeaders) {
         res.set(data.responseHeaders);
       }
