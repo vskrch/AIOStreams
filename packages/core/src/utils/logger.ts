@@ -156,23 +156,34 @@ export const getTimeTakenSincePoint = (point: number) => {
 };
 
 export function formatDurationAsText(seconds: number): string {
-  seconds = Math.floor(seconds);
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-  if (seconds < 86400)
-    return `${Math.floor(seconds / 3600)}h ${seconds % 3600}m`;
-  if (seconds < 604800)
-    return `${Math.floor(seconds / 86400)}d ${seconds % 86400}h`;
-  const weeks = Math.floor(seconds / 604800);
-  const days = Math.floor((seconds % 604800) / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  let result = '';
-  if (weeks > 0) result += `${weeks}w `;
-  if (days > 0) result += `${days}d `;
-  if (hours > 0) result += `${hours}h `;
-  if (minutes > 0) result += `${minutes}m `;
-  if (secs > 0) result += `${secs}s`;
-  return result;
+  if (seconds < 0) {
+    return 'Invalid input';
+  }
+  if (seconds === 0) {
+    return '0s';
+  }
+  if (seconds < 60) {
+    return seconds % 1 === 0 ? `${seconds}s` : `${seconds.toFixed(2)}s`;
+  }
+
+  const timeUnits = [
+    { unit: 'w', secondsInUnit: 604800 },
+    { unit: 'd', secondsInUnit: 86400 },
+    { unit: 'h', secondsInUnit: 3600 },
+    { unit: 'm', secondsInUnit: 60 },
+    { unit: 's', secondsInUnit: 1 },
+  ];
+
+  let remainingSeconds = seconds;
+  const parts: string[] = [];
+
+  for (const { unit, secondsInUnit } of timeUnits) {
+    if (remainingSeconds >= secondsInUnit) {
+      const value = Math.floor(remainingSeconds / secondsInUnit);
+      parts.push(`${value}${unit}`);
+      remainingSeconds %= secondsInUnit;
+    }
+  }
+
+  return parts.slice(0, 2).join(' ');
 }
