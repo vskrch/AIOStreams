@@ -218,7 +218,7 @@ router.all(
       let method = req.method as Dispatcher.HttpMethod;
 
       while (redirectCount < maxRedirects) {
-        const urlObj = new URL(data.url);
+        const urlObj = new URL(currentUrl);
         if (Env.BASE_URL && urlObj.origin === Env.BASE_URL) {
           const internalUrl = new URL(Env.INTERNAL_URL);
           urlObj.protocol = internalUrl.protocol;
@@ -241,9 +241,19 @@ router.all(
         const proxyAgent = useProxy
           ? getProxyAgent(Env.ADDON_PROXY![proxyIndex])
           : undefined;
+        const headers = { ...clientHeaders, ...data.requestHeaders };
+        logger.debug(`[${requestId}] Making upstream request`, {
+          username: auth.username,
+          method: method,
+          proxied: useProxy
+            ? `true${proxyIndex > 1 ? ` (${proxyIndex + 1})` : ''}`
+            : 'false',
+          range: headers['range'],
+          url: currentUrl,
+        });
         upstreamResponse = await request(currentUrl, {
           method: method,
-          headers: { ...clientHeaders, ...data.requestHeaders },
+          headers: headers,
           dispatcher: proxyAgent,
           body: isBodyRequest ? req : undefined,
           bodyTimeout: 0,
@@ -253,11 +263,6 @@ router.all(
         if ([301, 302, 303, 307, 308].includes(upstreamResponse.statusCode)) {
           redirectCount++;
           const location = upstreamResponse.headers['location'];
-          logger.debug(`[${requestId}] Got 30x redirect to ${location}`, {
-            username: auth.username,
-            statusCode: upstreamResponse.statusCode,
-            redirectCount,
-          });
           if (!location || typeof location !== 'string') {
             break; // No location header, stop redirecting
           }
@@ -278,19 +283,22 @@ router.all(
       }
       const upstreamDuration = getTimeTakenSincePoint(upstreamStartTime);
 
-      logger.debug(`[${requestId}] Serving upstream response`, {
-        username: auth.username,
-        targetUrl: data.url,
-        statusCode: upstreamResponse.statusCode,
-        upstreamDuration,
-      });
-
       // forward upstream response to client
       res.set(sanitiseHeaders(upstreamResponse.headers));
       if (data.responseHeaders) {
         res.set(data.responseHeaders);
       }
       res.status(upstreamResponse.statusCode);
+
+      logger.debug(`[${requestId}] Serving upstream response`, {
+        username: auth.username,
+        statusCode: upstreamResponse.statusCode,
+        upstreamDuration,
+        contentType: upstreamResponse.headers['content-type'],
+        contentLength: upstreamResponse.headers['content-length'],
+        range: upstreamResponse.headers['range'],
+        targetUrl: currentUrl,
+      });
 
       if (req.method === 'HEAD') {
         res.end();
