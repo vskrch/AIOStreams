@@ -212,37 +212,70 @@ router.all(
         req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH';
 
       const upstreamStartTime = Date.now();
-      const urlObj = new URL(data.url);
-      if (Env.BASE_URL && urlObj.origin === Env.BASE_URL) {
-        const internalUrl = new URL(Env.INTERNAL_URL);
-        urlObj.protocol = internalUrl.protocol;
-        urlObj.host = internalUrl.host;
-        urlObj.port = internalUrl.port;
-      }
+      let currentUrl = data.url;
+      const maxRedirects = 10;
+      let redirectCount = 0;
+      let method = req.method as Dispatcher.HttpMethod;
 
-      if (Env.REQUEST_URL_MAPPINGS) {
-        for (const [key, value] of Object.entries(Env.REQUEST_URL_MAPPINGS)) {
-          if (urlObj.origin === key) {
-            const mappedUrl = new URL(value);
-            urlObj.protocol = mappedUrl.protocol;
-            urlObj.host = mappedUrl.host;
-            urlObj.port = mappedUrl.port;
-            break;
+      while (redirectCount < maxRedirects) {
+        const urlObj = new URL(data.url);
+        if (Env.BASE_URL && urlObj.origin === Env.BASE_URL) {
+          const internalUrl = new URL(Env.INTERNAL_URL);
+          urlObj.protocol = internalUrl.protocol;
+          urlObj.host = internalUrl.host;
+          urlObj.port = internalUrl.port;
+        }
+
+        if (Env.REQUEST_URL_MAPPINGS) {
+          for (const [key, value] of Object.entries(Env.REQUEST_URL_MAPPINGS)) {
+            if (urlObj.origin === key) {
+              const mappedUrl = new URL(value);
+              urlObj.protocol = mappedUrl.protocol;
+              urlObj.host = mappedUrl.host;
+              urlObj.port = mappedUrl.port;
+              break;
+            }
           }
         }
+        const { useProxy, proxyIndex } = shouldProxy(urlObj);
+        const proxyAgent = useProxy
+          ? getProxyAgent(Env.ADDON_PROXY![proxyIndex])
+          : undefined;
+        upstreamResponse = await request(currentUrl, {
+          method: method,
+          headers: { ...clientHeaders, ...data.requestHeaders },
+          dispatcher: proxyAgent,
+          body: isBodyRequest ? req : undefined,
+          bodyTimeout: 0,
+          headersTimeout: 0,
+        });
+
+        if ([301, 302, 303, 307, 308].includes(upstreamResponse.statusCode)) {
+          redirectCount++;
+          const location = upstreamResponse.headers['location'];
+          logger.debug(`[${requestId}] Got 30x redirect to ${location}`, {
+            username: auth.username,
+            statusCode: upstreamResponse.statusCode,
+            redirectCount,
+          });
+          if (!location || typeof location !== 'string') {
+            break; // No location header, stop redirecting
+          }
+          currentUrl = new URL(location, currentUrl).href;
+
+          if ([301, 302, 303].includes(upstreamResponse.statusCode)) {
+            method = 'GET';
+          }
+          // For 307, 308, method remains the same
+          continue;
+        }
+
+        break; // Not a redirect, exit loop
       }
-      const { useProxy, proxyIndex } = shouldProxy(urlObj);
-      const proxyAgent = useProxy
-        ? getProxyAgent(Env.ADDON_PROXY![proxyIndex])
-        : undefined;
-      upstreamResponse = await request(data.url, {
-        method: req.method as Dispatcher.HttpMethod,
-        headers: { ...clientHeaders, ...data.requestHeaders },
-        dispatcher: proxyAgent,
-        body: isBodyRequest ? req : undefined,
-        bodyTimeout: 0,
-        headersTimeout: 0,
-      });
+
+      if (!upstreamResponse) {
+        throw new Error('Upstream response not found');
+      }
       const upstreamDuration = getTimeTakenSincePoint(upstreamStartTime);
 
       logger.debug(`[${requestId}] Serving upstream response`, {
