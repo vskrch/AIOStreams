@@ -180,7 +180,8 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       newData.proxy = {
         ...newData.proxy,
         enabled: forced.proxy.enabled ?? defaults.proxy?.enabled ?? undefined,
-        id: (forced.proxy.id ?? defaults.proxy?.id ?? 'mediaflow') as
+        id: (forced.proxy.id ?? defaults.proxy?.id ?? 'builtin') as
+          | 'builtin'
           | 'mediaflow'
           | 'stremthru'
           | undefined,
