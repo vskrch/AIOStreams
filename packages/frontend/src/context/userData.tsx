@@ -104,11 +104,39 @@ const DefaultUserData: UserData = {
         direction: 'desc',
       },
       {
+        key: 'resolution',
+        direction: 'desc',
+      },
+      {
         key: 'library',
         direction: 'desc',
       },
       {
-        key: 'resolution',
+        key: 'regexPatterns',
+        direction: 'desc',
+      },
+      {
+        key: 'streamType',
+        direction: 'desc',
+      },
+      {
+        key: 'visualTag',
+        direction: 'desc',
+      },
+      {
+        key: 'audioTag',
+        direction: 'desc',
+      },
+      {
+        key: 'audioChannel',
+        direction: 'desc',
+      },
+      {
+        key: 'encode',
+        direction: 'desc',
+      },
+      {
+        key: 'language',
         direction: 'desc',
       },
       {
