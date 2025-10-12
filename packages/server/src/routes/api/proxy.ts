@@ -47,6 +47,30 @@ function sanitiseHeaders(
   return sanitised;
 }
 
+function copyHeaders(headers: Record<string, string | string[] | undefined>) {
+  const exclude = new Set([
+    'x-client-ip',
+    'x-forwarded-for',
+    'cf-connecting-ip',
+    'do-connecting-ip',
+    'fastly-client-ip',
+    'true-client-ip',
+    'x-real-ip',
+    'x-cluster-client-ip',
+    'x-forwarded',
+    'forwarded-for',
+    'x-appengine-user-ip',
+    'cf-pseudo-ipv4',
+    'x-forwarded-proto',
+    'host',
+    'connection',
+    'upgrade',
+  ]);
+  return Object.fromEntries(
+    Object.entries(headers).filter(([key]) => !exclude.has(key))
+  );
+}
+
 export default router;
 
 const ProxyAuthSchema = z.object({
@@ -206,7 +230,7 @@ router.all(
       const timestamp = Date.now();
 
       // prepare and execute upstream request
-      const { host, ...clientHeaders } = req.headers;
+      const clientHeaders = copyHeaders(req.headers);
 
       const isBodyRequest =
         req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH';
