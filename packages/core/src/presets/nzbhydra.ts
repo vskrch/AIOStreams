@@ -17,7 +17,7 @@ export class NZBHydraPreset extends NewznabPreset {
       },
       {
         id: 'timeout',
-        name: 'Timeout',
+        name: 'Timeout (ms)',
         description: 'The timeout for this addon',
         type: 'number',
         default: Env.BUILTIN_DEFAULT_NZBHYDRA_TIMEOUT,

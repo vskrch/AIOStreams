@@ -17,7 +17,7 @@ export class JackettPreset extends TorznabPreset {
       },
       {
         id: 'timeout',
-        name: 'Timeout',
+        name: 'Timeout (ms)',
         description: 'The timeout for this addon',
         type: 'number',
         required: true,

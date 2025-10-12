@@ -37,7 +37,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       },
       {
         id: 'timeout',
-        name: 'Timeout',
+        name: 'Timeout (ms)',
         description: 'The timeout for this addon',
         type: 'number',
         default: Env.DEFAULT_TIMEOUT,

@@ -73,7 +73,7 @@ export const baseOptions = (
     },
     {
       id: 'timeout',
-      name: 'Timeout',
+      name: 'Timeout (ms)',
       description: 'The timeout for this addon',
       type: 'number',
       required: true,
