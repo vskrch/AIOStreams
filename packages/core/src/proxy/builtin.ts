@@ -9,6 +9,7 @@ import {
   Cache,
 } from '../utils/index.js';
 import path from 'path';
+import z from 'zod';
 
 const logger = createLogger('builtin');
 
@@ -84,6 +85,16 @@ export class BuiltinProxy extends BaseProxy {
     }
 
     const publicIp = await response.text();
+
+    const { error, success } = z
+      .union([z.ipv4(), z.ipv6()])
+      .safeParse(publicIp);
+    if (error || !success) {
+      logger.error(
+        `IP Response of ${publicIp} could not be parsed as a valid IP`
+      );
+      throw new Error(`Proxy did not respond with a valid public IP`);
+    }
 
     if (publicIp && cache) {
       await cache.set(cacheKey, publicIp, Env.PROXY_IP_CACHE_TTL);
