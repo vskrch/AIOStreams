@@ -5,6 +5,8 @@ import {
   ParsedStreamSchema,
 } from '../db/schemas.js';
 import bytes from 'bytes';
+import { formatZodError } from '../utils/config.js';
+import { ZodError } from 'zod';
 
 export abstract class StreamExpressionEngine {
   protected parser: Parser;
@@ -709,7 +711,7 @@ export class StreamSelector extends StreamExpressionEngine {
       selectedStreams = ParsedStreams.parse(selectedStreams);
     } catch (error) {
       throw new Error(
-        `Filter condition failed: ${error instanceof Error ? error.message : String(error)}`
+        `Result could not be parsed as stream array: ${formatZodError(error as ZodError)}`
       );
     }
     return selectedStreams;
