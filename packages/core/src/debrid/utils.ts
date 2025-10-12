@@ -31,6 +31,7 @@ export const BuiltinDebridServices = z.array(
 export type BuiltinDebridServices = z.infer<typeof BuiltinDebridServices>;
 
 interface BaseFile {
+  confirmed?: boolean; // whether the file has been confirmed to be the correct file for the media
   title?: string;
   size: number;
   index?: number;
