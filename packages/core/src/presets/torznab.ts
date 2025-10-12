@@ -58,7 +58,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
           'Optionally override the services that are used. If not specified, then the services that are enabled and supported will be used.',
         type: 'multi-select',
         required: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
         options: StremThruPreset.supportedServices.map((service) => ({
           value: service,
           label: constants.SERVICE_DETAILS[service].name,
@@ -73,7 +73,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
           'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
         type: 'multi-select',
         required: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
         default: [],
         options: [
           {
@@ -105,7 +105,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
           'Torznab supports multiple services in one instance of the addon - which is used by default. If this is enabled, then the addon will be created for each service.',
         type: 'boolean',
         default: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
     ];
 

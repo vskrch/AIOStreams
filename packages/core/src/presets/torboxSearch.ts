@@ -107,7 +107,7 @@ export class TorBoxSearchPreset extends StremThruPreset {
           'Optionally override the services that are used. If not specified, then the services that are enabled and supported will be used.',
         type: 'multi-select',
         required: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
         options: StremThruPreset.supportedServices.map((service) => ({
           value: service,
           label: constants.SERVICE_DETAILS[service].name,
@@ -122,7 +122,7 @@ export class TorBoxSearchPreset extends StremThruPreset {
           'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
         type: 'multi-select',
         required: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
         default: [],
         options: [
           {

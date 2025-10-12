@@ -95,7 +95,7 @@ export class DMMCastPreset extends Preset {
           label: resource,
           value: resource,
         })),
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
       {
         id: 'socials',

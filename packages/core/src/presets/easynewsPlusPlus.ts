@@ -62,7 +62,7 @@ export class EasynewsPlusPlusPreset extends EasynewsPreset {
             { label: 'Anime', value: 'anime' },
           ],
           default: [],
-          showInNoobMode: false,
+          showInSimpleMode: false,
         },
         {
           id: 'strictTitleMatching',

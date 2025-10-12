@@ -48,7 +48,7 @@ export class EasynewsPreset extends Preset {
           { label: 'Anime', value: 'anime' },
         ],
         default: [],
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
     ];
 

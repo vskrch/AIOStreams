@@ -149,7 +149,7 @@ export class TorrentsDbPreset extends Preset {
           'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
         type: 'multi-select',
         required: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
         options: [
           { label: 'Movie', value: 'movie' },
           { label: 'Series', value: 'series' },
@@ -170,7 +170,7 @@ export class TorrentsDbPreset extends Preset {
         })),
         default: undefined,
         emptyIsUndefined: true,
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
       {
         id: 'providers',
@@ -184,7 +184,7 @@ export class TorrentsDbPreset extends Preset {
           (provider) => provider.value
         ),
         emptyIsUndefined: true,
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
       {
         id: 'includeP2P',
@@ -194,7 +194,7 @@ export class TorrentsDbPreset extends Preset {
         type: 'boolean',
         default: false,
         required: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
       {
         id: 'useMultipleInstances',
@@ -204,7 +204,7 @@ export class TorrentsDbPreset extends Preset {
         type: 'boolean',
         default: false,
         required: true,
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
     ];
 

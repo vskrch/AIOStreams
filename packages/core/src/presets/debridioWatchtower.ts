@@ -86,7 +86,7 @@ export class DebridioWatchtowerPreset extends Preset {
           { label: 'Anime', value: 'anime' },
         ],
         default: [],
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
     ];
 

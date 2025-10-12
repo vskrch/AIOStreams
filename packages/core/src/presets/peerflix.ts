@@ -40,7 +40,7 @@ export class PeerflixPreset extends Preset {
         })),
         default: undefined,
         emptyIsUndefined: true,
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
       {
         id: 'mediaTypes',
@@ -49,7 +49,7 @@ export class PeerflixPreset extends Preset {
           'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
         type: 'multi-select',
         required: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
         options: [
           { label: 'Movie', value: 'movie' },
           { label: 'Series', value: 'series' },
@@ -65,7 +65,7 @@ export class PeerflixPreset extends Preset {
         type: 'boolean',
         default: false,
         required: true,
-        showInNoobMode: false,
+        showInSimpleMode: false,
       },
       {
         id: 'showTorrentLinks',
@@ -74,7 +74,7 @@ export class PeerflixPreset extends Preset {
           'If enabled, the addon will show P2P streams for uncached torrents. This is useful for users who want to use the addon to stream torrents that are not cached by the debrid service.',
         type: 'boolean',
         default: false,
-        showInNoobMode: false,
+        showInSimpleMode: false,
         required: true,
       },
     ];
