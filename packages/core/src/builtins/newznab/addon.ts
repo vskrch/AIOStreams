@@ -51,7 +51,7 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
     parsedId: ParsedId,
     metadata: SearchMetadata
   ): Promise<NZB[]> {
-    const results = await this.performSearch(parsedId, metadata);
+    const { results, meta } = await this.performSearch(parsedId, metadata);
     const seenNzbs = new Set<string>();
 
     const nzbs: NZB[] = [];
@@ -70,6 +70,7 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
       );
 
       nzbs.push({
+        confirmed: meta.searchType === 'id',
         hash: md5,
         nzb: nzbUrl,
         age: `${age}d`,

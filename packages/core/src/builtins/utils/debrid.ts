@@ -158,7 +158,7 @@ async function processTorrentsForDebridService(
 
     const parsedTorrent = parsedFiles.get(torrent.title ?? '');
     if (metadata && parsedTorrent) {
-      if (isTitleWrong(parsedTorrent, metadata)) {
+      if (torrent.confirmed !== true && isTitleWrong(parsedTorrent, metadata)) {
         continue;
       }
       if (isSeasonWrong(parsedTorrent, metadata)) {

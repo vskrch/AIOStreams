@@ -330,6 +330,7 @@ export class TorrentSourceHandler extends SourceHandler {
     const { results, errors } = await processTorrents(
       fetchResult.torrents.map((torrent) => ({
         ...torrent,
+        confirmed: true,
         type: 'torrent',
       })),
       this.services,
@@ -557,6 +558,7 @@ export class UsenetSourceHandler extends SourceHandler {
       .filter((torrent) => torrent.nzb)
       .map((torrent) => ({
         ...torrent,
+        confirmed: true,
         type: 'usenet' as const,
         nzb: torrent.nzb!,
       }));
