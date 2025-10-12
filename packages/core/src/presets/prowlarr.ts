@@ -24,6 +24,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
                 'This instance has a preconfigured Prowlarr instance. You do not need to set the Prowlarr URL and API Key below. ',
               type: 'alert',
               intent: 'info',
+              showInSimpleMode: false,
             } as const,
           ]
         : []),
@@ -53,6 +54,10 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
         description: 'The URL of the Prowlarr instance',
         type: 'url',
         required: !Env.BUILTIN_PROWLARR_URL || !Env.BUILTIN_PROWLARR_API_KEY,
+        showInSimpleMode:
+          Env.BUILTIN_PROWLARR_URL && Env.BUILTIN_PROWLARR_API_KEY
+            ? false
+            : undefined,
       },
       {
         id: 'prowlarrApiKey',
@@ -60,6 +65,10 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
         description: 'The API key for the Prowlarr instance',
         type: 'password',
         required: !Env.BUILTIN_PROWLARR_URL || !Env.BUILTIN_PROWLARR_API_KEY,
+        showInSimpleMode:
+          Env.BUILTIN_PROWLARR_URL && Env.BUILTIN_PROWLARR_API_KEY
+            ? false
+            : undefined,
       },
       ...(ProwlarrAddon.preconfiguredIndexers
         ? [
@@ -94,6 +103,10 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
         description:
           'Optionally provide a comma separated list of tags here to limit the indexers to be used. Only indexers with these tags will be used.',
         type: 'string',
+        showInSimpleMode:
+          Env.BUILTIN_PROWLARR_URL && Env.BUILTIN_PROWLARR_API_KEY
+            ? false
+            : undefined,
       },
       {
         id: 'mediaTypes',
