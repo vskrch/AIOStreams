@@ -202,8 +202,18 @@ export async function selectFileInTorrentOrNZB(
     if (parsed && !isSeasonWrong(parsed, metadata)) {
       score += 500;
     }
+    if (!parsed?.seasons?.length && metadata?.season) {
+      score -= 500;
+    }
+
     if (parsed && !isEpisodeWrong(parsed, metadata)) {
       score += 500;
+    }
+    if (
+      !parsed?.episodes?.length &&
+      (metadata?.episode || metadata?.absoluteEpisode)
+    ) {
+      score -= 500;
     }
 
     // Title matching (third priority)
@@ -230,7 +240,7 @@ export async function selectFileInTorrentOrNZB(
     }
     return {
       file,
-      score,
+      score: Math.max(score, 0),
       index,
     };
   });
