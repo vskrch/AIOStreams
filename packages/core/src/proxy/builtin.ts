@@ -27,10 +27,11 @@ export class BuiltinProxy extends BaseProxy {
     }
 
     if (
-      Env.AIOSTREAMS_AUTH?.has(username) &&
-      Env.AIOSTREAMS_AUTH?.get(username) !== password
+      !Env.AIOSTREAMS_AUTH ||
+      !Env.AIOSTREAMS_AUTH.has(username) ||
+      Env.AIOSTREAMS_AUTH.get(username) !== password
     ) {
-      throw new Error('Invalid credentials');
+      throw new Error('Invalid credentials.');
     }
 
     return {
@@ -60,6 +61,8 @@ export class BuiltinProxy extends BaseProxy {
   }
 
   public override async getPublicIp(): Promise<string | null> {
+    logger.debug(`Validating ${this.config.credentials}`);
+
     BuiltinProxy.validateAuth(this.config.credentials);
 
     if (this.config.publicIp) {
