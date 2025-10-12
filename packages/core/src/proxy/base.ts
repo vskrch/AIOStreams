@@ -34,6 +34,7 @@ export abstract class BaseProxy {
   constructor(config: StreamProxyConfig) {
     if (config.id === constants.BUILTIN_SERVICE) {
       config.url = Env.BASE_URL;
+      config.publicUrl = undefined;
     }
     if (!config.id || !config.credentials || !config.url) {
       throw new Error('Proxy configuration is missing');
