@@ -115,7 +115,8 @@ export function AboutMenu() {
 function Content() {
   const { status, loading, error } = useStatus();
   const { nextMenu } = useMenu();
-  const { userData, setUserData, uuid, password, setPassword } = useUserData();
+  const { userData, setUserData, uuid, setUuid, password, setPassword } =
+    useUserData();
   const { mode, setMode, isFirstTime } = useMode();
   const modeSelectModal = useDisclosure(isFirstTime);
   const addonName =
@@ -140,6 +141,8 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
     description: 'Are you sure you want to sign out?',
     onConfirm: () => {
       setUserData(null);
+      setUuid(null);
+      setPassword(null);
     },
   });
 

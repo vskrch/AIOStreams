@@ -30,13 +30,16 @@ export function TopNavbar(props: TopNavbarProps) {
   const signInModal = useDisclosure(false);
   const serverStatus = useStatus();
   const isOffline = !serverStatus.status;
-  const { userData, setUserData, uuid, password } = useUserData();
+  const { userData, setUserData, uuid, setUuid, password, setPassword } =
+    useUserData();
 
   const confirmClearConfig = useConfirmationDialog({
     title: 'Sign Out',
     description: 'Are you sure you want to sign out?',
     onConfirm: () => {
       setUserData(null);
+      setUuid(null);
+      setPassword(null);
     },
   });
 
