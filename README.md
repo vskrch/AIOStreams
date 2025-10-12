@@ -129,10 +129,9 @@ Take control of your Stremio home page. AIOStreams lets you manage catalogs from
 </p>
 
 
-### 🛡️ Proxy & Performance
-- **Proxy Integration**: Seamlessly proxy streams through **[MediaFlow Proxy](https://github.com/mhdzumair/mediaflow-proxy)** or **[StremThru](https://github.com/MunifTanjim/stremthru)**.
+### 🛡️ Proxy
+- **Proxy Integration**: Seamlessly proxy streams through AIOStreams' proxy or an external proxy like **[MediaFlow Proxy](https://github.com/mhdzumair/mediaflow-proxy)** or **[StremThru](https://github.com/MunifTanjim/stremthru)**.
 - **Bypass IP Restrictions**: Essential for services that limit simultaneous connections from different IP addresses.
-- **Improve Compatibility**: Fixes playback issues with certain players (like Infuse) and addons.
 
 And much much more...
 
