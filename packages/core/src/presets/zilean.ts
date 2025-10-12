@@ -19,6 +19,7 @@ export class ZileanPreset extends TorznabPreset {
         description: 'Optionally override the URL of the Zilean instance',
         type: 'url',
         required: false,
+        showInNoobMode: false,
       },
       {
         id: 'mediaTypes',
