@@ -890,7 +890,7 @@ class StreamFilterer {
 
       if (
         includedSeederRange &&
-        (!this.userData.seederRangeTypes ||
+        (!this.userData.seederRangeTypes?.length ||
           (typeForSeederRange &&
             this.userData.seederRangeTypes.includes(typeForSeederRange)))
       ) {
@@ -1202,7 +1202,7 @@ class StreamFilterer {
 
       if (
         requiredSeederRange &&
-        (!this.userData.seederRangeTypes ||
+        (!this.userData.seederRangeTypes?.length ||
           (typeForSeederRange &&
             this.userData.seederRangeTypes.includes(typeForSeederRange)))
       ) {
@@ -1231,7 +1231,7 @@ class StreamFilterer {
 
       if (
         excludedSeederRange &&
-        (!this.userData.seederRangeTypes ||
+        (!this.userData.seederRangeTypes?.length ||
           (typeForSeederRange &&
             this.userData.seederRangeTypes.includes(typeForSeederRange)))
       ) {
