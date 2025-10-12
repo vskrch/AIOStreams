@@ -47,6 +47,7 @@ export class JackettPreset extends TorznabPreset {
                 'This instance has a preconfigured Jackett instance. You do not need to set the Jackett URL and API Key below. ',
               type: 'alert',
               intent: 'info',
+              showInSimpleMode: false,
             } as const,
           ]
         : []),
@@ -56,6 +57,10 @@ export class JackettPreset extends TorznabPreset {
         description: 'The URL of the Jackett instance',
         type: 'url',
         required: !Env.BUILTIN_JACKETT_URL || !Env.BUILTIN_JACKETT_API_KEY,
+        showInSimpleMode:
+          Env.BUILTIN_JACKETT_URL && Env.BUILTIN_JACKETT_API_KEY
+            ? false
+            : undefined,
       },
       {
         id: 'jackettApiKey',
@@ -63,6 +68,10 @@ export class JackettPreset extends TorznabPreset {
         description: 'The API key for the Jackett instance',
         type: 'password',
         required: !Env.BUILTIN_JACKETT_URL || !Env.BUILTIN_JACKETT_API_KEY,
+        showInSimpleMode:
+          Env.BUILTIN_JACKETT_URL && Env.BUILTIN_JACKETT_API_KEY
+            ? false
+            : undefined,
       },
       {
         id: 'mediaTypes',
