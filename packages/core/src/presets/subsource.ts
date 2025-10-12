@@ -129,7 +129,7 @@ export class SubSourcePreset extends Preset {
       ),
       {
         id: 'subSourceApiKey',
-        type: 'string',
+        type: 'password',
         name: 'SubSource API Key',
         description:
           'Your SubSource API key, located at your [account dashboard](https://subsource.net/dashboard/profile)',
