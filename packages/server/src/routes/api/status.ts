@@ -98,7 +98,7 @@ const statusInfo = async (): Promise<StatusResponse> => {
                 'Disabled by owner of the instance',
               disabled: true,
             }
-          : undefined,
+          : preset.DISABLED,
       })),
       services: getEnvironmentServiceDetails(),
     },

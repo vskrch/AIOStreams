@@ -69,6 +69,12 @@ export class BitmagnetPreset extends TorznabPreset {
       SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
       SUPPORTED_RESOURCES: supportedResources,
       BUILTIN: true,
+      DISABLED: !Env.BUILTIN_BITMAGNET_URL
+        ? {
+            reason: 'Not configured',
+            disabled: true,
+          }
+        : undefined,
     };
   }
 

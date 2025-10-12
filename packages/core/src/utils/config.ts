@@ -6,6 +6,7 @@ import {
   Option,
   StreamProxyConfig,
   Group,
+  PresetMetadata,
 } from '../db/schemas.js';
 import { AIOStreams } from '../main.js';
 import { Preset, PresetManager } from '../presets/index.js';
@@ -700,9 +701,16 @@ function validateService(
 }
 
 function validatePreset(preset: PresetObject) {
-  const presetMeta = PresetManager.fromId(preset.type).METADATA;
+  const presetMeta = PresetManager.fromId(preset.type)
+    .METADATA as PresetMetadata;
 
   const optionMetas = presetMeta.OPTIONS;
+
+  if (presetMeta.DISABLED) {
+    throw new Error(
+      `Addon '${presetMeta.NAME}' is disabled: ${presetMeta.DISABLED.reason}`
+    );
+  }
 
   for (const optionMeta of optionMetas) {
     const optionValue = preset.options[optionMeta.id];

@@ -79,11 +79,12 @@ let PRESET_LIST: string[] = [
   'zilean',
   'knaben',
   'torrent-galaxy',
-  Env.BUILTIN_BITMAGNET_URL ? 'bitmagnet' : '',
+  'bitmagnet',
   'animetosho',
   'prowlarr',
   'jackett',
   'nzbhydra',
+  'stremio-gdrive',
   'jackettio',
   'peerflix',
   'orion',
@@ -101,9 +102,6 @@ let PRESET_LIST: string[] = [
   'webstreamr',
   'astream',
   'streamasia',
-  Env.BUILTIN_GDRIVE_CLIENT_ID && Env.BUILTIN_GDRIVE_CLIENT_SECRET
-    ? 'stremio-gdrive'
-    : '',
   'usa-tv',
   'argentina-tv',
   'debridio-tv',
@@ -147,6 +145,7 @@ export class PresetManager {
         SUPPORTED_SERVICES: metadata.SUPPORTED_SERVICES,
         OPTIONS: metadata.OPTIONS,
         BUILTIN: metadata.BUILTIN,
+        DISABLED: metadata.DISABLED,
       })
     );
   }

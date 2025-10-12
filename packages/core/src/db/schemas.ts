@@ -892,27 +892,6 @@ const AIOStreamResponseSchema = z.object({
 });
 export type AIOStreamResponse = z.infer<typeof AIOStreamResponseSchema>;
 
-const PresetMetadataSchema = z.object({
-  ID: z.string(),
-  NAME: z.string(),
-  DISABLED: z
-    .object({
-      reason: z.string(),
-      disabled: z.boolean(),
-    })
-    .optional(),
-  LOGO: z.string().optional(),
-  DESCRIPTION: z.string(),
-  URL: z.string(),
-  TIMEOUT: z.number(),
-  BUILTIN: z.boolean().optional(),
-  USER_AGENT: z.string(),
-  SUPPORTED_SERVICES: z.array(z.string()),
-  OPTIONS: z.array(OptionDefinition),
-  SUPPORTED_STREAM_TYPES: z.array(StreamTypes),
-  SUPPORTED_RESOURCES: z.array(ResourceSchema),
-});
-
 const PresetMinimalMetadataSchema = z.object({
   ID: z.string(),
   NAME: z.string(),
@@ -930,6 +909,11 @@ const PresetMinimalMetadataSchema = z.object({
   SUPPORTED_SERVICES: z.array(z.string()),
   OPTIONS: z.array(OptionDefinition),
   BUILTIN: z.boolean().optional(),
+});
+
+const PresetMetadataSchema = PresetMinimalMetadataSchema.extend({
+  TIMEOUT: z.number(),
+  USER_AGENT: z.string(),
 });
 
 const StatusResponseSchema = z.object({
