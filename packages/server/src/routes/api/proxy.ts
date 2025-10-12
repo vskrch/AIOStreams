@@ -269,6 +269,9 @@ router.all(
           range: headers['range'],
           url: currentUrl,
         });
+        logger.silly(`[${requestId}] Headers for upstream request`, {
+          headers: JSON.stringify(headers),
+        });
         upstreamResponse = await request(currentUrl, {
           method: method,
           headers: headers,
