@@ -84,7 +84,7 @@ export class BuiltinProxy extends BaseProxy {
       );
     }
 
-    const publicIp = await response.text();
+    const publicIp = (await response.text()).trim();
 
     const { error, success } = z
       .union([z.ipv4(), z.ipv6()])
