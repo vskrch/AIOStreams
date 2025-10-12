@@ -49,6 +49,9 @@ function sanitiseHeaders(
 
 function copyHeaders(headers: Record<string, string | string[] | undefined>) {
   const exclude = new Set([
+    // Host header
+    'host',
+    // IP headers
     'x-client-ip',
     'x-forwarded-for',
     'cf-connecting-ip',
@@ -62,9 +65,17 @@ function copyHeaders(headers: Record<string, string | string[] | undefined>) {
     'x-appengine-user-ip',
     'cf-pseudo-ipv4',
     'x-forwarded-proto',
-    'host',
+
+    // Hop-by-hop headers
     'connection',
     'upgrade',
+    'keep-alive',
+    'proxy-authenticate',
+    'proxy-authorization',
+    'te',
+    'trailers',
+    'transfer-encoding',
+    'proxy-connection',
   ]);
   return Object.fromEntries(
     Object.entries(headers).filter(([key]) => !exclude.has(key))
