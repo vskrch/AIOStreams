@@ -42,7 +42,7 @@ export class NewznabPreset extends BuiltinAddonPreset {
         id: 'proxyAuth',
         name: 'AIOStreams Proxy Auth',
         description:
-          'If you want to proxy the NZBs through AIOStreams, provide a username:password pair from the `BUILTIN_PROXY_AUTH` environment variable.',
+          'If you want to proxy the NZBs through AIOStreams, provide a username:password pair from the `AIOSTREAMS_AUTH` environment variable.',
         type: 'password',
         required: false,
       },
