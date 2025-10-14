@@ -51,7 +51,7 @@ router.get(
       }
 
       const fileInfo = FileInfoSchema.parse(
-        JSON.parse(Buffer.from(encodedFileInfo, 'base64').toString('utf-8'))
+        JSON.parse(fromUrlSafeBase64(encodedFileInfo))
       );
 
       const decryptedStoreAuth = decryptString(encryptedStoreAuth);

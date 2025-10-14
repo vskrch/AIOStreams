@@ -7,6 +7,7 @@ import {
   Cache,
   getSimpleTextHash,
   encryptString,
+  toUrlSafeBase64,
 } from '../utils/index.js';
 import {
   DebridFile,
@@ -363,5 +364,5 @@ export function generatePlaybackUrl(
   title?: string,
   filename?: string
 ): string {
-  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth}/${Buffer.from(JSON.stringify(fileInfo)).toString('base64')}/${metadataId}/${encodeURIComponent(filename ?? title ?? 'unknown')}`;
+  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth}/${toUrlSafeBase64(JSON.stringify(fileInfo))}/${metadataId}/${encodeURIComponent(filename ?? title ?? 'unknown')}`;
 }
