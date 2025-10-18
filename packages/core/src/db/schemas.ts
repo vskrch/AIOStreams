@@ -356,6 +356,7 @@ export const UserDataSchema = z.object({
     .tuple([z.number().min(0), z.number().min(0)])
     .optional(),
   seederRangeTypes: z.array(z.enum(['p2p', 'cached', 'uncached'])).optional(),
+  excludeSeasonPacks: z.boolean().optional(),
   excludeCached: z.boolean().optional(),
   excludeCachedFromAddons: z.array(z.string().min(1)).optional(),
   excludeCachedFromServices: z.array(z.string().min(1)).optional(),

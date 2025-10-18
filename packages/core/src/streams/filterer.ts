@@ -32,6 +32,7 @@ export interface FilterStatistics {
     titleMatching: Reason;
     yearMatching: Reason;
     seasonEpisodeMatching: Reason;
+    excludeSeasonPacks: Reason;
     excludedStreamType: Reason;
     requiredStreamType: Reason;
     excludedResolution: Reason;
@@ -89,6 +90,7 @@ class StreamFilterer {
         titleMatching: { total: 0, details: {} },
         yearMatching: { total: 0, details: {} },
         seasonEpisodeMatching: { total: 0, details: {} },
+        excludeSeasonPacks: { total: 0, details: {} },
         excludedStreamType: { total: 0, details: {} },
         requiredStreamType: { total: 0, details: {} },
         excludedResolution: { total: 0, details: {} },
@@ -1165,6 +1167,18 @@ class StreamFilterer {
         ) === false
       ) {
         this.incrementRemovalReason('excludedUncached');
+        return false;
+      }
+
+      if (
+        this.userData.excludeSeasonPacks &&
+        stream.parsedFile?.season &&
+        !stream.parsedFile?.episode
+      ) {
+        this.incrementRemovalReason(
+          'excludeSeasonPacks',
+          `${stream.parsedFile.title} - ${stream.parsedFile.season}`
+        );
         return false;
       }
 
