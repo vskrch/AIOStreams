@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getDataFolder } from './general';
-import { Template, TemplateSchema } from '../db/schemas';
+import { getDataFolder } from './general.js';
+import { Template, TemplateSchema } from '../db/schemas.js';
 import { ZodError } from 'zod';
-import { formatZodError } from './config';
+import { formatZodError } from './config.js';
 
 // Get __dirname equivalent in ESM
 const __filename = fileURLToPath(import.meta.url);
