@@ -520,6 +520,14 @@ class StreamFilterer {
         return true;
       }
 
+      // if the requested content is a movie and season/episode is present, filter out
+      if (
+        type === 'movie' &&
+        (stream.parsedFile?.season || stream.parsedFile?.episode)
+      ) {
+        return false;
+      }
+
       // is requested season present
       if (
         requestedSeason &&
