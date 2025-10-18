@@ -99,7 +99,8 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
         urlsToProxy.map((url) => ({
           url,
           filename: url.split('/').pop(),
-        }))
+        })),
+        false // don't encrypt NZB URLs to make sure the URLs stay the same.
       );
       if (!proxiedUrls) {
         throw new Error('Failed to proxy NZBs');

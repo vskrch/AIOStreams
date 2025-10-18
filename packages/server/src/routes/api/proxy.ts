@@ -5,6 +5,7 @@ import {
   createLogger,
   decryptString,
   Env,
+  fromUrlSafeBase64,
   getProxyAgent,
   getTimeTakenSincePoint,
   shouldProxy,
@@ -197,11 +198,40 @@ router.all(
     try {
       // decrypt and authenticate the request
       const { encryptedAuthAndData } = req.params;
-      const [encryptedAuth, encryptedData] = encryptedAuthAndData.split('.');
+      // const [encodeMode, encryptedAuth, encryptedData] =
+      //   encryptedAuthAndData.split('.');
+      const parts = encryptedAuthAndData.split('.');
+      let encodedAuth: string | undefined;
+      let encodedData: string | undefined;
+      let encodeMode: 'e' | 'u' | undefined;
+      if (parts.length == 2) {
+        encodeMode = 'e';
+        encodedAuth = parts[0];
+        encodedData = parts[1];
+      } else if (parts.length == 3) {
+        encodeMode = parts[0] as 'e' | 'u';
+        encodedAuth = parts[1];
+        encodedData = parts[2];
+      } else {
+        throw new APIError(
+          constants.ErrorCode.BAD_REQUEST,
+          undefined,
+          'Invalid encrypted auth and data'
+        );
+      }
       const filename = req.params.filename as string | undefined;
 
-      const { data: rawData } = decryptString(encryptedData);
-      const { data: rawAuth } = decryptString(encryptedAuth);
+      let rawData: string | undefined;
+      let rawAuth: string | undefined;
+      if (encodeMode === 'e') {
+        const { data: streamData } = decryptString(encodedData);
+        const { data: authData } = decryptString(encodedAuth);
+        rawData = streamData ?? undefined;
+        rawAuth = authData ?? undefined;
+      } else {
+        rawAuth = fromUrlSafeBase64(encodedAuth);
+        rawData = fromUrlSafeBase64(encodedData);
+      }
 
       if (!rawData || !rawAuth) {
         logger.error(`[${requestId}] Decryption failed`);

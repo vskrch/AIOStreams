@@ -7,6 +7,7 @@ import {
   encryptString,
   decryptString,
   Cache,
+  toUrlSafeBase64,
 } from '../utils/index.js';
 import path from 'path';
 import z from 'zod';
@@ -111,25 +112,41 @@ export class BuiltinProxy extends BaseProxy {
   }
 
   protected override async generateStreamUrls(
-    streams: ProxyStream[]
+    streams: ProxyStream[],
+    encrypt: boolean = true
   ): Promise<string[] | null> {
     const auth = BuiltinProxy.validateAuth(this.config.credentials);
     return streams.map((stream) => {
-      const encryptedAuth = encryptString(
-        JSON.stringify({
-          username: auth.username,
-          password: auth.password,
-        })
-      );
-      const encryptedData = encryptString(
-        JSON.stringify({
-          url: stream.url,
-          filename: stream.filename,
-          requestHeaders: stream.headers?.request,
-          responseHeaders: stream.headers?.response,
-        })
-      );
-      return `${Env.BASE_URL}/api/v1/proxy/${encryptedAuth.data}.${encryptedData.data}/${encodeURIComponent(stream.filename ?? '')}`;
+      let authData = JSON.stringify({
+        username: auth.username,
+        password: auth.password,
+      });
+      let streamData = JSON.stringify({
+        url: stream.url,
+        filename: stream.filename,
+        requestHeaders: stream.headers?.request,
+        responseHeaders: stream.headers?.response,
+      });
+      if (encrypt) {
+        const { success, data, error } = encryptString(authData);
+        if (!success) {
+          throw new Error(`Failed to encrypt auth data: ${error}`);
+        }
+        authData = data;
+      } else {
+        authData = toUrlSafeBase64(authData);
+      }
+      if (encrypt) {
+        const { success, data, error } = encryptString(streamData);
+        if (!success) {
+          throw new Error(`Failed to encrypt stream data: ${error}`);
+        }
+        streamData = data;
+      } else {
+        streamData = toUrlSafeBase64(streamData);
+      }
+
+      return `${Env.BASE_URL}/api/v1/proxy/${encrypt ? 'e' : 'u'}.${authData}.${streamData}/${encodeURIComponent(stream.filename ?? '')}`;
     });
   }
 }

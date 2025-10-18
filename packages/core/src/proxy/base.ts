@@ -60,7 +60,8 @@ export abstract class BaseProxy {
   protected abstract getPublicIpEndpoint(): string;
   protected abstract getPublicIpFromResponse(data: any): string | null;
   protected abstract generateStreamUrls(
-    streams: ProxyStream[]
+    streams: ProxyStream[],
+    encrypt?: boolean
   ): Promise<string[] | null>;
 
   public async getPublicIp(): Promise<string | null> {
@@ -133,7 +134,10 @@ export abstract class BaseProxy {
 
   protected abstract getHeaders(): Record<string, string>;
 
-  public async generateUrls(streams: ProxyStream[]): Promise<string[] | null> {
+  public async generateUrls(
+    streams: ProxyStream[],
+    encrypt?: boolean
+  ): Promise<string[] | null> {
     if (!streams.length) {
       return [];
     }
@@ -143,7 +147,7 @@ export abstract class BaseProxy {
     }
 
     try {
-      let urls = await this.generateStreamUrls(streams);
+      let urls = await this.generateStreamUrls(streams, encrypt);
       const publicUrl = this.config.publicUrl;
       if (publicUrl && urls) {
         const publicUrlObj = new URL(publicUrl);
