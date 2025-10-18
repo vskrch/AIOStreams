@@ -46,11 +46,13 @@ interface ProcessedTemplate {
 export interface ConfigTemplatesModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  openImportModal?: boolean;
 }
 
 export function ConfigTemplatesModal({
   open,
   onOpenChange,
+  openImportModal = false,
 }: ConfigTemplatesModalProps) {
   const { setUserData } = useUserData();
   const { status } = useStatus();
@@ -79,6 +81,9 @@ export function ConfigTemplatesModal({
   useEffect(() => {
     if (open) {
       fetchTemplates();
+      if (openImportModal) {
+        setShowImportModal(true);
+      }
     }
   }, [open]);
 

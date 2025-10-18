@@ -16,6 +16,7 @@ import { useDisclosure } from '@/hooks/disclosure';
 import { Modal } from '../ui/modal';
 import { Switch } from '../ui/switch';
 import { TemplateExportModal } from '../shared/template-export-modal';
+import { ConfigTemplatesModal } from '../shared/config-templates-modal';
 import {
   Accordion,
   AccordionContent,
@@ -29,6 +30,38 @@ import {
   useConfirmationDialog,
 } from '../shared/confirmation-dialog';
 import { UserData } from '@aiostreams/core';
+
+// Reusable modal option button component
+interface ModalOptionButtonProps {
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function ModalOptionButton({
+  onClick,
+  icon,
+  title,
+  description,
+}: ModalOptionButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative flex flex-col items-center gap-4 rounded-xl border-2 border-gray-700 bg-gradient-to-br from-gray-800/50 to-gray-800/30 p-6 text-center transition-all hover:border-brand-400 hover:from-brand-400/10 hover:to-brand-400/5 hover:shadow-lg hover:shadow-brand-400/20 hover:ring-1 hover:ring-brand-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400"
+    >
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg transition-transform group-hover:scale-110">
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-lg font-bold text-white">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-gray-400">
+          {description}
+        </p>
+      </div>
+    </button>
+  );
+}
 
 export function SaveInstallMenu() {
   return (
@@ -66,7 +99,9 @@ function Content() {
     React.useState('');
   const { setSelectedMenu, firstMenu } = useMenu();
   const templateExportModal = useDisclosure(false);
+  const templatesModal = useDisclosure(false);
   const exportMenuModal = useDisclosure(false);
+  const importMenuModal = useDisclosure(false);
   const [filterCredentialsInExport, setFilterCredentialsInExport] =
     React.useState(false);
   const confirmResetProps = useConfirmationDialog({
@@ -538,27 +573,21 @@ function Content() {
             >
               Export
             </Button>
-            <div>
-              <input
-                type="file"
-                accept=".json"
-                className="hidden"
-                id="import-file"
-                onChange={handleImport}
-                ref={importFileRef}
-              />
-              <label htmlFor="import-file">
-                <Button
-                  intent="gray"
-                  leftIcon={<DownloadIcon />}
-                  type="button"
-                  className="cursor-pointer"
-                  onClick={() => importFileRef.current?.click()}
-                >
-                  Import
-                </Button>
-              </label>
-            </div>
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              id="import-file"
+              onChange={handleImport}
+              ref={importFileRef}
+            />
+            <Button
+              onClick={importMenuModal.open}
+              leftIcon={<DownloadIcon />}
+              intent="gray"
+            >
+              Import
+            </Button>
           </div>
         </SettingsCard>
 
@@ -659,45 +688,50 @@ function Content() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {/* Standard Export Option */}
-              <button
+              <ModalOptionButton
                 onClick={handleExport}
-                className="group relative flex flex-col items-center gap-4 rounded-xl border-2 border-gray-700 bg-gradient-to-br from-gray-800/50 to-gray-800/30 p-6 text-center transition-all hover:border-brand-400 hover:from-brand-400/10 hover:to-brand-400/5 hover:shadow-lg hover:shadow-brand-400/20 hover:ring-1 hover:ring-brand-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400"
-              >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg transition-transform group-hover:scale-110">
-                  <UploadIcon className="h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">
-                    Export Config
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-400">
-                    Download as JSON file for backup or sharing
-                  </p>
-                </div>
-              </button>
-
-              {/* Template Export Option */}
-              <button
+                icon={<UploadIcon className="h-8 w-8" />}
+                title="Export Config"
+                description="Download as JSON file for backup or sharing"
+              />
+              <ModalOptionButton
                 onClick={() => {
                   exportMenuModal.close();
                   templateExportModal.open();
                 }}
-                className="group relative flex flex-col items-center gap-4 rounded-xl border-2 border-gray-700 bg-gradient-to-br from-gray-800/50 to-gray-800/30 p-6 text-center transition-all hover:border-brand-400 hover:from-brand-400/10 hover:to-brand-400/5 hover:shadow-lg hover:shadow-brand-400/20 hover:ring-1 hover:ring-brand-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400"
-              >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg transition-transform group-hover:scale-110">
-                  <PlusIcon className="h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">
-                    Export as Template
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-400">
-                    Create reusable template with custom metadata
-                  </p>
-                </div>
-              </button>
+                icon={<PlusIcon className="h-8 w-8" />}
+                title="Export as Template"
+                description="Create reusable template with custom metadata"
+              />
             </div>
+          </div>
+        </Modal>
+
+        <Modal
+          open={importMenuModal.isOpen}
+          onOpenChange={importMenuModal.toggle}
+          title="Import Configuration"
+          description="Choose what type of configuration to import"
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <ModalOptionButton
+              onClick={() => {
+                importMenuModal.close();
+                importFileRef.current?.click();
+              }}
+              icon={<DownloadIcon className="h-8 w-8" />}
+              title="Import Config"
+              description="Restore from a backup JSON file"
+            />
+            <ModalOptionButton
+              onClick={() => {
+                importMenuModal.close();
+                templatesModal.open();
+              }}
+              icon={<PlusIcon className="h-8 w-8" />}
+              title="Import Template"
+              description="Load a pre-configured template"
+            />
           </div>
         </Modal>
 
@@ -706,6 +740,11 @@ function Content() {
           onOpenChange={templateExportModal.toggle}
           userData={userData}
           filterCredentials={filterCredentials}
+        />
+        <ConfigTemplatesModal
+          open={templatesModal.isOpen}
+          onOpenChange={templatesModal.toggle}
+          openImportModal
         />
       </div>
     </>
