@@ -13,6 +13,7 @@ import {
   CoffeeIcon,
   MessageCircleIcon,
   PencilIcon,
+  PlusIcon,
 } from 'lucide-react';
 import { FaGithub, FaDiscord, FaChevronRight } from 'react-icons/fa';
 import { BiDonateHeart, BiLogInCircle, BiLogOutCircle } from 'react-icons/bi';
@@ -33,6 +34,7 @@ import { DonationModal } from '../shared/donation-modal';
 import { ModeSwitch } from '../ui/mode-switch/mode-switch';
 import { ModeSelectModal } from '../shared/mode-select-modal';
 import { ConfigModal } from '../config-modal';
+import { ConfigTemplatesModal } from '../shared/config-templates-modal';
 import {
   ConfirmationDialog,
   useConfirmationDialog,
@@ -134,6 +136,8 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
   const donationModal = useDisclosure(false);
   const customizeModal = useDisclosure(false);
   const signInModal = useDisclosure(false);
+  const templatesModal = useDisclosure(false);
+  const setupChoiceModal = useDisclosure(false);
   const customHtml = status?.settings?.customHtml;
 
   const confirmClearConfig = useConfirmationDialog({
@@ -229,33 +233,46 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
         )}
 
         {/* Setup Mode Row */}
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full justify-start md:pl-6">
-          <div className="flex flex-col items-start md:items-start">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 self-start">
-              Setup Mode
-            </span>
-            <ModeSwitch
-              value={mode}
-              onChange={setMode}
-              className="w-[280px] h-12 text-base"
-            />
+        <div className="flex flex-col items-center md:items-start gap-4 w-full md:pl-6">
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full justify-start">
+            <div className="flex flex-col items-start md:items-start">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 self-start">
+                Setup Mode
+              </span>
+              <ModeSwitch
+                value={mode}
+                onChange={setMode}
+                className="w-[280px] h-12 text-base"
+              />
+            </div>
+            <div className="text-gray-400 md:self-end md:pb-3">
+              <FaChevronRight className="hidden md:block text-2xl" />
+              <FaChevronRight className="md:hidden rotate-90 text-2xl" />
+            </div>
+            <div className="md:self-end">
+              <Button
+                intent="white"
+                rounded
+                leftIcon={<FaPlay />}
+                className="h-12 px-6 text-lg font-semibold"
+                onClick={setupChoiceModal.open}
+              >
+                START SETUP
+              </Button>
+            </div>
           </div>
-          <div className="text-gray-400 md:self-end md:pb-3">
-            <FaChevronRight className="hidden md:block text-2xl" />
-            <FaChevronRight className="md:hidden rotate-90 text-2xl" />
-          </div>
-          <div className="md:self-end">
-            <Button
-              intent="white"
-              rounded
-              leftIcon={<FaPlay />}
-              className="h-12 px-6 text-lg"
-              onClick={() => {
-                nextMenu();
-              }}
+
+          {/* Template Wizard Link */}
+          <div className="text-center md:text-left text-sm text-gray-400 max-w-2xl">
+            New to AIOStreams? Try our{' '}
+            <button
+              onClick={templatesModal.open}
+              className="text-[--brand] hover:text-[--brand]/80 hover:underline font-medium"
             >
-              START SETUP
-            </Button>
+              Template Wizard
+            </button>{' '}
+            for a guided, step-by-step setup experience with pre-configured
+            settings.
           </div>
         </div>
 
@@ -403,6 +420,22 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
         }}
       />
       <ConfirmationDialog {...confirmClearConfig} />
+      <ConfigTemplatesModal
+        open={templatesModal.isOpen}
+        onOpenChange={templatesModal.toggle}
+      />
+      <SetupChoiceModal
+        open={setupChoiceModal.isOpen}
+        onOpenChange={setupChoiceModal.toggle}
+        onStartFresh={() => {
+          setupChoiceModal.close();
+          nextMenu();
+        }}
+        onUseTemplate={() => {
+          setupChoiceModal.close();
+          templatesModal.open();
+        }}
+      />
     </>
   );
 }
@@ -945,6 +978,69 @@ function CustomizeModal({
           </div>
         </div>
       </form>
+    </Modal>
+  );
+}
+
+function SetupChoiceModal({
+  open,
+  onOpenChange,
+  onStartFresh,
+  onUseTemplate,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onStartFresh: () => void;
+  onUseTemplate: () => void;
+}) {
+  return (
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Get Started"
+      description="Choose how you'd like to set up AIOStreams"
+    >
+      <div className="space-y-4">
+        <button
+          onClick={onStartFresh}
+          className="w-full p-6 rounded-lg border-2 border-gray-700 bg-gray-800/50 hover:border-purple-500 hover:bg-purple-500/10 transition-all duration-200 text-left group"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+              <FaPlay className="w-5 h-5 text-purple-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Start Fresh
+              </h3>
+              <p className="text-sm text-gray-400">
+                Build your configuration from scratch. Perfect if you want
+                complete control over every setting.
+              </p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={onUseTemplate}
+          className="w-full p-6 rounded-lg border-2 border-gray-700 bg-gray-800/50 hover:border-blue-500 hover:bg-blue-500/10 transition-all duration-200 text-left group"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+              <PlusIcon className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Use a Template
+              </h3>
+              <p className="text-sm text-gray-400">
+                Start with a pre-configured template. Great for getting up and
+                running quickly with recommended settings.
+              </p>
+            </div>
+          </div>
+        </button>
+      </div>
     </Modal>
   );
 }

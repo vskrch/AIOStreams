@@ -15,6 +15,7 @@ import { PageControls } from '../shared/page-controls';
 import { useDisclosure } from '@/hooks/disclosure';
 import { Modal } from '../ui/modal';
 import { Switch } from '../ui/switch';
+import { TemplateExportModal } from '../shared/template-export-modal';
 import {
   Accordion,
   AccordionContent,
@@ -60,12 +61,14 @@ function Content() {
   const importFileRef = React.useRef<HTMLInputElement>(null);
   const installModal = useDisclosure(false);
   const passwordModal = useDisclosure(false);
-  const [filterCredentialsInExport, setFilterCredentialsInExport] =
-    React.useState(false);
   const deleteUserModal = useDisclosure(false);
   const [confirmDeletionPassword, setConfirmDeletionPassword] =
     React.useState('');
   const { setSelectedMenu, firstMenu } = useMenu();
+  const templateExportModal = useDisclosure(false);
+  const exportMenuModal = useDisclosure(false);
+  const [filterCredentialsInExport, setFilterCredentialsInExport] =
+    React.useState(false);
   const confirmResetProps = useConfirmationDialog({
     title: 'Confirm Reset',
     description: `Are you sure you want to reset your configuration? This will clear all your settings${uuid ? ` but keep your user account` : ''}. This action cannot be undone.`,
@@ -196,64 +199,68 @@ function Content() {
     reader.readAsText(file);
   };
 
+  const filterCredentials = (data: UserData): UserData => {
+    const clonedData = structuredClone(data);
+
+    return {
+      ...clonedData,
+      ip: undefined,
+      uuid: undefined,
+      addonPassword: undefined,
+      tmdbAccessToken: undefined,
+      tmdbApiKey: undefined,
+      tvdbApiKey: undefined,
+      rpdbApiKey: undefined,
+      services: clonedData?.services?.map((service) => ({
+        ...service,
+        credentials: {},
+      })),
+      proxy: {
+        ...clonedData?.proxy,
+        credentials: undefined,
+        url: undefined,
+        publicUrl: undefined,
+      },
+      presets: clonedData?.presets?.map((preset) => {
+        const presetMeta = status?.settings.presets.find(
+          (p) => p.ID === preset.type
+        );
+        return {
+          ...preset,
+          options: Object.fromEntries(
+            Object.entries(preset.options || {}).filter(([key]) => {
+              const optionMeta = presetMeta?.OPTIONS?.find(
+                (opt) => opt.id === key
+              );
+              return optionMeta?.type !== 'password';
+            })
+          ),
+        };
+      }),
+    };
+  };
+
   const handleExport = () => {
     try {
-      const filteredUserData: UserData = {
-        ...userData,
-        ip: filterCredentialsInExport ? undefined : userData.ip,
-        uuid: filterCredentialsInExport ? undefined : userData.uuid,
-        addonPassword: filterCredentialsInExport
-          ? undefined
-          : userData.addonPassword,
-        tmdbAccessToken: filterCredentialsInExport
-          ? undefined
-          : userData.tmdbAccessToken,
-        tmdbApiKey: filterCredentialsInExport ? undefined : userData.tmdbApiKey,
-        tvdbApiKey: filterCredentialsInExport ? undefined : userData.tvdbApiKey,
-        rpdbApiKey: filterCredentialsInExport ? undefined : userData.rpdbApiKey,
-        services: userData?.services?.map((service) => ({
-          ...service,
-          credentials: filterCredentialsInExport ? {} : service.credentials,
-        })),
-        proxy: {
-          ...userData?.proxy,
-          credentials: filterCredentialsInExport
-            ? undefined
-            : userData?.proxy?.credentials,
-          url: filterCredentialsInExport ? undefined : userData?.proxy?.url,
-          publicUrl: filterCredentialsInExport
-            ? undefined
-            : userData?.proxy?.publicUrl,
-        },
-        presets: userData?.presets?.map((preset) => {
-          const presetMeta = status?.settings.presets.find(
-            (p) => p.ID === preset.type
-          );
-          return {
-            ...preset,
-            options: filterCredentialsInExport
-              ? Object.fromEntries(
-                  Object.entries(preset.options || {}).filter(([key]) => {
-                    const optionMeta = presetMeta?.OPTIONS?.find(
-                      (opt) => opt.id === key
-                    );
-                    return optionMeta?.type !== 'password';
-                  })
-                )
-              : preset.options,
-          };
-        }),
-      };
-      const dataStr = JSON.stringify(filteredUserData, null, 2);
+      const exportData = filterCredentialsInExport
+        ? filterCredentials(userData)
+        : structuredClone(userData);
+      const dataStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'aiostreams-config.json';
+      // format date as YYYY-MM-DD.HH-MM-SS
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const formattedDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+      a.download = `aiostreams-config-${formattedDate}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      toast.success('Configuration exported successfully');
+      exportMenuModal.close();
     } catch (err) {
       toast.error('Failed to export configuration');
     }
@@ -523,9 +530,9 @@ function Content() {
           title="Backups"
           description="Export your settings or restore from a backup file"
         >
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Button
-              onClick={handleExport}
+              onClick={exportMenuModal.open}
               leftIcon={<UploadIcon />}
               intent="gray"
             >
@@ -552,28 +559,6 @@ function Content() {
                 </Button>
               </label>
             </div>
-          </div>
-          <div className="flex items-center gap-2 mt-4 w-full">
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="export-settings" className="w-full">
-                <AccordionTrigger className="w-full">
-                  Export Settings
-                </AccordionTrigger>
-                <AccordionContent className="w-full">
-                  <div className="flex items-center justify-between w-full">
-                    <Switch
-                      value={filterCredentialsInExport ?? false}
-                      onValueChange={(value) =>
-                        setFilterCredentialsInExport(value)
-                      }
-                      side="right"
-                      help="This will not exclude any URLs you have provided, these may contain credentials and you should always double check the contents of the exported file before sharing it."
-                      label="Exclude Credentials"
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
           </div>
         </SettingsCard>
 
@@ -649,6 +634,79 @@ function Content() {
         </Modal>
         <ConfirmationDialog {...confirmDelete} />
         <ConfirmationDialog {...confirmResetProps} />
+
+        <Modal
+          open={exportMenuModal.isOpen}
+          onOpenChange={exportMenuModal.toggle}
+          title="Export Configuration"
+          description="Choose how to export your configuration"
+        >
+          <div className="space-y-4">
+            {/* Exclude Credentials Option */}
+            <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+              <div className="flex-1">
+                <div className="text-sm font-medium text-white">
+                  Exclude Credentials
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Remove sensitive information from export
+                </div>
+              </div>
+              <Switch
+                value={filterCredentialsInExport}
+                onValueChange={setFilterCredentialsInExport}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Standard Export Option */}
+              <button
+                onClick={handleExport}
+                className="group relative flex flex-col items-center gap-4 rounded-xl border-2 border-gray-700 bg-gradient-to-br from-gray-800/50 to-gray-800/30 p-6 text-center transition-all hover:border-brand-400 hover:from-brand-400/10 hover:to-brand-400/5 hover:shadow-lg hover:shadow-brand-400/20 hover:ring-1 hover:ring-brand-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400"
+              >
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg transition-transform group-hover:scale-110">
+                  <UploadIcon className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    Export Config
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-400">
+                    Download as JSON file for backup or sharing
+                  </p>
+                </div>
+              </button>
+
+              {/* Template Export Option */}
+              <button
+                onClick={() => {
+                  exportMenuModal.close();
+                  templateExportModal.open();
+                }}
+                className="group relative flex flex-col items-center gap-4 rounded-xl border-2 border-gray-700 bg-gradient-to-br from-gray-800/50 to-gray-800/30 p-6 text-center transition-all hover:border-brand-400 hover:from-brand-400/10 hover:to-brand-400/5 hover:shadow-lg hover:shadow-brand-400/20 hover:ring-1 hover:ring-brand-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400"
+              >
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-lg transition-transform group-hover:scale-110">
+                  <PlusIcon className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    Export as Template
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-400">
+                    Create reusable template with custom metadata
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        <TemplateExportModal
+          open={templateExportModal.isOpen}
+          onOpenChange={templateExportModal.toggle}
+          userData={userData}
+          filterCredentials={filterCredentials}
+        />
       </div>
     </>
   );

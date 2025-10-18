@@ -1,4 +1,6 @@
 import app from './app.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 import {
   Env,
@@ -12,6 +14,7 @@ import {
   PTT,
   AnimeDatabase,
   ProwlarrAddon,
+  TemplateManager,
 } from '@aiostreams/core';
 
 const logger = createLogger('server');
@@ -66,9 +69,26 @@ async function initialiseProwlarr() {
   }
 }
 
+async function initialiseTemplates() {
+  try {
+    const templates = TemplateManager.loadTemplates();
+    logger.info(
+      `Loaded ${templates.loaded} templates from ${templates.detected} detected templates. ${templates.errors.length} errors occurred.`
+    );
+    if (templates.errors.length > 0) {
+      logger.error(
+        `Errors loading templates: \n${templates.errors.map((error) => `- ${error.file}: ${error.error}`).join('\n')}`
+      );
+    }
+  } catch (error) {
+    logger.error('Failed to initialise templates:', error);
+  }
+}
+
 async function start() {
   try {
     logStartupInfo();
+    await initialiseTemplates();
     await initialiseDatabase();
     await initialiseRedis();
     await initialisePTT();
