@@ -10,7 +10,7 @@ import { SearchIcon, CheckIcon, AlertTriangleIcon } from 'lucide-react';
 import { TextInput } from '../ui/text-input';
 import { Textarea } from '../ui/textarea';
 import * as constants from '../../../../core/src/utils/constants';
-import { Template } from '@aiostreams/core';
+import { StatusResponse, Template } from '@aiostreams/core';
 import MarkdownLite from './markdown-lite';
 import { BiImport } from 'react-icons/bi';
 
@@ -115,7 +115,7 @@ export function ConfigTemplatesModal({
 
   const validateTemplate = (
     template: TemplateWithId,
-    statusData: any
+    statusData: StatusResponse
   ): TemplateValidation => {
     const warnings: string[] = [];
     const errors: string[] = [];
@@ -132,7 +132,7 @@ export function ConfigTemplatesModal({
         const presetMeta = statusData.settings?.presets?.find(
           (p: any) => p.ID === preset.type
         );
-        if (!presetMeta) {
+        if (!presetMeta || presetMeta.DISABLED?.disabled) {
           warnings.push(
             `Addon type "${preset.type}" not available on this instance`
           );
@@ -157,7 +157,7 @@ export function ConfigTemplatesModal({
     const includedRegexes = template.config.includedRegexPatterns || [];
     const requiredRegexes = template.config.requiredRegexPatterns || [];
     const preferredRegexes = (template.config.preferredRegexPatterns || []).map(
-      (r: any) => (typeof r === 'string' ? r : r.pattern)
+      (r) => (typeof r === 'string' ? r : r.pattern)
     );
 
     const allRegexes = [
@@ -180,23 +180,14 @@ export function ConfigTemplatesModal({
         warnings.push(
           'Template uses regex patterns but regex access is disabled on this instance'
         );
-      } else if (
-        statusData.settings?.regexFilterAccess === 'trusted' &&
-        !template.config.trusted
-      ) {
-        warnings.push(
-          'Template uses regex patterns which require trusted user status'
-        );
-      } else if (allowedPatterns.length > 0) {
-        // Check if all patterns are allowed (exact match)
+      } else if (statusData.settings?.regexFilterAccess !== 'all') {
         const unsupportedPatterns = allRegexes.filter(
           (pattern) => !allowedPatterns.includes(pattern)
         );
 
         if (unsupportedPatterns.length > 0) {
-          const patternList = unsupportedPatterns.slice(0, 3).join(', ');
           warnings.push(
-            `Template has ${unsupportedPatterns.length} unsupported regex pattern${unsupportedPatterns.length > 1 ? 's' : ''}: ${patternList}${unsupportedPatterns.length > 3 ? '...' : ''}`
+            `Template has ${unsupportedPatterns.length} regex patterns that are not trusted.`
           );
         }
       }
@@ -888,7 +879,7 @@ export function ConfigTemplatesModal({
                       <AlertTriangleIcon
                         className={`w-4 h-4 ${hasErrors ? 'text-red-400' : 'text-yellow-400'}`}
                       />
-                      <div className="absolute left-0 top-full mt-1 w-64 p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-xs">
+                      <div className="absolute right-0 top-full mt-1 w-64 max-w-[calc(100vw-2rem)] p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-xs">
                         {validation.errors.length > 0 && (
                           <div className="mb-2">
                             <div className="font-semibold text-red-400 mb-1">
@@ -896,7 +887,9 @@ export function ConfigTemplatesModal({
                             </div>
                             <ul className="list-disc list-inside space-y-1 text-red-300">
                               {validation.errors.map((error, idx) => (
-                                <li key={idx}>{error}</li>
+                                <li key={idx} className="break-words">
+                                  {error}
+                                </li>
                               ))}
                             </ul>
                           </div>
@@ -908,7 +901,9 @@ export function ConfigTemplatesModal({
                             </div>
                             <ul className="list-disc list-inside space-y-1 text-yellow-300">
                               {validation.warnings.map((warning, idx) => (
-                                <li key={idx}>{warning}</li>
+                                <li key={idx} className="break-words">
+                                  {warning}
+                                </li>
                               ))}
                             </ul>
                           </div>
