@@ -26,7 +26,7 @@ export const TorBoxApiResponseSchema = <T>(dataSchema: z.ZodSchema<T>) =>
 
 const TorBoxSearchApiMetadataSchema = z.object({
   globalID: z.string(),
-  title: z.string(),
+  title: z.string().nullable(),
   titles: z.array(z.string()),
   imdb_id: z.string().nullable(),
   tmdb_id: z.number().nullable(),

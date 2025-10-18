@@ -416,7 +416,10 @@ export class TorrentSourceHandler extends SourceHandler {
     if (data.metadata) {
       titleMetadata = await this.processMetadata(
         parsedId,
-        data.metadata,
+        {
+          ...data.metadata,
+          title: data.metadata.title ?? undefined,
+        },
         tmdbAccessToken
       );
     }
@@ -494,10 +497,14 @@ export class UsenetSourceHandler extends SourceHandler {
           `Found ${torrents.length} NZBs for ${parsedId.type}:${parsedId.value} in ${getTimeTakenSincePoint(start)}`
         );
 
-        if (data.metadata) {
+        if (data.metadata && data.metadata.title) {
           titleMetadata = await this.processMetadata(
             parsedId,
-            data.metadata,
+            // data.metadata,
+            {
+              ...data.metadata,
+              title: data.metadata.title,
+            },
             userData.tmdbAccessToken
           );
         }
