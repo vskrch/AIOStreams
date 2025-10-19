@@ -942,7 +942,8 @@ export function ConfigTemplatesModal({
       // Apply all input values
       processedTemplate.inputs.forEach((input) => {
         const value = inputValues[input.key];
-        if (value) {
+        // Apply value if it exists OR if the input is optional (to replace placeholder with empty string)
+        if (value || !input.required) {
           // Handle service credentials separately
           const paths = Array.isArray(input.path) ? input.path : [input.path];
           for (const path of paths) {
@@ -973,10 +974,10 @@ export function ConfigTemplatesModal({
                 service.credentials = {};
               }
 
-              service.credentials[credKey] = value;
+              service.credentials[credKey] = value || '';
             } else {
               // Apply to regular path
-              applyInputValue(migratedData, path, value);
+              applyInputValue(migratedData, path, value || '');
             }
           }
         }
