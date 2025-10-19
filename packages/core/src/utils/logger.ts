@@ -47,6 +47,7 @@ const moduleMap: { [key: string]: string } = {
   torrent: '👤  TORRENT',
   knaben: '🔍  KNABEN',
   'torrent-galaxy': '🌐  TGx',
+  templates: '📄  TEMPLATES',
 };
 
 // Define colors for each log level using full names

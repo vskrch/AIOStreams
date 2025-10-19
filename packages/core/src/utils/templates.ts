@@ -5,6 +5,10 @@ import { getDataFolder } from './general.js';
 import { Template, TemplateSchema } from '../db/schemas.js';
 import { ZodError } from 'zod';
 import { formatZodError } from './config.js';
+import { FeatureControl } from './feature.js';
+import { createLogger } from './logger.js';
+
+const logger = createLogger('templates');
 
 // Get __dirname equivalent in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -19,11 +23,7 @@ export class TemplateManager {
     return TemplateManager.templates;
   }
 
-  static loadTemplates(): {
-    detected: number;
-    loaded: number;
-    errors: { file: string; error: string }[];
-  } {
+  static loadTemplates(): void {
     const builtinTemplatePath = path.join(RESOURCE_DIR, 'templates');
     const customTemplatesPath = path.join(getDataFolder(), 'templates');
 
@@ -41,11 +41,28 @@ export class TemplateManager {
       ...customTemplates.templates,
       ...builtinTemplates.templates,
     ];
-    return {
-      detected: builtinTemplates.detected + customTemplates.detected,
-      loaded: builtinTemplates.loaded + customTemplates.loaded,
-      errors: [...builtinTemplates.errors, ...customTemplates.errors],
-    };
+    const patternsInTemplates = this.templates.flatMap((template) => {
+      return [
+        ...(template.config.excludedRegexPatterns || []),
+        ...(template.config.includedRegexPatterns || []),
+        ...(template.config.requiredRegexPatterns || []),
+        ...(template.config.preferredRegexPatterns || []).map(
+          (pattern) => pattern.pattern
+        ),
+      ];
+    });
+    const errors = [...builtinTemplates.errors, ...customTemplates.errors];
+    logger.info(
+      `Loaded ${this.templates.length} templates from ${builtinTemplates.detected + customTemplates.detected} detected templates. ${patternsInTemplates.length} regex patterns detected. ${errors.length} errors occurred.`
+    );
+    if (patternsInTemplates.length > 0) {
+      FeatureControl._addPatterns(patternsInTemplates);
+    }
+    if (errors.length > 0) {
+      logger.error(
+        `Errors loading templates: \n${errors.map((error) => `  ${error.file} - ${error.error}`).join('\n')}`
+      );
+    }
   }
 
   private static loadTemplatesFromPath(
@@ -83,7 +100,10 @@ export class TemplateManager {
           file: file,
           error:
             error instanceof ZodError
-              ? `Failed to parse template: ${formatZodError(error)}`
+              ? `Failed to parse template:\n${formatZodError(error)
+                  .split('\n')
+                  .map((line) => '    ' + line)
+                  .join('\n')}`
               : `Failed to load template: ${error}`,
         });
       }

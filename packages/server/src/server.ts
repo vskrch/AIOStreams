@@ -71,15 +71,7 @@ async function initialiseProwlarr() {
 
 async function initialiseTemplates() {
   try {
-    const templates = TemplateManager.loadTemplates();
-    logger.info(
-      `Loaded ${templates.loaded} templates from ${templates.detected} detected templates. ${templates.errors.length} errors occurred.`
-    );
-    if (templates.errors.length > 0) {
-      logger.error(
-        `Errors loading templates: \n${templates.errors.map((error) => `- ${error.file}: ${error.error}`).join('\n')}`
-      );
-    }
+    TemplateManager.loadTemplates();
   } catch (error) {
     logger.error('Failed to initialise templates:', error);
   }
