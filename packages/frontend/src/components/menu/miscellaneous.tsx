@@ -363,24 +363,6 @@ function Content() {
           </SettingsCard>
         )}
         {mode === 'pro' && (
-          <SettingsCard
-            title="Exclude Season Packs"
-            description="Whether to filter out results that contain entire seasons."
-          >
-            <Switch
-              label="Enable"
-              side="right"
-              value={userData.excludeSeasonPacks}
-              onValueChange={(value) => {
-                setUserData((prev) => ({
-                  ...prev,
-                  excludeSeasonPacks: value,
-                }));
-              }}
-            />
-          </SettingsCard>
-        )}
-        {mode === 'pro' && (
           <SettingsCard title="Hide Errors">
             <Switch
               label="Hide Errors"

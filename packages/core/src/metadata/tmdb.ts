@@ -103,6 +103,23 @@ const FindResultsSchema = z.object({
   ),
 });
 
+const ReleaseDateSchema = z.object({
+  release_date: z.string(),
+  type: z.number().min(0).max(6),
+});
+
+export type ReleaseDate = z.infer<typeof ReleaseDateSchema>;
+
+const ReleaseDatesResponseSchema = z.object({
+  id: z.number(),
+  results: z.array(
+    z.object({
+      iso_3166_1: z.string(),
+      release_dates: z.array(ReleaseDateSchema),
+    })
+  ),
+});
+
 const IdTypeMap: Partial<Record<IdType, TMDBIdType>> = {
   imdbId: 'imdb_id',
   thetvdbId: 'tvdb_id',
@@ -240,11 +257,11 @@ export class TMDBMetadata {
       parsedId.mediaType === 'movie'
         ? (detailsData as z.infer<typeof MovieDetailsSchema>).title
         : (detailsData as z.infer<typeof TVDetailsSchema>).name;
-    const year = this.parseReleaseDate(
+    const releaseDate =
       parsedId.mediaType === 'movie'
         ? (detailsData as z.infer<typeof MovieDetailsSchema>).release_date
-        : (detailsData as z.infer<typeof TVDetailsSchema>).first_air_date
-    );
+        : (detailsData as z.infer<typeof TVDetailsSchema>).first_air_date;
+    const year = this.parseReleaseDate(releaseDate);
     const yearEnd =
       parsedId.mediaType !== 'movie'
         ? (detailsData as z.infer<typeof TVDetailsSchema>).last_air_date
@@ -350,6 +367,7 @@ export class TMDBMetadata {
     const metadata: Metadata = {
       title: primaryTitle,
       titles: uniqueTitles,
+      releaseDate: releaseDate,
       year: Number(year),
       yearEnd: yearEnd ? Number(yearEnd) : undefined,
       seasons,
@@ -365,6 +383,21 @@ export class TMDBMetadata {
     if (this.apiKey) {
       url.searchParams.set('api_key', this.apiKey);
     }
+  }
+
+  public async getReleaseDates(tmdbId: number): Promise<ReleaseDate[]> {
+    const url = new URL(API_BASE_URL + `/movie/${tmdbId}/release_dates`);
+    this.addSearchParams(url);
+    const response = await makeRequest(url.toString(), {
+      timeout: 5000,
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch release dates: ${response.statusText}`);
+    }
+    const json = await response.json();
+    const data = ReleaseDatesResponseSchema.parse(json);
+    return data.results.flatMap((result) => result.release_dates);
   }
 
   public async validateAuthorisation() {

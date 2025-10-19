@@ -28,6 +28,7 @@ import {
   MdSurroundSound,
   MdTextFields,
   MdVideoLibrary,
+  MdMiscellaneousServices,
 } from 'react-icons/md';
 import { BiSolidCameraMovie } from 'react-icons/bi';
 import { SiDolby } from 'react-icons/si';
@@ -340,6 +341,10 @@ function Content() {
               <TabsTrigger value="deduplicator">
                 <MdCleaningServices className="text-lg mr-3" />
                 Deduplicator
+              </TabsTrigger>
+              <TabsTrigger value="miscellaneous">
+                <MdMiscellaneousServices className="text-lg mr-3" />
+                Miscellaneous
               </TabsTrigger>
             </div>
           </SettingsNavCard>
@@ -2440,6 +2445,59 @@ function Content() {
                       />
                     </SettingsCard>
                   </>
+                )}
+              </div>
+            </>
+          </TabsContent>
+          <TabsContent value="miscellaneous" className="space-y-4">
+            <>
+              <HeadingWithPageControls heading="Miscellaneous" />
+              <div className="mb-4">
+                <p className="text-sm text-[--muted]">
+                  Additional miscellaneous filters.
+                </p>
+              </div>
+              <div className="space-y-4">
+                {/* <SettingsCard>
+                  <Switch
+                    label="Enable"
+                    side="right"
+                    value={userData.miscellaneous?.enabled ?? false}
+                  />
+                </SettingsCard> */}
+                <SettingsCard
+                  title="Digital Release Filter"
+                  description="This will filter out all results for movies that are determined to not have a digital release."
+                >
+                  <Switch
+                    label="Enable"
+                    side="right"
+                    value={userData.digitalReleaseFilter}
+                    onValueChange={(value) => {
+                      setUserData((prev) => ({
+                        ...prev,
+                        digitalReleaseFilter: value,
+                      }));
+                    }}
+                  />
+                </SettingsCard>
+                {mode === 'pro' && (
+                  <SettingsCard
+                    title="Exclude Season Packs"
+                    description="Whether to filter out results that contain entire seasons."
+                  >
+                    <Switch
+                      label="Enable"
+                      side="right"
+                      value={userData.excludeSeasonPacks}
+                      onValueChange={(value) => {
+                        setUserData((prev) => ({
+                          ...prev,
+                          excludeSeasonPacks: value,
+                        }));
+                      }}
+                    />
+                  </SettingsCard>
                 )}
               </div>
             </>

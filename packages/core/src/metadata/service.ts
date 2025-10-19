@@ -38,6 +38,7 @@ export class MetadataService {
           async () => {
             const start = Date.now();
             const titles: string[] = [];
+            let releaseDate: string | undefined;
             let year: number | undefined;
             let yearEnd: number | undefined;
             let seasons:
@@ -155,6 +156,8 @@ export class MetadataService {
               if (tmdbMetadata.titles) titles.push(...tmdbMetadata.titles);
               if (tmdbMetadata.year) year = tmdbMetadata.year;
               if (tmdbMetadata.yearEnd) yearEnd = tmdbMetadata.yearEnd;
+              if (tmdbMetadata.releaseDate)
+                releaseDate = tmdbMetadata.releaseDate;
               if (tmdbMetadata.seasons)
                 seasons = tmdbMetadata.seasons.sort(
                   (a, b) => a.season_number - b.season_number
@@ -275,6 +278,7 @@ export class MetadataService {
               year,
               yearEnd,
               seasons,
+              releaseDate,
               tmdbId,
               tvdbId,
             };
