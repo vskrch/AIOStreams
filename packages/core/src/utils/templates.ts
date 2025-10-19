@@ -24,29 +24,33 @@ export class TemplateManager {
     loaded: number;
     errors: { file: string; error: string }[];
   } {
-    const predefinedTemplatePath = path.join(RESOURCE_DIR, 'templates');
-    const userTemplatesPath = path.join(getDataFolder(), 'templates');
+    const builtinTemplatePath = path.join(RESOURCE_DIR, 'templates');
+    const customTemplatesPath = path.join(getDataFolder(), 'templates');
 
-    //  load all predefined templates first. look for all JSON files in the predefined template path.
-    const predefinedTemplates = this.loadTemplatesFromPath(
-      predefinedTemplatePath,
-      true
+    //  load all builtin templates first, then custom templates
+    const builtinTemplates = this.loadTemplatesFromPath(
+      builtinTemplatePath,
+      'builtin'
     );
-    const userTemplates = this.loadTemplatesFromPath(userTemplatesPath, false);
+    const customTemplates = this.loadTemplatesFromPath(
+      customTemplatesPath,
+      'custom'
+    );
+    // Order: custom first, then builtin (external templates added by frontend in the right order)
     this.templates = [
-      ...predefinedTemplates.templates,
-      ...userTemplates.templates,
+      ...customTemplates.templates,
+      ...builtinTemplates.templates,
     ];
     return {
-      detected: predefinedTemplates.detected + userTemplates.detected,
-      loaded: predefinedTemplates.loaded + userTemplates.loaded,
-      errors: [...predefinedTemplates.errors, ...userTemplates.errors],
+      detected: builtinTemplates.detected + customTemplates.detected,
+      loaded: builtinTemplates.loaded + customTemplates.loaded,
+      errors: [...builtinTemplates.errors, ...customTemplates.errors],
     };
   }
 
   private static loadTemplatesFromPath(
     dirPath: string,
-    predefined: boolean
+    source: 'builtin' | 'custom'
   ): {
     templates: Template[];
     detected: number;
@@ -70,7 +74,7 @@ export class TemplateManager {
             ...template,
             metadata: {
               ...template.metadata,
-              predefined: predefined || false,
+              source,
             },
           });
         }

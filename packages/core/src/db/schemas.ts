@@ -1000,7 +1000,14 @@ export const TemplateSchema = z.object({
     name: z.string().min(1).max(20), // name of the template
     description: z.string().min(1).max(500), // description of the template
     author: z.string().min(1).max(20), // author of the template (predefined templates will have Vire)
-    predefined: z.boolean().optional(), // whether the template is predefined or not.
+    source: z
+      .enum(['builtin', 'custom', 'external'])
+      .optional()
+      .default('builtin'),
+    version: z
+      .stringFormat('semver', /^[0-9]+\.[0-9]+\.[0-9]+$/)
+      .optional()
+      .default('1.0.0'),
     category: z.string().min(1).max(20), // category of the template
     services: z.array(ServiceIds).optional(),
     serviceRequired: z.boolean().optional(), // whether a service is required for this template or not.

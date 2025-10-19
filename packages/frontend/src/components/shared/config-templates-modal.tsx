@@ -6,13 +6,24 @@ import { Alert } from '../ui/alert';
 import { toast } from 'sonner';
 import { applyMigrations, useUserData } from '@/context/userData';
 import { useStatus } from '@/context/status';
-import { SearchIcon, CheckIcon, AlertTriangleIcon } from 'lucide-react';
+import {
+  SearchIcon,
+  CheckIcon,
+  AlertTriangleIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { TextInput } from '../ui/text-input';
 import { Textarea } from '../ui/textarea';
 import * as constants from '../../../../core/src/utils/constants';
 import { StatusResponse, Template } from '@aiostreams/core';
 import MarkdownLite from './markdown-lite';
 import { BiImport } from 'react-icons/bi';
+import {
+  useConfirmationDialog,
+  ConfirmationDialog,
+} from './confirmation-dialog';
+import { PasswordInput } from '../ui/password-input';
+import React from 'react';
 
 export interface TemplateValidation {
   isValid: boolean;
@@ -54,7 +65,7 @@ export function ConfigTemplatesModal({
   onOpenChange,
   openImportModal = false,
 }: ConfigTemplatesModalProps) {
-  const { setUserData } = useUserData();
+  const { setUserData, userData } = useUserData();
   const { status } = useStatus();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -67,6 +78,12 @@ export function ConfigTemplatesModal({
   const [showImportModal, setShowImportModal] = useState(false);
   const [importUrl, setImportUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [showImportConfirmModal, setShowImportConfirmModal] = useState(false);
+  const [pendingImportTemplates, setPendingImportTemplates] = useState<
+    TemplateWithId[]
+  >([]);
+  const [templateToDelete, setTemplateToDelete] =
+    useState<TemplateWithId | null>(null);
 
   // Template loading state
   const [processedTemplate, setProcessedTemplate] =
@@ -87,6 +104,39 @@ export function ConfigTemplatesModal({
     }
   }, [open]);
 
+  // Load templates from localStorage
+  const getLocalStorageTemplates = (): TemplateWithId[] => {
+    try {
+      const stored = localStorage.getItem('aiostreams-custom-templates');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.map((template: any) => ({
+          ...template,
+          metadata: {
+            ...template.metadata,
+            source: 'external',
+          },
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading templates from localStorage:', error);
+    }
+    return [];
+  };
+
+  // Save templates to localStorage
+  const saveLocalStorageTemplates = (templates: TemplateWithId[]) => {
+    try {
+      localStorage.setItem(
+        'aiostreams-custom-templates',
+        JSON.stringify(templates)
+      );
+    } catch (error) {
+      console.error('Error saving templates to localStorage:', error);
+      toast.error('Failed to save templates to local storage');
+    }
+  };
+
   const fetchTemplates = async () => {
     setLoadingTemplates(true);
     try {
@@ -94,16 +144,18 @@ export function ConfigTemplatesModal({
       if (response.ok) {
         const data = await response.json();
         const fetchedTemplates = data.data || [];
-        setTemplates(fetchedTemplates);
+
+        // Load external templates from localStorage
+        const localTemplates = getLocalStorageTemplates();
+
+        const allTemplates = [...localTemplates, ...fetchedTemplates];
+        setTemplates(allTemplates);
 
         // Validate all templates
         if (status) {
           const validations: Record<string, TemplateValidation> = {};
-          fetchedTemplates.forEach((template: Template, index: number) => {
-            validations[`template-${index}`] = validateTemplate(
-              Object.assign(template, { id: `template-${index}` }),
-              status
-            );
+          allTemplates.forEach((template: TemplateWithId) => {
+            validations[template.id] = validateTemplate(template, status);
           });
           setTemplateValidations(validations);
         }
@@ -233,47 +285,60 @@ export function ConfigTemplatesModal({
 
   const processImportedTemplate = (data: any) => {
     try {
-      // Validate it has userData field
-      if (!data.config) {
-        toast.error('Invalid template: missing config field');
-        return;
-      }
+      // Check if data is an array of templates
+      const isArray = Array.isArray(data);
+      const templateData = isArray ? data : [data];
 
-      // Create a template object from the data
-      const importedTemplate: TemplateWithId = {
-        id: `imported-${Date.now()}`,
-        metadata: {
-          name: data.metadata.name || 'Imported Template',
-          description: data.metadata.description || 'Imported from JSON',
-          author: data.metadata.author || 'Unknown',
-          category: data.metadata.category || 'Custom',
-          services: data.metadata.services,
-          serviceRequired: data.metadata.serviceRequired,
-          predefined: false,
-        },
-        config: data.config || data,
-      };
+      const importedTemplates: TemplateWithId[] = [];
 
-      // Validate the imported template
-      if (status) {
-        const validation = validateTemplate(importedTemplate, status);
-        setTemplateValidations((prev) => ({
-          ...prev,
-          [importedTemplate.id]: validation,
-        }));
-
-        if (validation.errors.length > 0) {
-          toast.error(`Cannot load template: ${validation.errors.join(', ')}`);
+      for (const item of templateData) {
+        // Validate it has config field
+        if (!item.config) {
+          toast.error('Invalid template: missing config field');
           return;
         }
+
+        // Create a template object from the data
+        const importedTemplate: TemplateWithId = {
+          id: `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          metadata: {
+            name: item.metadata?.name || 'Imported Template',
+            description: item.metadata?.description || 'Imported from JSON',
+            author: item.metadata?.author || 'Unknown',
+            version: item.metadata?.version || '1.0.0',
+            category: item.metadata?.category || 'Custom',
+            services: item.metadata?.services,
+            serviceRequired: item.metadata?.serviceRequired,
+            source: 'external',
+          },
+          config: item.config || item,
+        };
+
+        // Validate the imported template
+        if (status) {
+          const validation = validateTemplate(importedTemplate, status);
+
+          if (validation.errors.length > 0) {
+            toast.error(
+              `Cannot import template "${importedTemplate.metadata.name}": ${validation.errors.join(', ')}`
+            );
+            return;
+          }
+
+          setTemplateValidations((prev) => ({
+            ...prev,
+            [importedTemplate.id]: validation,
+          }));
+        }
+
+        importedTemplates.push(importedTemplate);
       }
 
-      // Close import modal and load the template directly
+      // Close import modal and show confirmation modal
       setShowImportModal(false);
       setImportUrl('');
-
-      // Load the template directly (will trigger processing)
-      handleLoadTemplate(importedTemplate);
+      setPendingImportTemplates(importedTemplates);
+      setShowImportConfirmModal(true);
     } catch (error) {
       toast.error('Invalid template format: ' + (error as Error).message);
     }
@@ -318,6 +383,60 @@ export function ConfigTemplatesModal({
     };
     input.click();
   };
+
+  const handleConfirmImport = (loadImmediately = false) => {
+    // Save to localStorage
+    const localTemplates = getLocalStorageTemplates();
+    const updatedTemplates = [...localTemplates, ...pendingImportTemplates];
+    saveLocalStorageTemplates(updatedTemplates);
+
+    // Add to current templates list
+    setTemplates((prev) => [...prev, ...pendingImportTemplates]);
+
+    toast.success(
+      `Successfully imported ${pendingImportTemplates.length} template${pendingImportTemplates.length !== 1 ? 's' : ''}`
+    );
+
+    // If user wants to load immediately (single template only)
+    if (loadImmediately && pendingImportTemplates.length === 1) {
+      setShowImportConfirmModal(false);
+      handleLoadTemplate(pendingImportTemplates[0]);
+      setPendingImportTemplates([]);
+    } else {
+      setShowImportConfirmModal(false);
+      setPendingImportTemplates([]);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setShowImportConfirmModal(false);
+    setPendingImportTemplates([]);
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    // Remove from current templates list
+    setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+
+    // Remove from localStorage
+    const localTemplates = getLocalStorageTemplates();
+    const updatedTemplates = localTemplates.filter((t) => t.id !== templateId);
+    saveLocalStorageTemplates(updatedTemplates);
+
+    toast.success('Template deleted successfully');
+  };
+
+  const confirmDeleteTemplate = useConfirmationDialog({
+    title: 'Delete Template',
+    description:
+      'Are you sure you want to delete this template? This action cannot be undone.',
+    actionText: 'Delete',
+    actionIntent: 'alert-subtle',
+    onConfirm: () => {
+      if (templateToDelete) {
+        handleDeleteTemplate(templateToDelete.id);
+      }
+    },
+  });
 
   // Parse placeholder values from a string
   const parsePlaceholder = (
@@ -428,7 +547,7 @@ export function ConfigTemplatesModal({
             description: fieldDescriptions[field],
             type: field === 'credentials' ? 'password' : 'string',
             required: placeholder.required,
-            value: '',
+            value: userData?.proxy?.[field] || '',
           });
         }
       });
@@ -455,7 +574,7 @@ export function ConfigTemplatesModal({
           description: detail?.description,
           type: 'password',
           required: placeholder.required,
-          value: '',
+          value: userData?.[field] || '',
         });
       }
     });
@@ -498,7 +617,9 @@ export function ConfigTemplatesModal({
                   description: option.description,
                   type: 'password',
                   required: true,
-                  value: '',
+                  value:
+                    userData?.presets?.[presetIndex]?.options?.[option.id] ||
+                    '',
                 });
               }
             } else {
@@ -509,7 +630,8 @@ export function ConfigTemplatesModal({
                 description: option.description,
                 type: option.type === 'password' ? 'password' : 'string',
                 required: placeholder.required || option.required || false,
-                value: '',
+                value:
+                  userData?.presets?.[presetIndex]?.options?.[option.id] || '',
               });
             }
           }
@@ -549,7 +671,9 @@ export function ConfigTemplatesModal({
           description: cred.description,
           type: 'password',
           required: true,
-          value: '',
+          value:
+            userData?.services?.find((s: any) => s.id === serviceId)
+              ?.credentials?.[cred.id] || '',
         });
       });
     });
@@ -875,55 +999,74 @@ export function ConfigTemplatesModal({
                 key={template.id}
                 className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition-colors"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-base font-semibold text-white flex-1">
-                    {template.metadata.name}
-                  </h3>
-                  {template.metadata.predefined && (
-                    <span className="text-xs bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded border border-brand-500/30">
-                      Built-in
-                    </span>
-                  )}
-                  {(hasWarnings || hasErrors) && (
-                    <div className="relative group">
-                      <AlertTriangleIcon
-                        className={`w-4 h-4 ${hasErrors ? 'text-red-400' : 'text-yellow-400'}`}
-                      />
-                      <div className="absolute right-0 top-full mt-1 w-64 max-w-[calc(100vw-2rem)] p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-xs">
-                        {validation.errors.length > 0 && (
-                          <div className="mb-2">
-                            <div className="font-semibold text-red-400 mb-1">
-                              Errors:
-                            </div>
-                            <ul className="list-disc list-inside space-y-1 text-red-300">
-                              {validation.errors.map((error, idx) => (
-                                <li key={idx} className="break-words">
-                                  {error}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {validation.warnings.length > 0 && (
-                          <div>
-                            <div className="font-semibold text-yellow-400 mb-1">
-                              Warnings:
-                            </div>
-                            <ul className="list-disc list-inside space-y-1 text-yellow-300">
-                              {validation.warnings.map((warning, idx) => (
-                                <li key={idx} className="break-words">
-                                  {warning}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
+                <div className="flex items-start gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-base font-semibold text-white truncate">
+                        {template.metadata.name}
+                      </h3>
+                      <span className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded flex-shrink-0">
+                        v{template.metadata.version || '1.0.0'}
+                      </span>
                     </div>
-                  )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {template.metadata.source === 'builtin' && (
+                      <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">
+                        Built-in
+                      </span>
+                    )}
+                    {template.metadata.source === 'custom' && (
+                      <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">
+                        Custom
+                      </span>
+                    )}
+                    {template.metadata.source === 'external' && (
+                      <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">
+                        External
+                      </span>
+                    )}
+                    {(hasWarnings || hasErrors) && (
+                      <div className="relative group">
+                        <AlertTriangleIcon
+                          className={`w-4 h-4 ${hasErrors ? 'text-red-400' : 'text-yellow-400'}`}
+                        />
+                        <div className="absolute right-0 top-full mt-1 w-64 max-w-[calc(100vw-2rem)] p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-xs">
+                          {validation.errors.length > 0 && (
+                            <div className="mb-2">
+                              <div className="font-semibold text-red-400 mb-1">
+                                Errors:
+                              </div>
+                              <ul className="list-disc list-inside space-y-1 text-red-300">
+                                {validation.errors.map((error, idx) => (
+                                  <li key={idx} className="break-words">
+                                    {error}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {validation.warnings.length > 0 && (
+                            <div>
+                              <div className="font-semibold text-yellow-400 mb-1">
+                                Warnings:
+                              </div>
+                              <ul className="list-disc list-inside space-y-1 text-yellow-300">
+                                {validation.warnings.map((warning, idx) => (
+                                  <li key={idx} className="break-words">
+                                    {warning}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <MarkdownLite className="text-sm text-gray-400 mb-3">
+                <MarkdownLite className="text-sm text-gray-400 mb-4">
                   {template.metadata.description}
                 </MarkdownLite>
 
@@ -958,9 +1101,27 @@ export function ConfigTemplatesModal({
                         </span>
                       ))}
                       {addons.length > 5 && (
-                        <span className="text-xs bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded">
-                          +{addons.length - 5} more
-                        </span>
+                        <div className="relative group">
+                          <span className="text-xs bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded cursor-pointer">
+                            +{addons.length - 5} more
+                          </span>
+                          <div className="absolute left-0 top-full mt-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                            <div className="bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-2 flex flex-wrap gap-1.5 max-w-xs">
+                              {addons.slice(5).map((addon, idx) => (
+                                <span
+                                  key={addon}
+                                  className="text-xs bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded animate-in fade-in slide-in-from-top-1"
+                                  style={{
+                                    animationDelay: `${idx * 30}ms`,
+                                    animationDuration: '200ms',
+                                  }}
+                                >
+                                  {addon}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -989,16 +1150,29 @@ export function ConfigTemplatesModal({
                   )}
 
                 {/* Load Template Button - Full Width at Bottom */}
-                <Button
-                  intent="primary"
-                  size="md"
-                  leftIcon={<CheckIcon className="w-4 h-4" />}
-                  onClick={() => handleLoadTemplate(template)}
-                  loading={isLoading}
-                  className="w-full"
-                >
-                  Load Template
-                </Button>
+                <div className="flex gap-2">
+                  {template.metadata.source === 'external' && (
+                    <IconButton
+                      icon={<Trash2Icon className="w-4 h-4" />}
+                      intent="alert-outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTemplateToDelete(template);
+                        confirmDeleteTemplate.open();
+                      }}
+                    />
+                  )}
+                  <Button
+                    intent="primary"
+                    size="md"
+                    leftIcon={<CheckIcon className="w-4 h-4" />}
+                    onClick={() => handleLoadTemplate(template)}
+                    loading={isLoading}
+                    className="flex-1"
+                  >
+                    Load Template
+                  </Button>
+                </div>
               </div>
             );
           })
@@ -1132,28 +1306,34 @@ export function ConfigTemplatesModal({
               No inputs required for this template
             </div>
           ) : (
-            processedTemplate.inputs.map((input) => (
-              <div key={input.key}>
-                <TextInput
-                  label={input.label}
-                  type={input.type === 'password' ? 'password' : 'text'}
-                  placeholder={`Enter ${input.label.toLowerCase()}...`}
-                  value={inputValues[input.key] || ''}
-                  onValueChange={(newValue) => {
-                    setInputValues((prev) => ({
-                      ...prev,
-                      [input.key]: newValue,
-                    }));
-                  }}
-                  required={input.required}
-                />
-                {input.description && (
-                  <MarkdownLite className="text-xs text-[--muted] mt-1">
-                    {input.description}
-                  </MarkdownLite>
-                )}
-              </div>
-            ))
+            processedTemplate.inputs.map((input) => {
+              const props = {
+                label: input.label,
+                value: inputValues[input.key] || '',
+                placeholder: `Enter ${input.label}...`,
+                onValueChange: (newValue: string) => {
+                  setInputValues((prev) => ({
+                    ...prev,
+                    [input.key]: newValue,
+                  }));
+                },
+                required: input.required,
+              };
+              return (
+                <React.Fragment key={input.key}>
+                  {input.type === 'string' ? (
+                    <TextInput {...props} />
+                  ) : (
+                    <PasswordInput {...props} />
+                  )}
+                  {input.description && (
+                    <MarkdownLite className="text-xs text-[--muted] mt-1">
+                      {input.description}
+                    </MarkdownLite>
+                  )}
+                </React.Fragment>
+              );
+            })
           )}
         </form>
 
@@ -1273,6 +1453,138 @@ export function ConfigTemplatesModal({
           </div>
         </div>
       </Modal>
+
+      {/* Import Confirmation Modal */}
+      <Modal
+        open={showImportConfirmModal}
+        onOpenChange={setShowImportConfirmModal}
+        title="Confirm Import"
+        description={
+          pendingImportTemplates.length === 1
+            ? 'Review the template details before importing'
+            : `${pendingImportTemplates.length} templates will be imported`
+        }
+      >
+        <div className="space-y-4">
+          {pendingImportTemplates.length === 1 ? (
+            // Show detailed metadata for single template
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3">
+              <div>
+                <div className="text-xs text-gray-400 mb-1">Name</div>
+                <div className="text-sm font-semibold text-white flex items-center gap-2">
+                  {pendingImportTemplates[0].metadata.name}
+                  <span className="text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded">
+                    v{pendingImportTemplates[0].metadata.version || '1.0.0'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-400 mb-1">Description</div>
+                <div className="text-sm text-gray-300">
+                  {pendingImportTemplates[0].metadata.description}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Author</div>
+                  <div className="text-sm text-gray-300">
+                    {pendingImportTemplates[0].metadata.author}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Category</div>
+                  <div className="text-sm text-gray-300">
+                    {pendingImportTemplates[0].metadata.category}
+                  </div>
+                </div>
+              </div>
+              {pendingImportTemplates[0].metadata.services &&
+                pendingImportTemplates[0].metadata.services.length > 0 && (
+                  <div>
+                    <div className="text-xs text-gray-400 mb-1">Services</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {pendingImportTemplates[0].metadata.services.map(
+                        (service) => (
+                          <span
+                            key={service}
+                            className="text-xs bg-green-600/30 text-green-300 px-2 py-0.5 rounded"
+                          >
+                            {constants.SERVICE_DETAILS[
+                              service as keyof typeof constants.SERVICE_DETAILS
+                            ]?.name || service}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
+          ) : (
+            // Show simple list for multiple templates
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {pendingImportTemplates.map((template, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">
+                        {template.metadata.name}
+                      </div>
+                      <div className="text-xs text-gray-400 truncate">
+                        {template.metadata.category} • v
+                        {template.metadata.version || '1.0.0'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Alert
+            intent="info"
+            description={`The template${pendingImportTemplates.length !== 1 ? 's' : ''} will be saved to your browser's local storage and added to your templates list.`}
+          />
+
+          <div className="flex justify-between gap-2 pt-2 border-t border-gray-700">
+            <Button intent="primary-outline" onClick={handleCancelImport}>
+              Cancel
+            </Button>
+            <div className="flex gap-2">
+              {pendingImportTemplates.length === 1 ? (
+                <>
+                  <Button
+                    intent="gray-outline"
+                    onClick={() => handleConfirmImport(false)}
+                  >
+                    OK
+                  </Button>
+                  <Button
+                    intent="white"
+                    rounded
+                    onClick={() => handleConfirmImport(true)}
+                  >
+                    Use This Template Now
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  intent="white"
+                  rounded
+                  onClick={() => handleConfirmImport(false)}
+                >
+                  Confirm Import
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog {...confirmDeleteTemplate} />
     </>
   );
 }

@@ -152,7 +152,9 @@ export function TemplateExportModal({
         metadata: {
           name: templateName,
           description: description,
+          source: 'external',
           author: author,
+          version: '1.0.0',
           category: finalCategory,
           services: undefined,
           serviceRequired: false,
