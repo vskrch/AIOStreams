@@ -333,9 +333,9 @@ export class StremThruInterface implements DebridService {
     );
 
     if (!file?.link) {
-      throw new DebridError('No matching file found', {
+      throw new DebridError('Selected file was missing a link', {
         statusCode: 400,
-        statusText: 'No matching file found',
+        statusText: 'Selected file was missing a link',
         code: 'NO_MATCHING_FILE',
         headers: {},
         body: file,
