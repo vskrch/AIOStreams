@@ -133,16 +133,21 @@ export function ConfigTemplatesModal({
 
     // Check if addons exist on instance
     if (template.config.presets) {
+      const presetsToRemove: string[] = [];
       template.config.presets.forEach((preset: any) => {
         const presetMeta = statusData.settings?.presets?.find(
-          (p: any) => p.ID === preset.type
+          (p) => p.ID === preset.type
         );
         if (!presetMeta || presetMeta.DISABLED?.disabled) {
           warnings.push(
-            `Addon type "${preset.type}" not available on this instance`
+            `"${preset.type}" is not available or disabled on this instance.`
           );
+          presetsToRemove.push(preset.type);
         }
       });
+      template.config.presets = template.config.presets.filter(
+        (p) => !presetsToRemove.includes(p.type)
+      );
     }
 
     // Check if services exist on instance
