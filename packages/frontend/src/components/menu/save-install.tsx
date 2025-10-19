@@ -214,17 +214,16 @@ function Content() {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const json = applyMigrations(
-          JSON.parse(event.target?.result as string)
-        );
-        // const validate = UserDataSchema.safeParse(json);
-        // if (!validate.success) {
-        //   toast.error('Failed to import configuration: Invalid JSON file');
-        //   return;
-        // }
+        const parsed = JSON.parse(event.target?.result as string);
+        if (parsed.metadata) {
+          toast.error(
+            'The imported file is a template, please use the template import option instead.'
+          );
+          return;
+        }
         setUserData((prev) => ({
           ...prev,
-          ...json,
+          ...applyMigrations(parsed),
         }));
         toast.success('Configuration imported successfully');
       } catch (err) {
