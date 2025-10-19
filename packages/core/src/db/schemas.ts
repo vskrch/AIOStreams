@@ -998,10 +998,10 @@ export type RPDBIsValidResponse = z.infer<typeof RPDBIsValidResponse>;
 
 export const TemplateSchema = z.object({
   metadata: z.object({
-    id: z.string().optional().default(crypto.randomUUID()),
-    name: z.string().min(1).max(20), // name of the template
-    description: z.string().min(1).max(500), // description of the template
-    author: z.string().min(1).max(20), // author of the template (predefined templates will have Vire)
+    id: z.string().min(1).max(100).optional().default(crypto.randomUUID()),
+    name: z.string().min(1).max(100), // name of the template
+    description: z.string().min(1).max(1000), // description of the template
+    author: z.string().min(1).max(20), // author of the template
     source: z
       .enum(['builtin', 'custom', 'external'])
       .optional()

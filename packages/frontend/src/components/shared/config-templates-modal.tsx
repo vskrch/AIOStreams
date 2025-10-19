@@ -24,6 +24,33 @@ import {
 } from './confirmation-dialog';
 import { PasswordInput } from '../ui/password-input';
 import React from 'react';
+import { z, ZodError } from 'zod';
+
+const formatZodError = (error: ZodError) => {
+  console.log(JSON.stringify(error, null, 2));
+  return z.prettifyError(error);
+};
+
+const TemplateSchema = z.object({
+  metadata: z.object({
+    id: z.string().min(1).max(100).optional().default(crypto.randomUUID()),
+    name: z.string().min(1).max(100), // name of the template
+    description: z.string().min(1).max(1000), // description of the template
+    author: z.string().min(1).max(20), // author of the template
+    source: z
+      .enum(['builtin', 'custom', 'external'])
+      .optional()
+      .default('builtin'),
+    version: z
+      .stringFormat('semver', /^[0-9]+\.[0-9]+\.[0-9]+$/)
+      .optional()
+      .default('1.0.0'),
+    category: z.string().min(1).max(20), // category of the template
+    services: z.array(z.enum(constants.SERVICES)).optional(),
+    serviceRequired: z.boolean().optional(), // whether a service is required for this template or not.
+  }),
+  config: z.any(),
+});
 
 export interface TemplateValidation {
   isValid: boolean;
@@ -197,6 +224,12 @@ export function ConfigTemplatesModal({
     // Check if template has required structure
     if (!template.config) {
       errors.push('Template is missing configuration data');
+      return { isValid: false, warnings, errors };
+    }
+
+    const validate = TemplateSchema.safeParse(template);
+    if (!validate.success) {
+      errors.push(formatZodError(validate.error));
       return { isValid: false, warnings, errors };
     }
 
