@@ -31,10 +31,6 @@ export interface TemplateValidation {
   errors: string[];
 }
 
-interface TemplateWithId extends Template {
-  id: string;
-}
-
 interface TemplateInput {
   key: string; // Unique identifier for this input
   path: string | string[]; // Path in the userData object (e.g., "tmdbApiKey", "presets.0.options.apiKey", "proxy.url")
@@ -46,7 +42,7 @@ interface TemplateInput {
 }
 
 interface ProcessedTemplate {
-  template: TemplateWithId;
+  template: Template;
   services: string[]; // Selected services
   skipServiceSelection: boolean; // True if services = [] or single required service
   showServiceSelection: boolean; // True if services = undefined or multiple options
@@ -70,7 +66,7 @@ export function ConfigTemplatesModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
-  const [templates, setTemplates] = useState<TemplateWithId[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [templateValidations, setTemplateValidations] = useState<
     Record<string, TemplateValidation>
@@ -80,10 +76,11 @@ export function ConfigTemplatesModal({
   const [isImporting, setIsImporting] = useState(false);
   const [showImportConfirmModal, setShowImportConfirmModal] = useState(false);
   const [pendingImportTemplates, setPendingImportTemplates] = useState<
-    TemplateWithId[]
+    Template[]
   >([]);
-  const [templateToDelete, setTemplateToDelete] =
-    useState<TemplateWithId | null>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<Template | null>(
+    null
+  );
 
   // Template loading state
   const [processedTemplate, setProcessedTemplate] =
@@ -105,7 +102,7 @@ export function ConfigTemplatesModal({
   }, [open]);
 
   // Load templates from localStorage
-  const getLocalStorageTemplates = (): TemplateWithId[] => {
+  const getLocalStorageTemplates = (): Template[] => {
     try {
       const stored = localStorage.getItem('aiostreams-custom-templates');
       if (stored) {
@@ -125,7 +122,7 @@ export function ConfigTemplatesModal({
   };
 
   // Save templates to localStorage
-  const saveLocalStorageTemplates = (templates: TemplateWithId[]) => {
+  const saveLocalStorageTemplates = (templates: Template[]) => {
     try {
       localStorage.setItem(
         'aiostreams-custom-templates',
@@ -148,14 +145,34 @@ export function ConfigTemplatesModal({
         // Load external templates from localStorage
         const localTemplates = getLocalStorageTemplates();
 
+        // Combine templates, removing duplicates based on ID
+        // External templates come first to allow overwriting
         const allTemplates = [...localTemplates, ...fetchedTemplates];
-        setTemplates(allTemplates);
+
+        // Remove duplicates by ID, keeping the first occurrence (external templates have priority)
+        const uniqueTemplates = allTemplates.reduce(
+          (acc: Template[], template) => {
+            const existingIndex = acc.findIndex(
+              (t: Template) => t.metadata.id === template.metadata.id
+            );
+            if (existingIndex === -1) {
+              acc.push(template);
+            }
+            return acc;
+          },
+          [] as Template[]
+        );
+
+        setTemplates(uniqueTemplates);
 
         // Validate all templates
         if (status) {
           const validations: Record<string, TemplateValidation> = {};
-          allTemplates.forEach((template: TemplateWithId) => {
-            validations[template.id] = validateTemplate(template, status);
+          uniqueTemplates.forEach((template: Template) => {
+            validations[template.metadata.id] = validateTemplate(
+              template,
+              status
+            );
           });
           setTemplateValidations(validations);
         }
@@ -171,7 +188,7 @@ export function ConfigTemplatesModal({
   };
 
   const validateTemplate = (
-    template: TemplateWithId,
+    template: Template,
     statusData: StatusResponse
   ): TemplateValidation => {
     const warnings: string[] = [];
@@ -289,7 +306,8 @@ export function ConfigTemplatesModal({
       const isArray = Array.isArray(data);
       const templateData = isArray ? data : [data];
 
-      const importedTemplates: TemplateWithId[] = [];
+      const importedTemplates: Template[] = [];
+      const protectedTemplateIds: string[] = [];
 
       for (const item of templateData) {
         // Validate it has config field
@@ -298,10 +316,28 @@ export function ConfigTemplatesModal({
           return;
         }
 
+        // Generate ID if not provided
+        const templateId =
+          item.metadata?.id ||
+          `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Check if this would overwrite a built-in or custom template
+        const existingTemplate = templates.find(
+          (t) => t.metadata.id === templateId
+        );
+        if (
+          existingTemplate &&
+          (existingTemplate.metadata.source === 'builtin' ||
+            existingTemplate.metadata.source === 'custom')
+        ) {
+          protectedTemplateIds.push(templateId);
+          continue; // Skip this template
+        }
+
         // Create a template object from the data
-        const importedTemplate: TemplateWithId = {
-          id: `imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        const importedTemplate: Template = {
           metadata: {
+            id: templateId,
             name: item.metadata?.name || 'Imported Template',
             description: item.metadata?.description || 'Imported from JSON',
             author: item.metadata?.author || 'Unknown',
@@ -327,11 +363,21 @@ export function ConfigTemplatesModal({
 
           setTemplateValidations((prev) => ({
             ...prev,
-            [importedTemplate.id]: validation,
+            [importedTemplate.metadata.id]: validation,
           }));
         }
 
         importedTemplates.push(importedTemplate);
+      }
+
+      // Show error if any templates were blocked
+      if (protectedTemplateIds.length > 0) {
+        toast.error(
+          `Cannot overwrite built-in or custom templates: ${protectedTemplateIds.join(', ')}`
+        );
+        if (importedTemplates.length === 0) {
+          return; // No templates to import
+        }
       }
 
       // Close import modal and show confirmation modal
@@ -385,17 +431,44 @@ export function ConfigTemplatesModal({
   };
 
   const handleConfirmImport = (loadImmediately = false) => {
-    // Save to localStorage
+    // Save to localStorage, overwriting templates with the same ID
     const localTemplates = getLocalStorageTemplates();
-    const updatedTemplates = [...localTemplates, ...pendingImportTemplates];
+
+    // Remove any existing templates with the same IDs
+    const existingTemplateIds = new Set(
+      pendingImportTemplates.map((t) => t.metadata.id)
+    );
+    const filteredLocalTemplates = localTemplates.filter(
+      (t) => !existingTemplateIds.has(t.metadata.id)
+    );
+
+    const updatedTemplates = [
+      ...filteredLocalTemplates,
+      ...pendingImportTemplates,
+    ];
     saveLocalStorageTemplates(updatedTemplates);
 
-    // Add to current templates list
-    setTemplates((prev) => [...prev, ...pendingImportTemplates]);
+    // Update current templates list, removing duplicates
+    setTemplates((prev) => {
+      const filtered = prev.filter(
+        (t) => !existingTemplateIds.has(t.metadata.id)
+      );
+      return [...filtered, ...pendingImportTemplates];
+    });
 
-    toast.success(
-      `Successfully imported ${pendingImportTemplates.length} template${pendingImportTemplates.length !== 1 ? 's' : ''}`
-    );
+    const overwriteCount = localTemplates.filter((t) =>
+      existingTemplateIds.has(t.metadata.id)
+    ).length;
+
+    if (overwriteCount > 0) {
+      toast.success(
+        `Successfully imported ${pendingImportTemplates.length} template${pendingImportTemplates.length !== 1 ? 's' : ''} (${overwriteCount} overwritten)`
+      );
+    } else {
+      toast.success(
+        `Successfully imported ${pendingImportTemplates.length} template${pendingImportTemplates.length !== 1 ? 's' : ''}`
+      );
+    }
 
     // If user wants to load immediately (single template only)
     if (loadImmediately && pendingImportTemplates.length === 1) {
@@ -415,11 +488,13 @@ export function ConfigTemplatesModal({
 
   const handleDeleteTemplate = (templateId: string) => {
     // Remove from current templates list
-    setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+    setTemplates((prev) => prev.filter((t) => t.metadata.id !== templateId));
 
     // Remove from localStorage
     const localTemplates = getLocalStorageTemplates();
-    const updatedTemplates = localTemplates.filter((t) => t.id !== templateId);
+    const updatedTemplates = localTemplates.filter(
+      (t) => t.metadata.id !== templateId
+    );
     saveLocalStorageTemplates(updatedTemplates);
 
     toast.success('Template deleted successfully');
@@ -433,7 +508,7 @@ export function ConfigTemplatesModal({
     actionIntent: 'alert-subtle',
     onConfirm: () => {
       if (templateToDelete) {
-        handleDeleteTemplate(templateToDelete.id);
+        handleDeleteTemplate(templateToDelete.metadata.id);
       }
     },
   });
@@ -471,7 +546,7 @@ export function ConfigTemplatesModal({
   };
 
   // Process template to extract all inputs and determine service handling
-  const processTemplate = (template: TemplateWithId): ProcessedTemplate => {
+  const processTemplate = (template: Template): ProcessedTemplate => {
     const inputs: TemplateInput[] = [];
     const availableServices = Object.keys(status?.settings?.services || {});
 
@@ -681,9 +756,9 @@ export function ConfigTemplatesModal({
     return serviceInputs;
   };
 
-  const handleLoadTemplate = (template: TemplateWithId) => {
+  const handleLoadTemplate = (template: Template) => {
     // Show validation warnings if any
-    const validation = templateValidations[template.id];
+    const validation = templateValidations[template.metadata.id];
     if (validation && validation.errors.length > 0) {
       toast.error(`Cannot load template: ${validation.errors.join(', ')}`);
       return;
@@ -982,7 +1057,7 @@ export function ConfigTemplatesModal({
           </div>
         ) : (
           filteredTemplates.map((template) => {
-            const validation = templateValidations[template.id];
+            const validation = templateValidations[template.metadata.id];
             const hasWarnings = validation && validation.warnings.length > 0;
             const hasErrors = validation && validation.errors.length > 0;
 
@@ -996,7 +1071,7 @@ export function ConfigTemplatesModal({
 
             return (
               <div
-                key={template.id}
+                key={template.metadata.id}
                 className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition-colors"
               >
                 <div className="flex items-start gap-2 mb-2">
@@ -1480,9 +1555,9 @@ export function ConfigTemplatesModal({
               </div>
               <div>
                 <div className="text-xs text-gray-400 mb-1">Description</div>
-                <div className="text-sm text-gray-300">
+                <MarkdownLite className="text-sm text-gray-300">
                   {pendingImportTemplates[0].metadata.description}
-                </div>
+                </MarkdownLite>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

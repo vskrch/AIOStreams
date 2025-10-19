@@ -148,8 +148,12 @@ export function TemplateExportModal({
         category === 'Custom' ? customCategory.trim() : category;
 
       // Create template with new structure
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const formattedDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
       const template: Template = {
         metadata: {
+          id: `${templateName.toLowerCase().replace(/\s+/g, '-')}-${formattedDate}-${Math.random().toString(36).slice(2, 9)}`,
           name: templateName,
           description: description,
           source: 'external',
@@ -167,7 +171,7 @@ export function TemplateExportModal({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${templateName.toLowerCase().replace(/\s+/g, '-')}-template.json`;
+      a.download = `${template.metadata.id}-template.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
