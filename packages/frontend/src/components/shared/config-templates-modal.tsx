@@ -856,6 +856,19 @@ export function ConfigTemplatesModal({
     const allInputs = [...serviceInputs, ...processedTemplate.inputs];
     processedTemplate.inputs = allInputs;
 
+    // enable selected services in the template
+    setProcessedTemplate((prev) => {
+      if (!prev) return null;
+      for (const serviceId of selectedServices) {
+        const service = prev.template.config.services?.find(
+          (s: any) => s.id === serviceId
+        );
+        if (service) {
+          service.enabled = true;
+        }
+      }
+      return prev;
+    });
     // Initialize input values
     setInputValues(
       allInputs.reduce(
