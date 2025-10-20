@@ -29,27 +29,21 @@ export class StreamFusionPreset extends Preset {
         Env.DEFAULT_STREAMFUSION_TIMEOUT
       ),
       {
-        id: 'mediaTypes',
-        name: 'Media Types',
-        description:
-          'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
-        type: 'multi-select',
-        required: false,
-        showInSimpleMode: false,
-        options: [
-          { label: 'Movie', value: 'movie' },
-          { label: 'Series', value: 'series' },
-          { label: 'Anime', value: 'anime' },
-        ],
-        default: [],
-      },
-      {
         id: 'streamFusionApiKey',
         name: 'StreamFusion API Key',
         description:
           'The API key for the StreamFusion service. You can get it by sending the `/generate` command to the [StremioFR Telegram bot](https://t.me/Stremiofr_bot)',
         type: 'password',
         required: true,
+      },
+      {
+        id: 'usePublicTorrentCacheServer',
+        name: 'Use Public Torrent Cache Server',
+        description:
+          'For faster results, you can use the public torrent cache server. Only historiacl public torrents from stremio-jackett will be cached on it. Disable this for results from other sources.',
+        type: 'boolean',
+        required: false,
+        default: false,
       },
       {
         id: 'torboxSearch',
@@ -112,7 +106,21 @@ export class StreamFusionPreset extends Preset {
         default: undefined,
         emptyIsUndefined: true,
       },
-
+      {
+        id: 'mediaTypes',
+        name: 'Media Types',
+        description:
+          'Limits this addon to the selected media types for streams. For example, selecting "Movie" means this addon will only be used for movie streams (if the addon supports them). Leave empty to allow all.',
+        type: 'multi-select',
+        required: false,
+        showInSimpleMode: false,
+        options: [
+          { label: 'Movie', value: 'movie' },
+          { label: 'Series', value: 'series' },
+          { label: 'Anime', value: 'anime' },
+        ],
+        default: [],
+      },
       {
         id: 'socials',
         name: '',
@@ -271,7 +279,7 @@ export class StreamFusionPreset extends Preset {
       minCachedResults: 10,
       exclusion: [],
       cacheUrl: 'https://stremio-jackett-cacher.elfhosted.com/',
-      cache: true,
+      cache: options.usePublicTorrentCacheServer ?? true,
       zilean: true,
       yggflix: true,
       sharewood: true,
