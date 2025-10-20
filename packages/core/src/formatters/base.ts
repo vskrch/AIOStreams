@@ -323,10 +323,12 @@ export abstract class BaseFormatter {
         )
         .join('\n')
         .replace(/\{tools.newLine\}/g, '\n');
-    }
+    };
   }
 
-    protected async compileTemplateHelper(str: string): Promise<CompiledParseFunction> {
+  protected async compileTemplateHelper(
+    str: string
+  ): Promise<CompiledParseFunction> {
     const re = this.regexBuilder.buildRegexExpression();
     let matches: RegExpExecArray | null;
 
@@ -341,7 +343,7 @@ export abstract class BaseFormatter {
       );
     }
 
-    const placeHolder = " ";
+    const placeHolder = ' ';
 
     // Iterate through all {...} matches
     while ((matches = re.exec(str))) {
@@ -435,30 +437,32 @@ export abstract class BaseFormatter {
         };
       } // end of CHECK TRUE/FALSE logic
 
-      str = str.slice(0, index) +placeHolder+ str.slice(re.lastIndex);
-      re.lastIndex = index+placeHolder.length;
+      str = str.slice(0, index) + placeHolder + str.slice(re.lastIndex);
+      re.lastIndex = index + placeHolder.length;
       compiledMatchTemplateFns.push({
         resultFn: precompiledResolvedVariableFn,
         insertIndex: index,
       });
-		} // end of while loop
-		
-		compiledMatchTemplateFns = compiledMatchTemplateFns.sort((a, b) => (b.insertIndex - a.insertIndex ));
+    } // end of while loop
+
+    compiledMatchTemplateFns = compiledMatchTemplateFns.sort(
+      (a, b) => b.insertIndex - a.insertIndex
+    );
     return (parseValue: ParseValue) => {
       let resultStr = str;
 
       // Sort by startIndex to process in reverse order
       for (const { resultFn, insertIndex } of compiledMatchTemplateFns) {
-				const resolvedResult = resultFn(parseValue);
+        const resolvedResult = resultFn(parseValue);
         const replacement =
           resolvedResult.error ?? resolvedResult.result?.toString() ?? '';
         resultStr =
           resultStr.slice(0, insertIndex) +
           replacement +
-          resultStr.slice(insertIndex+placeHolder.length);
+          resultStr.slice(insertIndex + placeHolder.length);
       }
 
-      return resultStr
+      return resultStr;
     };
   }
 
@@ -632,16 +636,19 @@ export abstract class BaseFormatter {
       // handle hardcoded modifiers here
       switch (true) {
         case mod.startsWith('replace(') && mod.endsWith(')'): {
-					const findStartChar = mod.charAt(8); // either " or '
-					const findEndChar = mod.charAt(mod.length - 2); // either " or '
+          const findStartChar = mod.charAt(8); // either " or '
+          const findEndChar = mod.charAt(mod.length - 2); // either " or '
 
-					// Extract the separator from replace(['"]...<matching'">, ['"]...<matching'">)
-					const content = _mod.substring(9, _mod.length - 2);
+          // Extract the separator from replace(['"]...<matching'">, ['"]...<matching'">)
+          const content = _mod.substring(9, _mod.length - 2);
 
-					// split on findStartChar<whitespace?>,<whitespace?>findEndChar
-					const [key, replaceKey, shouldBeUndefined] = content.split(new RegExp(`${findStartChar}\\s*,\\s*${findEndChar}`))
+          // split on findStartChar<whitespace?>,<whitespace?>findEndChar
+          const [key, replaceKey, shouldBeUndefined] = content.split(
+            new RegExp(`${findStartChar}\\s*,\\s*${findEndChar}`)
+          );
 
-					if (!shouldBeUndefined && key && replaceKey) return variable.replaceAll(key, replaceKey);
+          if (!shouldBeUndefined && key && replaceKey)
+            return variable.replaceAll(key, replaceKey);
         }
       }
     }
@@ -813,8 +820,11 @@ class ModifierConstants {
     octal: (value: number) => value.toString(8),
     binary: (value: number) => value.toString(2),
     bytes: (value: number) => formatBytes(value, 1000),
+    rbytes: (value: number) => formatBytes(value, 1000, true),
     bytes10: (value: number) => formatBytes(value, 1000),
+    rbytes10: (value: number) => formatBytes(value, 1000, true),
     bytes2: (value: number) => formatBytes(value, 1024),
+    rbytes2: (value: number) => formatBytes(value, 1024, true),
     string: (value: number) => value.toString(),
     time: (value: number) => formatDuration(value),
   };
@@ -845,11 +855,11 @@ class ModifierConstants {
     },
   };
 
-	static hardcodedModifiersForRegexMatching = {
-		"replace('.*?'\\s*?,\\s*?'.*?')": null,
-		"replace(\".*?\"\\s*?,\\s*?'.*?')": null,
-		"replace('.*?'\\s*?,\\s*?\".*?\")": null,
-		'replace(".*?"\\s*?,\\s*?\".*?\")': null,
+  static hardcodedModifiersForRegexMatching = {
+    "replace('.*?'\\s*?,\\s*?'.*?')": null,
+    'replace(".*?"\\s*?,\\s*?\'.*?\')': null,
+    'replace(\'.*?\'\\s*?,\\s*?".*?")': null,
+    'replace(".*?"\\s*?,\\s*?\".*?\")': null,
     "join('.*?')": null,
     'join(".*?")': null,
     '$.*?': null,

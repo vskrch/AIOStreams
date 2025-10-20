@@ -1,13 +1,21 @@
 import { FULL_LANGUAGE_MAPPING } from '../utils/languages.js';
 
-export function formatBytes(bytes: number, k: 1024 | 1000): string {
+export function formatBytes(
+  bytes: number,
+  k: 1024 | 1000,
+  round: boolean = false
+): string {
   if (bytes === 0) return '0 B';
   const sizes =
     k === 1024
       ? ['B', 'KiB', 'MiB', 'GiB', 'TiB']
       : ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  let value = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+  if (round) {
+    value = Math.round(value);
+  }
+  return value + ' ' + sizes[i];
 }
 
 export function formatDuration(durationInMs: number): string {
