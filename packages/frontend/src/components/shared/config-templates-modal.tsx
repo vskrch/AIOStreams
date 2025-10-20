@@ -27,6 +27,7 @@ import React from 'react';
 import { z, ZodError } from 'zod';
 import { Tooltip } from '../ui/tooltip';
 import { cn } from '../ui/core/styling';
+import { useMenu } from '@/context/menu';
 
 const formatZodError = (error: ZodError) => {
   console.log(JSON.stringify(error, null, 2));
@@ -97,6 +98,7 @@ export function ConfigTemplatesModal({
 }: ConfigTemplatesModalProps) {
   const { setUserData, userData } = useUserData();
   const { status } = useStatus();
+  const { setSelectedMenu } = useMenu();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSource, setSelectedSource] = useState<string>('all');
@@ -392,6 +394,7 @@ export function ConfigTemplatesModal({
             services: item.metadata?.services,
             serviceRequired: item.metadata?.serviceRequired,
             source: 'external',
+            setToSaveInstallMenu: true,
           },
           config: item.config || item,
         };
@@ -1036,6 +1039,9 @@ export function ConfigTemplatesModal({
       setCurrentStep('browse');
       setSelectedServices([]);
       setInputValues({});
+      if (processedTemplate?.template.metadata.setToSaveInstallMenu) {
+        setSelectedMenu('save-install');
+      }
       onOpenChange(false);
     } catch (err) {
       console.error('Error loading template:', err);

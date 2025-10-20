@@ -162,6 +162,7 @@ export function TemplateExportModal({
           category: finalCategory,
           services: undefined,
           serviceRequired: false,
+          setToSaveInstallMenu: true,
         },
         config: templateData,
       };
