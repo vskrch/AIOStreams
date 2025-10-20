@@ -25,6 +25,8 @@ import {
 import { PasswordInput } from '../ui/password-input';
 import React from 'react';
 import { z, ZodError } from 'zod';
+import { Tooltip } from '../ui/tooltip';
+import { cn } from '../ui/core/styling';
 
 const formatZodError = (error: ZodError) => {
   console.log(JSON.stringify(error, null, 2));
@@ -33,7 +35,12 @@ const formatZodError = (error: ZodError) => {
 
 const TemplateSchema = z.object({
   metadata: z.object({
-    id: z.string().min(1).max(100).optional().default(crypto.randomUUID()),
+    id: z
+      .string()
+      .min(1)
+      .max(100)
+      .optional()
+      .transform((val) => val ?? crypto.randomUUID()),
     name: z.string().min(1).max(100), // name of the template
     description: z.string().min(1).max(1000), // description of the template
     author: z.string().min(1).max(20), // author of the template
@@ -92,6 +99,7 @@ export function ConfigTemplatesModal({
   const { status } = useStatus();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSource, setSelectedSource] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -314,6 +322,8 @@ export function ConfigTemplatesModal({
     ...Array.from(new Set(templates.map((t) => t.metadata.category))),
   ];
 
+  const sources = ['all', 'builtin', 'custom', 'external'];
+
   const filteredTemplates = templates.filter((template) => {
     const matchesSearch =
       template.metadata.name
@@ -330,7 +340,10 @@ export function ConfigTemplatesModal({
       selectedCategory === 'all' ||
       template.metadata.category === selectedCategory;
 
-    return matchesSearch && matchesCategory;
+    const matchesSource =
+      selectedSource === 'all' || template.metadata.source === selectedSource;
+
+    return matchesSearch && matchesCategory && matchesSource;
   });
 
   const processImportedTemplate = (data: any) => {
@@ -1065,30 +1078,95 @@ export function ConfigTemplatesModal({
   // Render different steps
   const renderBrowse = () => (
     <>
-      {/* Search and Filter */}
-      <div className="flex flex-wrap gap-2">
-        <div className="w-full sm:basis-auto sm:flex-1 order-1">
-          <TextInput
-            placeholder="Search templates..."
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            leftIcon={<SearchIcon className="w-4 h-4" />}
-          />
+      {/* Search and Filters */}
+      <div className="space-y-3 min-w-0">
+        {/* Search Bar - Full Width */}
+        <TextInput
+          placeholder="Search templates..."
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          leftIcon={<SearchIcon className="w-4 h-4" />}
+        />
+
+        {/* Source Filters */}
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm text-gray-400 flex-shrink-0">Source:</span>
+          <div className="flex gap-1.5 overflow-x-auto min-w-0 flex-1 pb-2">
+            {sources.map((source: string) => {
+              const sourceDescription = {
+                all: 'All sources',
+                builtin: 'Provided with AIOStreams',
+                custom: 'Added by the instance hoster',
+                external: 'Imported by you',
+              };
+              const colorClasses = {
+                all: 'bg-gray-700/50 text-gray-300 hover:bg-gray-700',
+                builtin:
+                  selectedSource === 'builtin'
+                    ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30'
+                    : 'bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 border border-brand-500/20',
+                custom:
+                  selectedSource === 'custom'
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                    : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20',
+                external:
+                  selectedSource === 'external'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20',
+              };
+              const tooltipColorClasses = {
+                all: 'bg-gray-800 text-white border-gray-700',
+                builtin: 'bg-brand-600 text-white border-brand-500',
+                custom: 'bg-purple-600 text-white border-purple-500',
+                external: 'bg-emerald-600 text-white border-emerald-500',
+              };
+              return (
+                <Tooltip
+                  className={cn(
+                    'mb-2',
+                    tooltipColorClasses[
+                      source as keyof typeof tooltipColorClasses
+                    ]
+                  )}
+                  trigger={
+                    <button
+                      key={source}
+                      onClick={() => setSelectedSource(source)}
+                      className={`px-3 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap flex-shrink-0 ${
+                        selectedSource === source && source === 'all'
+                          ? 'bg-gray-600 text-white'
+                          : colorClasses[source as keyof typeof colorClasses]
+                      }`}
+                    >
+                      {source.charAt(0).toUpperCase() + source.slice(1)}
+                    </button>
+                  }
+                >
+                  {sourceDescription[source as keyof typeof sourceDescription]}
+                </Tooltip>
+              );
+            })}
+          </div>
         </div>
-        <div className="w-full sm:basis-1/2 sm:flex-none order-2 flex flex-wrap gap-1.5">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              intent={
-                selectedCategory === category ? 'primary' : 'gray-outline'
-              }
-              size="sm"
-              onClick={() => setSelectedCategory(category)}
-              className="whitespace-nowrap"
-            >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </Button>
-          ))}
+
+        {/* Category Filters - Scrollable */}
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm text-gray-400 flex-shrink-0">Category:</span>
+          <div className="flex gap-1.5 overflow-x-auto min-w-0 flex-1 pb-2">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                intent={
+                  selectedCategory === category ? 'primary' : 'gray-outline'
+                }
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className="whitespace-nowrap flex-shrink-0"
+              >
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -1134,7 +1212,7 @@ export function ConfigTemplatesModal({
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {template.metadata.source === 'builtin' && (
-                      <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">
+                      <span className="text-xs bg-brand-500/20 text-brand-300 px-2 py-0.5 rounded border border-brand-500/30">
                         Built-in
                       </span>
                     )}
@@ -1303,18 +1381,21 @@ export function ConfigTemplatesModal({
 
       <div className="flex justify-between items-center pt-2 border-t border-gray-700">
         <div className="text-sm text-gray-400">
-          {filteredTemplates.length} template
-          {filteredTemplates.length !== 1 ? 's' : ''} available
+          {templates.length} template
+          {templates.length !== 1 ? 's' : ''} available
         </div>
         <div className="flex gap-2">
-          <IconButton
-            icon={<BiImport />}
-            intent="primary-outline"
-            onClick={() => setShowImportModal(true)}
-          />
-          <Button intent="primary-outline" onClick={handleCancel}>
-            Close
-          </Button>
+          <Tooltip
+            trigger={
+              <IconButton
+                intent="primary-outline"
+                icon={<BiImport />}
+                onClick={() => setShowImportModal(true)}
+              />
+            }
+          >
+            Import Template
+          </Tooltip>
         </div>
       </div>
     </>
@@ -1489,7 +1570,9 @@ export function ConfigTemplatesModal({
         title="Templates"
         description="Browse and load pre-configured templates for your AIOStreams setup"
       >
-        <div className="space-y-4">{renderBrowse()}</div>
+        <div className="space-y-4 min-w-0 overflow-hidden">
+          {renderBrowse()}
+        </div>
       </Modal>
 
       {/* Service Selection Modal */}
@@ -1561,18 +1644,6 @@ export function ConfigTemplatesModal({
           >
             Import from File
           </Button>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              intent="primary-outline"
-              onClick={() => {
-                setShowImportModal(false);
-                setImportUrl('');
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
         </div>
       </Modal>
 
