@@ -911,7 +911,7 @@ function CustomizeModal({
       ...prev,
       addonName: name.trim(),
       addonLogo: logo?.trim(),
-      addonDescription: description?.trim(),
+      addonDescription: description?.trim() || undefined,
     }));
 
     toast.success('Customization saved');
