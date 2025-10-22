@@ -1334,6 +1334,7 @@ class StreamFilterer {
 
       if (
         this.userData.excludeSeasonPacks &&
+        type === 'series' &&
         stream.parsedFile?.season &&
         !stream.parsedFile?.episode
       ) {
