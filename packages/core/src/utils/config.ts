@@ -407,7 +407,25 @@ export async function validateConfig(
     }
   }
 
-  if (config.titleMatching?.enabled === true) {
+  const tmdbAuth =
+    config.tmdbApiKey ||
+    config.tmdbAccessToken ||
+    Env.TMDB_API_KEY ||
+    Env.TMDB_ACCESS_TOKEN;
+
+  const needTmdb =
+    config.titleMatching?.enabled ||
+    config.yearMatching?.enabled ||
+    config.digitalReleaseFilter;
+
+  if (needTmdb && !tmdbAuth) {
+    throw new Error(
+      'A TMDB API key or access token is required for the following features: title matching, year matching, and digital release filter'
+    );
+  }
+
+  // validate tmdb auth if it is needed or if it is provided in the config.
+  if (needTmdb || config.tmdbAccessToken || config.tmdbApiKey) {
     try {
       const tmdb = new TMDBMetadata({
         accessToken: config.tmdbAccessToken,
@@ -416,9 +434,9 @@ export async function validateConfig(
       await tmdb.validateAuthorisation();
     } catch (error) {
       if (!options?.skipErrorsFromAddonsOrProxies) {
-        throw new Error(`Invalid TMDB access token: ${error}`);
+        throw error;
       }
-      logger.warn(`Invalid TMDB access token: ${error}`);
+      logger.warn(error instanceof Error ? error.message : String(error));
     }
   }
 
