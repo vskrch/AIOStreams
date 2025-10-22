@@ -1020,6 +1020,7 @@ export const TemplateSchema = z.object({
     services: z.array(ServiceIds).optional(),
     serviceRequired: z.boolean().optional(), // whether a service is required for this template or not.
     setToSaveInstallMenu: z.boolean().optional().default(true), // whether to set the menu to save-install after importing the template
+    sourceUrl: z.url().optional(), // URL from which the template was imported (for auto-updates)
   }),
   config: UserDataSchema, // config of the template
 });

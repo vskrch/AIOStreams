@@ -56,6 +56,8 @@ const TemplateSchema = z.object({
     category: z.string().min(1).max(20), // category of the template
     services: z.array(z.enum(constants.SERVICES)).optional(),
     serviceRequired: z.boolean().optional(), // whether a service is required for this template or not.
+    setToSaveInstallMenu: z.boolean().optional().default(true), // whether to set the menu to save-install after importing the template
+    sourceUrl: z.url().optional(), // URL from which the template was imported (for auto-updates)
   }),
   config: z.any(),
 });
@@ -90,6 +92,8 @@ export interface ConfigTemplatesModalProps {
   onOpenChange: (open: boolean) => void;
   openImportModal?: boolean;
 }
+
+const TEMPLATE_CACHE = new Map<string, Template[]>();
 
 export function ConfigTemplatesModal({
   open,
@@ -143,8 +147,8 @@ export function ConfigTemplatesModal({
     try {
       const stored = localStorage.getItem('aiostreams-custom-templates');
       if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed.map((template: any) => ({
+        const parsed = z.array(TemplateSchema).parse(JSON.parse(stored));
+        return parsed.map((template) => ({
           ...template,
           metadata: {
             ...template.metadata,
@@ -171,50 +175,210 @@ export function ConfigTemplatesModal({
     }
   };
 
+  // Compare semver versions
+  // return 1 if v1 is greater than v2, -1 if v1 is less than v2, 0 if they are equal
+  const compareVersions = (v1: string, v2: string): number => {
+    const parts1 = v1.split('.').map(Number);
+    const parts2 = v2.split('.').map(Number);
+
+    for (let i = 0; i < 3; i++) {
+      const num1 = parts1[i] || 0;
+      const num2 = parts2[i] || 0;
+
+      if (num1 > num2) return 1;
+      if (num1 < num2) return -1;
+    }
+
+    return 0;
+  };
+
+  // Check and update templates from their source URLs
+  const checkAndUpdateTemplates = async (
+    templates: Template[]
+  ): Promise<Template[]> => {
+    const updatedTemplates: Template[] = [];
+    const templatesToUpdate: Array<{ old: Template; new: Template }> = [];
+
+    for (const template of templates) {
+      if (!template.metadata.sourceUrl) {
+        updatedTemplates.push(template);
+        continue;
+      }
+
+      try {
+        // const cachedTemplates = TEMPLATE_CACHE.get(template.metadata.sourceUrl);
+        let templates: Template[] = [];
+
+        const cachedTemplates = TEMPLATE_CACHE.get(template.metadata.sourceUrl);
+        if (cachedTemplates) {
+          templates = cachedTemplates;
+        } else {
+          const response = await fetch(template.metadata.sourceUrl);
+          if (!response.ok) {
+            console.warn(
+              `Failed to fetch update for template "${template.metadata.name}": ${response.status}`
+            );
+            updatedTemplates.push(template);
+            continue;
+          }
+
+          const data = await response.json();
+          const isArray = Array.isArray(data);
+          const items = isArray ? data : [data];
+          templates = items;
+          TEMPLATE_CACHE.set(template.metadata.sourceUrl, templates);
+        }
+
+        // Find matching template by ID
+        const remoteTemplate = templates.find((item: any) => {
+          const id = item.metadata?.id || item.id;
+          return id === template.metadata.id;
+        });
+
+        if (!remoteTemplate) {
+          console.warn(
+            `Template "${template.metadata.name}" not found at source URL`
+          );
+          updatedTemplates.push(template);
+          continue;
+        }
+
+        // Validate remote template
+        const validatedTemplate: Template = {
+          metadata: {
+            ...remoteTemplate.metadata,
+            id: template.metadata.id,
+            source: 'external' as const,
+            sourceUrl: template.metadata.sourceUrl,
+            setToSaveInstallMenu:
+              remoteTemplate.metadata?.setToSaveInstallMenu ?? true,
+            version: remoteTemplate.metadata?.version || '1.0.0',
+            name: remoteTemplate.metadata?.name || template.metadata.name,
+            description:
+              remoteTemplate.metadata?.description ||
+              template.metadata.description,
+            author: remoteTemplate.metadata?.author || template.metadata.author,
+            category:
+              remoteTemplate.metadata?.category || template.metadata.category,
+            services: remoteTemplate.metadata?.services,
+            serviceRequired: remoteTemplate.metadata?.serviceRequired,
+          },
+          config: remoteTemplate.config || remoteTemplate,
+        };
+
+        const remoteVersion = validatedTemplate.metadata.version || '1.0.0';
+        const localVersion = template.metadata.version || '1.0.0';
+
+        // Compare versions and update if remote is newer
+        if (compareVersions(remoteVersion, localVersion) > 0) {
+          templatesToUpdate.push({ old: template, new: validatedTemplate });
+          updatedTemplates.push(validatedTemplate);
+          console.log(
+            `Updated template "${template.metadata.name}" from v${localVersion} to v${remoteVersion}`
+          );
+        } else {
+          updatedTemplates.push(template);
+        }
+      } catch (error) {
+        console.error(
+          `Error checking update for template "${template.metadata.name}":`,
+          error
+        );
+        updatedTemplates.push(template);
+      }
+    }
+
+    // Show toast notification if any templates were updated
+    if (templatesToUpdate.length > 0) {
+      const names = templatesToUpdate
+        .map((t) => t.new.metadata.name)
+        .join(', ');
+      toast.success(
+        `Updated ${templatesToUpdate.length} template${templatesToUpdate.length !== 1 ? 's' : ''}: ${names}`
+      );
+    }
+
+    return updatedTemplates;
+  };
+
   const fetchTemplates = async () => {
     setLoadingTemplates(true);
+    let fetchedTemplates: Template[] = [];
     try {
-      const response = await fetch('/api/v1/templates');
-      if (response.ok) {
-        const data = await response.json();
-        const fetchedTemplates = data.data || [];
-
-        // Load external templates from localStorage
-        const localTemplates = getLocalStorageTemplates();
-
-        // Combine templates, removing duplicates based on ID
-        // External templates come first to allow overwriting
-        const allTemplates = [...localTemplates, ...fetchedTemplates];
-
-        // Remove duplicates by ID, keeping the first occurrence (external templates have priority)
-        const uniqueTemplates = allTemplates.reduce(
-          (acc: Template[], template) => {
-            const existingIndex = acc.findIndex(
-              (t: Template) => t.metadata.id === template.metadata.id
-            );
-            if (existingIndex === -1) {
-              acc.push(template);
-            }
-            return acc;
-          },
-          [] as Template[]
-        );
-
-        setTemplates(uniqueTemplates);
-
-        // Validate all templates
-        if (status) {
-          const validations: Record<string, TemplateValidation> = {};
-          uniqueTemplates.forEach((template: Template) => {
-            validations[template.metadata.id] = validateTemplate(
-              template,
-              status
-            );
-          });
-          setTemplateValidations(validations);
+      const cachedTemplates = TEMPLATE_CACHE.get('api_templates');
+      if (!cachedTemplates) {
+        const response = await fetch('/api/v1/templates');
+        if (!response.ok) {
+          throw new Error('Failed to fetch templates from API');
         }
+        const data = await response.json();
+        fetchedTemplates = data.data || [];
+        TEMPLATE_CACHE.set('api_templates', fetchedTemplates);
       } else {
-        toast.error('Failed to load templates');
+        fetchedTemplates = cachedTemplates;
+      }
+
+      // Load external templates from localStorage
+      let localTemplates = getLocalStorageTemplates();
+
+      // Check for updates to external templates with source URLs
+      const updatedLocalTemplates =
+        await checkAndUpdateTemplates(localTemplates);
+
+      // Save updated templates back to localStorage if any were updated
+      if (
+        JSON.stringify(updatedLocalTemplates) !== JSON.stringify(localTemplates)
+      ) {
+        saveLocalStorageTemplates(updatedLocalTemplates);
+        localTemplates = updatedLocalTemplates;
+      }
+
+      // Remove templates from localTemplates when one of the same ID exists in fetchedTemplates but of a newer version
+      localTemplates = localTemplates.filter((template) => {
+        const existingTemplate = fetchedTemplates.find(
+          (t) => t.metadata.id === template.metadata.id
+        );
+        if (existingTemplate) {
+          return (
+            compareVersions(
+              template.metadata.version,
+              existingTemplate.metadata.version
+            ) === 1
+          );
+        }
+        return true;
+      });
+
+      // Combine templates, removing duplicates based on ID
+      // External templates come first to allow overwriting
+      const allTemplates = [...localTemplates, ...fetchedTemplates];
+
+      // Remove duplicates by ID, keeping the first occurrence (external templates have priority)
+      const uniqueTemplates = allTemplates.reduce(
+        (acc: Template[], template) => {
+          const existingIndex = acc.findIndex(
+            (t: Template) => t.metadata.id === template.metadata.id
+          );
+          if (existingIndex === -1) {
+            acc.push(template);
+          }
+          return acc;
+        },
+        [] as Template[]
+      );
+
+      setTemplates(uniqueTemplates);
+
+      // Validate all templates
+      if (status) {
+        const validations: Record<string, TemplateValidation> = {};
+        uniqueTemplates.forEach((template: Template) => {
+          validations[template.metadata.id] = validateTemplate(
+            template,
+            status
+          );
+        });
+        setTemplateValidations(validations);
       }
     } catch (error) {
       console.error('Error fetching templates:', error);
@@ -348,14 +512,14 @@ export function ConfigTemplatesModal({
     return matchesSearch && matchesCategory && matchesSource;
   });
 
-  const processImportedTemplate = (data: any) => {
+  const processImportedTemplate = (data: any, sourceUrl?: string) => {
     try {
       // Check if data is an array of templates
       const isArray = Array.isArray(data);
       const templateData = isArray ? data : [data];
 
       const importedTemplates: Template[] = [];
-      const protectedTemplateIds: string[] = [];
+      // const protectedTemplateIds: string[] = [];
 
       for (const item of templateData) {
         // Validate it has config field
@@ -378,8 +542,18 @@ export function ConfigTemplatesModal({
           (existingTemplate.metadata.source === 'builtin' ||
             existingTemplate.metadata.source === 'custom')
         ) {
-          protectedTemplateIds.push(templateId);
-          continue; // Skip this template
+          // only use the external template if it is newer than the existing template
+          if (
+            compareVersions(
+              item.metadata.version,
+              existingTemplate.metadata.version
+            ) !== 1
+          ) {
+            console.log(
+              `Skipping template "${item.metadata.name}" because it is not newer than the existing template "${existingTemplate.metadata.name}"`
+            );
+            continue;
+          }
         }
 
         // Create a template object from the data
@@ -395,6 +569,7 @@ export function ConfigTemplatesModal({
             serviceRequired: item.metadata?.serviceRequired,
             source: 'external',
             setToSaveInstallMenu: true,
+            sourceUrl: sourceUrl, // Store the source URL if provided
           },
           config: item.config || item,
         };
@@ -420,13 +595,19 @@ export function ConfigTemplatesModal({
       }
 
       // Show error if any templates were blocked
-      if (protectedTemplateIds.length > 0) {
-        toast.error(
-          `Cannot overwrite built-in or custom templates: ${protectedTemplateIds.join(', ')}`
+      // if (protectedTemplateIds.length > 0) {
+      //   toast.error(
+      //     `Cannot overwrite built-in or custom templates: ${protectedTemplateIds.join(', ')}`
+      //   );
+      //   if (importedTemplates.length === 0) {
+      //     return; // No templates to import
+      //   }
+      // }
+      if (importedTemplates.length === 0) {
+        toast.info(
+          'There were no templates to import as existing templates are newer or the same version.'
         );
-        if (importedTemplates.length === 0) {
-          return; // No templates to import
-        }
+        return;
       }
 
       // Close import modal and show confirmation modal
@@ -452,7 +633,7 @@ export function ConfigTemplatesModal({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      processImportedTemplate(data);
+      processImportedTemplate(data, importUrl); // Pass the URL for auto-update support
     } catch (error) {
       toast.error('Failed to import template: ' + (error as Error).message);
     } finally {
