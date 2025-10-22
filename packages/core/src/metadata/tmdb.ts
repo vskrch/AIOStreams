@@ -29,6 +29,8 @@ const MovieDetailsSchema = z.object({
   title: z.string(),
   release_date: z.string().optional(),
   status: z.string(),
+  original_title: z.string().optional(),
+  original_language: z.string().optional(),
 });
 
 const TVDetailsSchema = z.object({
@@ -37,6 +39,8 @@ const TVDetailsSchema = z.object({
   first_air_date: z.string().optional(),
   last_air_date: z.string().optional(),
   status: z.string(),
+  original_title: z.string().optional(),
+  original_language: z.string().optional(),
   seasons: z.array(
     z.object({
       season_number: z.number(),
@@ -212,6 +216,60 @@ export class TMDBMetadata {
     return date.getFullYear().toString();
   }
 
+  private async fetchAlternativeTitles(
+    url: URL,
+    mediaType: string
+  ): Promise<string[]> {
+    const response = await makeRequest(url.toString(), {
+      timeout: 5000,
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch alternative titles: ${response.statusText}`
+      );
+    }
+
+    const json = await response.json();
+
+    if (mediaType === 'movie') {
+      const data = MovieAlternativeTitlesSchema.parse(json);
+      return data.titles.map((title) => title.title);
+    } else {
+      const data = TVAlternativeTitlesSchema.parse(json);
+      return data.results.map((title) => title.title);
+    }
+  }
+
+  private async fetchTranslatedTitles(
+    url: URL,
+    mediaType: string
+  ): Promise<string[]> {
+    const response = await makeRequest(url.toString(), {
+      timeout: 5000,
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch translations: ${response.statusText}`);
+    }
+
+    const json = await response.json();
+
+    if (mediaType === 'movie') {
+      const data = MovieTranslationsSchema.parse(json);
+      return data.translations
+        .map((translation) => translation.data.name)
+        .filter(Boolean);
+    } else {
+      const data = TVTranslationsSchema.parse(json);
+      return data.translations
+        .map((translation) => translation.data.title)
+        .filter(Boolean);
+    }
+  }
+
   public async getMetadata(parsedId: ParsedId): Promise<Metadata> {
     if (!['movie', 'series', 'anime'].includes(parsedId.mediaType)) {
       throw new Error(`Invalid media type: ${parsedId.mediaType}`);
@@ -248,32 +306,47 @@ export class TMDBMetadata {
     }
 
     const detailsJson = await detailsResponse.json();
-    const detailsData =
-      parsedId.mediaType === 'movie'
-        ? MovieDetailsSchema.parse(detailsJson)
-        : TVDetailsSchema.parse(detailsJson);
 
-    const primaryTitle =
-      parsedId.mediaType === 'movie'
-        ? (detailsData as z.infer<typeof MovieDetailsSchema>).title
-        : (detailsData as z.infer<typeof TVDetailsSchema>).name;
-    const releaseDate =
-      parsedId.mediaType === 'movie'
-        ? (detailsData as z.infer<typeof MovieDetailsSchema>).release_date
-        : (detailsData as z.infer<typeof TVDetailsSchema>).first_air_date;
+    // Parse and extract data based on media type
+    let primaryTitle: string;
+    let releaseDate: string | undefined;
+    let yearEnd: string | undefined;
+    let seasons:
+      | Array<{ season_number: number; episode_count: number }>
+      | undefined;
+    let allTitles: string[] = [];
+    let imdbId: string | undefined =
+      parsedId.type === 'imdbId' ? parsedId.value.toString() : undefined;
+
+    if (parsedId.mediaType === 'movie') {
+      const movieData = MovieDetailsSchema.parse(detailsJson);
+      primaryTitle =
+        movieData.original_language !== 'en'
+          ? (movieData.original_title ?? movieData.title)
+          : movieData.title;
+      if (movieData.original_title) {
+        allTitles.push(movieData.original_title);
+      }
+      releaseDate = movieData.release_date;
+    } else {
+      const tvData = TVDetailsSchema.parse(detailsJson);
+      primaryTitle =
+        tvData.original_language !== 'en'
+          ? (tvData.original_title ?? tvData.name)
+          : tvData.name;
+      if (tvData.original_title) {
+        allTitles.push(tvData.original_title);
+      }
+      releaseDate = tvData.first_air_date;
+      yearEnd = tvData.last_air_date
+        ? this.parseReleaseDate(tvData.last_air_date)
+        : undefined;
+      seasons = tvData.seasons;
+    }
+
+    allTitles.push(primaryTitle);
+
     const year = this.parseReleaseDate(releaseDate);
-    const yearEnd =
-      parsedId.mediaType !== 'movie'
-        ? (detailsData as z.infer<typeof TVDetailsSchema>).last_air_date
-          ? this.parseReleaseDate(
-              (detailsData as z.infer<typeof TVDetailsSchema>).last_air_date
-            )
-          : undefined
-        : undefined;
-    const seasons =
-      parsedId.mediaType !== 'movie'
-        ? (detailsData as z.infer<typeof TVDetailsSchema>).seasons
-        : undefined;
 
     // Fetch alternative titles and translations in parallel
     const altTitlesUrl = new URL(
@@ -294,56 +367,9 @@ export class TMDBMetadata {
     this.addSearchParams(translatedTitlesUrl);
 
     const [altTitlesResult, translationsResult] = await Promise.allSettled([
-      makeRequest(altTitlesUrl.toString(), {
-        timeout: 5000,
-        headers: this.getHeaders(),
-      }).then(async (response) => {
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch alternative titles: ${response.statusText}`
-          );
-        }
-        const json = await response.json();
-        const data =
-          parsedId.mediaType === 'movie'
-            ? MovieAlternativeTitlesSchema.parse(json)
-            : TVAlternativeTitlesSchema.parse(json);
-        return parsedId.mediaType === 'movie'
-          ? (data as z.infer<typeof MovieAlternativeTitlesSchema>).titles.map(
-              (title) => title.title
-            )
-          : (data as z.infer<typeof TVAlternativeTitlesSchema>).results.map(
-              (title) => title.title
-            );
-      }),
-      makeRequest(translatedTitlesUrl.toString(), {
-        timeout: 5000,
-        headers: this.getHeaders(),
-      }).then(async (response) => {
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch translations: ${response.statusText}`
-          );
-        }
-        const json = await response.json();
-        const data =
-          parsedId.mediaType === 'movie'
-            ? MovieTranslationsSchema.parse(json)
-            : TVTranslationsSchema.parse(json);
-        return data.translations
-          .map((translation) => {
-            if (parsedId.mediaType === 'movie') {
-              return (translation.data as { name: string }).name;
-            } else {
-              return (translation.data as { title: string }).title;
-            }
-          })
-          .filter(Boolean);
-      }),
+      this.fetchAlternativeTitles(altTitlesUrl, parsedId.mediaType),
+      this.fetchTranslatedTitles(translatedTitlesUrl, parsedId.mediaType),
     ]);
-
-    // Collect all successful titles
-    const allTitles = [primaryTitle];
 
     if (altTitlesResult.status === 'fulfilled') {
       allTitles.push(...altTitlesResult.value);
@@ -420,7 +446,9 @@ export class TMDBMetadata {
         `Failed to validate TMDB authorisation, ensure you have set a valid access token or API key: ${validationResponse.statusText}`
       );
     }
-    const validationData: any = await validationResponse.json();
+    const validationData = (await validationResponse.json()) as {
+      success: boolean;
+    };
     const isValid = validationData.success;
     TMDBMetadata.validationCache.set(
       cacheKey,
