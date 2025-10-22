@@ -436,7 +436,13 @@ class StreamParser {
       quality: fileParsed?.quality || folderParsed?.quality,
       encode: fileParsed?.encode || folderParsed?.encode,
       releaseGroup: fileParsed?.releaseGroup || folderParsed?.releaseGroup,
-      seasonEpisode: fileParsed?.seasonEpisode || folderParsed?.seasonEpisode,
+      seasonEpisode:
+        fileParsed?.seasonEpisode && fileParsed?.seasonEpisode.length > 0
+          ? fileParsed?.seasonEpisode
+          : folderParsed?.seasonEpisode &&
+              folderParsed?.seasonEpisode.length > 0
+            ? folderParsed?.seasonEpisode
+            : undefined,
       visualTags: Array.from(
         new Set([
           ...(folderParsed?.visualTags ?? []),
