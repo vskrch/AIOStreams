@@ -245,6 +245,16 @@ export class MetadataService {
                   );
                 }
               }
+
+              if (
+                cinemetaData.released &&
+                typeof cinemetaData.released === 'string'
+              ) {
+                const parsedReleaseDate = new Date(cinemetaData.released);
+                if (!isNaN(parsedReleaseDate.getTime())) {
+                  releaseDate = parsedReleaseDate.toISOString().split('T')[0];
+                }
+              }
             } else if (imdbResult.status === 'rejected') {
               logger.warn(
                 `Failed to fetch IMDb metadata for ${imdbId}: ${imdbResult.reason}`
