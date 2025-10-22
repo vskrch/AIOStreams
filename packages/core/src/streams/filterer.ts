@@ -659,6 +659,16 @@ class StreamFilterer {
         return false;
       }
 
+      // if the requested content is series and no season or episode info is present, filter out if strict is true
+      if (
+        type === 'series' &&
+        seasonEpisodeMatchingOptions.strict &&
+        !stream.parsedFile?.season &&
+        !stream.parsedFile?.episode
+      ) {
+        return false;
+      }
+
       // is requested season present
       if (
         requestedSeason &&

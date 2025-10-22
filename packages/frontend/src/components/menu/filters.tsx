@@ -1444,6 +1444,24 @@ function Content() {
                     }}
                   />
 
+                  <Switch
+                    label="Strict"
+                    side="right"
+                    help="Filter out streams for series that don't have any season or episode specified."
+                    moreHelp="Without this enabled, only streams with present but incorrect season or episode will be filtered out."
+                    disabled={!userData.seasonEpisodeMatching?.enabled}
+                    value={userData.seasonEpisodeMatching?.strict ?? false}
+                    onValueChange={(value) => {
+                      setUserData((prev) => ({
+                        ...prev,
+                        seasonEpisodeMatching: {
+                          ...prev.seasonEpisodeMatching,
+                          strict: value,
+                        },
+                      }));
+                    }}
+                  />
+
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Combobox

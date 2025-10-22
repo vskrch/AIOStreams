@@ -462,6 +462,7 @@ export const UserDataSchema = z.object({
   seasonEpisodeMatching: z
     .object({
       enabled: z.boolean().optional(),
+      strict: z.boolean().optional(),
       requestTypes: z.array(z.string()).optional(),
       addons: z.array(z.string()).optional(),
     })
