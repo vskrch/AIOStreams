@@ -35,18 +35,30 @@ export function preprocessTitle(
 ) {
   let preprocessedTitle = parsedTitle;
 
-  const altTitleSeparators = ['/', ' aka '];
-  for (const sep of altTitleSeparators) {
-    if (
-      preprocessedTitle?.toLowerCase().includes(sep) &&
-      !titles.some((title) => title.toLowerCase().includes(sep))
-    ) {
-      preprocessedTitle =
-        preprocessedTitle.split(sep)[0]?.trim() ?? preprocessedTitle;
-      logger.debug(
-        `Updated title from ${parsedTitle} to ${preprocessedTitle} because of ${sep}`
+  const separatorPatterns = [
+    /\s*\/\s*/,
+    /[\s\.\-\(]*a[\s\.]?k[\s\.]?a[\s\.\)]*[\s\.\-]*/i,
+  ];
+  for (const pattern of separatorPatterns) {
+    const match = preprocessedTitle.match(pattern);
+
+    if (match) {
+      // Check if any existing titles contain this separator pattern
+      const hasExistingTitleWithSeparator = titles.some((title) =>
+        pattern.test(title.toLowerCase())
       );
-      break;
+
+      if (!hasExistingTitleWithSeparator) {
+        const parts = preprocessedTitle.split(pattern);
+        if (parts.length > 1 && parts[0]?.trim()) {
+          const originalTitle = preprocessedTitle;
+          preprocessedTitle = parts[0].trim();
+          logger.debug(
+            `Updated title from "${originalTitle}" to "${preprocessedTitle}"`
+          );
+          break;
+        }
+      }
     }
   }
 
