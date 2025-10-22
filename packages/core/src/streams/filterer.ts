@@ -15,7 +15,7 @@ import { StreamSelector } from '../parser/streamExpression.js';
 import StreamUtils from './utils.js';
 import { MetadataService } from '../metadata/service.js';
 import { Metadata } from '../metadata/utils.js';
-import { titleMatch } from '../parser/utils.js';
+import { preprocessTitle, titleMatch } from '../parser/utils.js';
 import { partial_ratio } from 'fuzzball';
 import { calculateAbsoluteEpisode } from '../builtins/utils/general.js';
 import { formatBytes } from '../formatters/utils.js';
@@ -479,19 +479,16 @@ class StreamFilterer {
         return true;
       }
 
-      if (!streamTitle) {
+      if (!streamTitle || !stream.filename) {
         // only filter out movies without a year as series results usually don't include a year
         return false;
       }
 
-      if (
-        requestedMetadata.title.toLowerCase().includes('saga') &&
-        stream.filename?.toLowerCase().includes('saga') &&
-        !streamTitle.toLowerCase().includes('saga')
-      ) {
-        streamTitle += ' Saga';
-        stream.parsedFile!.title = streamTitle;
-      }
+      streamTitle = preprocessTitle(
+        streamTitle,
+        stream.filename,
+        requestedMetadata.titles
+      );
 
       if (titleMatchingOptions.mode === 'exact') {
         return titleMatch(

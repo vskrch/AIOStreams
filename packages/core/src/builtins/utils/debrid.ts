@@ -18,6 +18,7 @@ import {
 } from '../../debrid/index.js';
 import { PTT } from '../../parser/index.js';
 import { ParseResult } from 'go-ptt';
+import { preprocessTitle } from '../../parser/utils.js';
 
 // we have a list of torrents which need to be
 // - 1. checked for instant availability for each configured debrid service
@@ -158,7 +159,15 @@ async function processTorrentsForDebridService(
 
     const parsedTorrent = parsedFiles.get(torrent.title ?? '');
     if (metadata && parsedTorrent) {
-      if (torrent.confirmed !== true && isTitleWrong(parsedTorrent, metadata)) {
+      const preprocessedTitle = preprocessTitle(
+        parsedTorrent.title,
+        torrent.title ?? '',
+        metadata.titles
+      );
+      if (
+        torrent.confirmed !== true &&
+        isTitleWrong({ title: preprocessedTitle }, metadata)
+      ) {
         continue;
       }
       if (isSeasonWrong(parsedTorrent, metadata)) {

@@ -28,6 +28,39 @@ export function titleMatch(
   return highestScore >= threshold;
 }
 
+export function preprocessTitle(
+  parsedTitle: string,
+  filename: string,
+  titles: string[]
+) {
+  let preprocessedTitle = parsedTitle;
+
+  const altTitleSeparators = ['/', ' aka '];
+  for (const sep of altTitleSeparators) {
+    if (
+      preprocessedTitle?.toLowerCase().includes(sep) &&
+      !titles.some((title) => title.toLowerCase().includes(sep))
+    ) {
+      preprocessedTitle =
+        preprocessedTitle.split(sep)[0]?.trim() ?? preprocessedTitle;
+      logger.debug(
+        `Updated title from ${parsedTitle} to ${preprocessedTitle} because of ${sep}`
+      );
+      break;
+    }
+  }
+
+  if (
+    titles.some((title) => title.toLowerCase().includes('saga')) &&
+    filename?.toLowerCase().includes('saga') &&
+    !preprocessedTitle.toLowerCase().includes('saga')
+  ) {
+    preprocessedTitle += ' Saga';
+  }
+
+  return preprocessedTitle;
+}
+
 export function normaliseTitle(title: string) {
   return title
     .normalize('NFD')

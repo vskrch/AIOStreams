@@ -17,7 +17,11 @@ import {
   FileInfo,
   TitleMetadata,
 } from './base.js';
-import { normaliseTitle, titleMatch } from '../parser/utils.js';
+import {
+  normaliseTitle,
+  preprocessTitle,
+  titleMatch,
+} from '../parser/utils.js';
 import { partial_ratio } from 'fuzzball';
 
 const logger = createLogger('debrid');
@@ -218,7 +222,19 @@ export async function selectFileInTorrentOrNZB(
     }
 
     // Title matching (third priority)
-    if (parsed && !isTitleWrong(parsed, metadata)) {
+    if (
+      parsed?.title &&
+      !isTitleWrong(
+        {
+          title: preprocessTitle(
+            parsed.title,
+            torrentOrNZB.title ?? '',
+            metadata?.titles ?? []
+          ),
+        },
+        metadata
+      )
+    ) {
       score += 100;
     }
 
