@@ -62,8 +62,6 @@ export class BuiltinProxy extends BaseProxy {
   }
 
   public override async getPublicIp(): Promise<string | null> {
-    logger.debug(`Validating ${this.config.credentials}`);
-
     BuiltinProxy.validateAuth(this.config.credentials);
 
     if (this.config.publicIp) {
@@ -83,6 +81,9 @@ export class BuiltinProxy extends BaseProxy {
     });
 
     if (!response.ok) {
+      logger.error(
+        `Failed to check public IP using AWS: ${response.status}: ${response.statusText}`
+      );
       throw new Error(
         `Failed to check public IP using AWS: ${response.status}: ${response.statusText}`
       );
