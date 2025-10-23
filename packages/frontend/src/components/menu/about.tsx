@@ -51,6 +51,7 @@ import { Select } from '@/components/ui/select';
 import { cn } from '@/components/ui/core/styling';
 import { Textarea } from '../ui/textarea';
 import { FaPlay } from 'react-icons/fa6';
+import { usePathname } from 'next/navigation';
 
 interface QuickLinkProps {
   href?: string;
@@ -117,6 +118,7 @@ export function AboutMenu() {
 function Content() {
   const { status, loading, error } = useStatus();
   const { nextMenu } = useMenu();
+  const [initialUuid, setInitialUuid] = React.useState<string | null>(null);
   const { userData, setUserData, uuid, setUuid, password, setPassword } =
     useUserData();
   const { mode, setMode, isFirstTime } = useMode();
@@ -139,7 +141,7 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
   const templatesModal = useDisclosure(false);
   const setupChoiceModal = useDisclosure(false);
   const customHtml = status?.settings?.customHtml;
-
+  const pathname = usePathname();
   const confirmClearConfig = useConfirmationDialog({
     title: 'Sign Out',
     description: 'Are you sure you want to sign out?',
@@ -149,6 +151,15 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
       setPassword(null);
     },
   });
+
+  React.useEffect(() => {
+    const uuidMatch = pathname.match(
+      /stremio\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/.*\/configure/
+    );
+    if (uuidMatch) {
+      setInitialUuid(uuidMatch[1]);
+    }
+  }, [pathname]);
 
   return (
     <>
@@ -257,7 +268,7 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
                 className="h-12 px-6 text-lg font-semibold"
                 onClick={setupChoiceModal.open}
               >
-                START SETUP
+                {uuid && password ? 'CONTINUE SETUP' : 'START SETUP'}
               </Button>
             </div>
           </div>
@@ -418,6 +429,7 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
             signInModal.close();
           }
         }}
+        initialUuid={initialUuid || undefined}
       />
       <ConfirmationDialog {...confirmClearConfig} />
       <ConfigTemplatesModal
@@ -427,7 +439,7 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
       <SetupChoiceModal
         open={setupChoiceModal.isOpen}
         onOpenChange={setupChoiceModal.toggle}
-        onStartFresh={() => {
+        onNextMenu={() => {
           setupChoiceModal.close();
           nextMenu();
         }}
@@ -435,6 +447,18 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
           setupChoiceModal.close();
           templatesModal.open();
         }}
+        nextMenuText={uuid && password ? 'Continue Setup' : 'Start Fresh'}
+        nextMenuDescription={
+          uuid && password
+            ? 'Continue adjusting your setup'
+            : 'Build your configuration from scratch. Perfect if you want complete control over every setting.'
+        }
+        useTemplateText="Use a Template"
+        useTemplateDescription={
+          uuid && password
+            ? 'Apply a template to your existing setup'
+            : 'Start with a pre-configured template. Great for getting up and running quickly with recommended settings.'
+        }
       />
     </>
   );
@@ -985,13 +1009,21 @@ function CustomizeModal({
 function SetupChoiceModal({
   open,
   onOpenChange,
-  onStartFresh,
+  onNextMenu,
   onUseTemplate,
+  nextMenuText,
+  nextMenuDescription,
+  useTemplateText,
+  useTemplateDescription,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStartFresh: () => void;
+  onNextMenu: () => void;
   onUseTemplate: () => void;
+  nextMenuText: string;
+  nextMenuDescription: string;
+  useTemplateText: string;
+  useTemplateDescription: string;
 }) {
   return (
     <Modal
@@ -1002,7 +1034,7 @@ function SetupChoiceModal({
     >
       <div className="space-y-4">
         <button
-          onClick={onStartFresh}
+          onClick={onNextMenu}
           className="w-full p-6 rounded-lg border-2 border-gray-700 bg-gray-800/50 hover:border-purple-500 hover:bg-purple-500/10 transition-all duration-200 text-left group"
         >
           <div className="flex items-start gap-4">
@@ -1011,11 +1043,12 @@ function SetupChoiceModal({
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-white mb-2">
-                Start Fresh
+                {nextMenuText}
               </h3>
               <p className="text-sm text-gray-400">
-                Build your configuration from scratch. Perfect if you want
-                complete control over every setting.
+                {/* Build your configuration from scratch. Perfect if you want
+                complete control over every setting. */}
+                {nextMenuDescription}
               </p>
             </div>
           </div>
@@ -1031,11 +1064,12 @@ function SetupChoiceModal({
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-white mb-2">
-                Use a Template
+                {useTemplateText}
               </h3>
               <p className="text-sm text-gray-400">
-                Start with a pre-configured template. Great for getting up and
-                running quickly with recommended settings.
+                {/* Start with a pre-configured template. Great for getting up and
+                running quickly with recommended settings. */}
+                {useTemplateDescription}
               </p>
             </div>
           </div>
