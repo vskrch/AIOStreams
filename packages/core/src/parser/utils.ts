@@ -37,7 +37,8 @@ export function preprocessTitle(
 
   const separatorPatterns = [
     /\s*\/\s*/,
-    /[\s\.\-\(]*a[\s\.]?k[\s\.]?a[\s\.\)]*[\s\.\-]*/i,
+    /[\s\.\-\(]+a[\s\.]?k[\s\.]?a[\s\.\)\-]+/i,
+    /\s*\(([^)]+)\)$/,
   ];
   for (const pattern of separatorPatterns) {
     const match = preprocessedTitle.match(pattern);
