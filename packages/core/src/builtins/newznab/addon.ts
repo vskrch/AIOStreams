@@ -107,6 +107,7 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
       }
       for (let i = 0; i < nzbs.length; i++) {
         nzbs[i].nzb = proxiedUrls[i];
+        nzbs[i].hash = createHash('md5').update(nzbs[i].nzb).digest('hex');
       }
     }
     return nzbs;
