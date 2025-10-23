@@ -83,13 +83,17 @@ export function normaliseTitle(title: string) {
 }
 
 export function cleanTitle(title: string) {
-  return title
-    .normalize('NFD')
-    .replace(/-/g, ' ')
+  let cleaned = title.normalize('NFD');
+
+  for (const char of ['♪', '♫', '★', '☆', '♡', '♥', '-']) {
+    cleaned = cleaned.replaceAll(char, ' ');
+  }
+
+  return cleaned
     .replace(/&/g, 'and')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
-    .replace(/\s+/g, ' ')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^\p{L}\p{N}\s]/gu, '') // Remove remaining special chars
+    .replace(/\s+/g, ' ') // Normalise spaces
     .toLowerCase()
     .trim();
 }
