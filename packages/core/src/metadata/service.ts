@@ -67,7 +67,7 @@ export class MetadataService {
             let tvdbId: number | null =
               id.type === 'thetvdbId'
                 ? Number(id.value)
-                : animeEntry?.mappings?.thetvdbId
+                : animeEntry?.mappings?.thetvdbId && type === 'series'
                   ? Number(animeEntry.mappings.thetvdbId)
                   : null;
 
@@ -247,6 +247,7 @@ export class MetadataService {
               }
 
               if (
+                !releaseDate &&
                 cinemetaData.released &&
                 typeof cinemetaData.released === 'string'
               ) {
