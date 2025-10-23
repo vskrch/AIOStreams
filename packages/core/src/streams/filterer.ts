@@ -527,6 +527,7 @@ class StreamFilterer {
     const performYearMatch = (stream: ParsedStream) => {
       const yearMatchingOptions = {
         tolerance: 1,
+        strict: true,
         ...this.userData.yearMatching,
       };
 
@@ -580,8 +581,8 @@ class StreamFilterer {
       }
 
       if (!streamYear) {
-        // if no year is present, filter out if its a movie, keep otherwise
-        return type === 'movie' ? false : true;
+        // if no year is present, filter out if its a movie IF strict is true, keep otherwise
+        return type === 'movie' && yearMatchingOptions.strict ? false : true;
       }
 
       // streamYear can be a string like "2004" or "2012-2020"

@@ -1357,6 +1357,20 @@ function Content() {
                     }}
                   />
 
+                  <Switch
+                    label="Strict"
+                    side="right"
+                    help="Filter out streams for movies that don't have a year specified."
+                    moreHelp="Disabling this will allow streams without a year to be included in the results."
+                    value={userData.yearMatching?.strict ?? true}
+                    onValueChange={(value) => {
+                      setUserData((prev) => ({
+                        ...prev,
+                        yearMatching: { ...prev.yearMatching, strict: value },
+                      }));
+                    }}
+                  />
+
                   <NumberInput
                     label="Year Tolerance"
                     disabled={!userData.yearMatching?.enabled}

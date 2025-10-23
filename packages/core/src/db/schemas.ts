@@ -444,6 +444,7 @@ export const UserDataSchema = z.object({
     .object({
       enabled: z.boolean().optional(),
       tolerance: z.number().min(0).max(100).optional(),
+      strict: z.boolean().optional(),
       requestTypes: z.array(z.string()).optional(),
       addons: z.array(z.string()).optional(),
     })
