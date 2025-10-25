@@ -122,6 +122,12 @@ async function processTorrentsForDebridService(
     torrents.map((torrent) => torrent.hash),
     stremioId
   );
+  // const magnetCheckTime = getTimeTakenSincePoint(startTime);
+  logger.debug(`Retrieved magnet status from debrid`, {
+    service: debridService.serviceName,
+    magnetCount: torrents.length,
+    time: getTimeTakenSincePoint(startTime),
+  });
 
   const allStrings: string[] = [];
 
@@ -149,7 +155,7 @@ async function processTorrentsForDebridService(
       parsedFiles.set(allStrings[index], result);
     }
   }
-
+  const processingStart = Date.now();
   for (const [index, torrent] of torrents.entries()) {
     let file: DebridFile | undefined;
 
@@ -200,7 +206,7 @@ async function processTorrentsForDebridService(
   }
 
   logger.debug(
-    `Processed ${torrents.length} torrents for ${service.id} in ${getTimeTakenSincePoint(startTime)}`
+    `Processed ${torrents.length} torrents for ${service.id} in ${getTimeTakenSincePoint(processingStart)}`
   );
 
   return results;
@@ -338,6 +344,12 @@ async function processNZBsForDebridService(
     nzbs.map((nzb) => nzb.hash)
   );
 
+  logger.debug(`Retrieved NZB status from debrid`, {
+    service: debridService.serviceName,
+    magnetCount: nzbs.length,
+    time: getTimeTakenSincePoint(startTime),
+  });
+
   // parse all files from all nzbs in one call
 
   const allStrings: string[] = [];
@@ -362,6 +374,7 @@ async function processNZBsForDebridService(
     }
   }
 
+  const processingStart = Date.now();
   for (const [index, nzb] of nzbs.entries()) {
     let file: DebridFile | undefined;
 
@@ -400,7 +413,7 @@ async function processNZBsForDebridService(
   }
 
   logger.debug(
-    `Processed ${nzbs.length} NZBs for ${service.id} in ${getTimeTakenSincePoint(startTime)}`
+    `Processed ${nzbs.length} NZBs for ${service.id} in ${getTimeTakenSincePoint(processingStart)}`
   );
 
   return results;

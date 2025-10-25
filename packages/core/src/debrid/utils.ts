@@ -136,7 +136,7 @@ export const isTitleWrong = (
     !titleMatch(
       normaliseTitle(parsed.title),
       metadata.titles.map(normaliseTitle),
-      { threshold: 0.8, scorer: partial_ratio }
+      { threshold: 0.8 }
     )
   ) {
     return true;
@@ -178,9 +178,20 @@ export async function selectFileInTorrentOrNZB(
   }
 
   const isVideo = debridDownload.files.map((file) => isVideoFile(file));
+  if (metadata?.titles && metadata.titles.length) {
+    const uniqueTitles = [
+      ...new Set(metadata?.titles.map(normaliseTitle)),
+    ].slice(0, 100);
+    metadata = {
+      ...metadata,
+      titles: uniqueTitles,
+    };
+  }
 
   // Create a scoring system for each file
-  const fileScores = debridDownload.files.map((file, index) => {
+  const fileScores = [];
+  for (let index = 0; index < debridDownload.files.length; index++) {
+    const file = debridDownload.files[index];
     let score = 0;
     const parsed = parsedFiles.get(file.name ?? '');
 
@@ -255,12 +266,16 @@ export async function selectFileInTorrentOrNZB(
     ) {
       score += 25;
     }
-    return {
+    fileScores.push({
       file,
       score: Math.max(score, 0),
       index,
-    };
-  });
+    });
+
+    if ((index + 1) % 10 === 0) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  }
 
   // Sort by score descending
   fileScores.sort((a, b) => b.score - a.score);
