@@ -1,3 +1,4 @@
+import bytes from 'bytes';
 import { Stream, ParsedStream, Addon, ParsedFile } from '../db/index.js';
 import {
   constants,
@@ -267,7 +268,7 @@ class StreamParser {
       (stream.name && this.calculateBytesFromSizeString(stream.name));
 
     if (typeof size === 'string') {
-      size = parseInt(size);
+      size = bytes.parse(size);
     } else if (typeof size === 'number') {
       size = Math.round(size);
     }
