@@ -151,8 +151,10 @@ export class Wrapper {
         `Fetching manifest for ${this.addon.name} ${this.addon.displayIdentifier || this.addon.identifier} (${makeUrlLogSafe(this.manifestUrl)})`
       );
       try {
+        const backgroundTimeout =
+          Env.BACKGROUND_RESOURCE_REQUEST_TIMEOUT ?? Env.MAX_TIMEOUT;
         const res = await makeRequest(this.manifestUrl, {
-          timeout: options?.timeout ?? Env.MANIFEST_TIMEOUT,
+          timeout: backgroundTimeout,
           headers: this.addon.headers,
           forwardIp: this.addon.ip,
         });
@@ -380,13 +382,45 @@ export class Wrapper {
       }
     }
 
-    const result = await requestFn();
-    const doCache = shouldCache ? shouldCache(result) : true;
-    // bypass cache only skips retrieving from cache, it still caches the result
-    if (cacher && doCache) {
-      await cacher.set(cacheKey, result, cacheTtl);
+    const processRequest = async () => {
+      const result = await requestFn();
+      const doCache = shouldCache ? shouldCache(result) : true;
+      // bypass cache only skips retrieving from cache, it still caches the result
+      if (cacher && doCache) {
+        await cacher.set(cacheKey, result, cacheTtl);
+      }
+      return result;
+    };
+
+    const requestPromise = processRequest();
+
+    const timeoutPromise = new Promise<T>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              `Request for ${resourceName} for ${this.getAddonName(this.addon)} timed out after ${timeout}ms`
+            )
+          ),
+        timeout
+      )
+    );
+
+    try {
+      return await Promise.race([requestPromise, timeoutPromise]);
+    } catch (error: any) {
+      if (error.message.includes('timed out')) {
+        logger.warn(
+          `Request for ${resourceName} for ${this.getAddonName(this.addon)} timed out. Will process in background.`
+        );
+        requestPromise.catch((bgError) => {
+          logger.warn(
+            `Background request for ${resourceName} for ${this.getAddonName(this.addon)} failed: ${bgError.message}`
+          );
+        });
+      }
+      throw error;
     }
-    return result;
   }
 
   private async makeResourceRequest<T>(
@@ -411,8 +445,10 @@ export class Wrapper {
 
     const requestFn = async (): Promise<T> => {
       try {
+        const backgroundTimeout =
+          Env.BACKGROUND_RESOURCE_REQUEST_TIMEOUT ?? Env.MAX_TIMEOUT;
         const res = await makeRequest(url, {
-          timeout: timeout,
+          timeout: backgroundTimeout,
           headers: this.addon.headers,
           forwardIp: this.addon.ip,
         });
