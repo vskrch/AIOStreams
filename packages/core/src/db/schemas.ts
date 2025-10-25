@@ -45,7 +45,7 @@ const StreamProxyConfig = z.object({
   url: z.string().optional(),
   publicUrl: z.string().optional(),
   credentials: z.string().optional(),
-  publicIp: z.union([z.union([z.ipv4(), z.ipv6()]), z.literal('')]).optional(),
+  publicIp: z.string().optional(),
   proxiedAddons: z.array(z.string().min(1)).optional(),
   proxiedServices: z.array(z.string().min(1)).optional(),
 });
@@ -125,7 +125,7 @@ const AddonSchema = z.object({
   resultPassthrough: z.boolean().optional(),
   forceToTop: z.boolean().optional(),
   headers: z.record(z.string().min(1), z.string().min(1)).optional(),
-  ip: z.union([z.union([z.ipv4(), z.ipv6()])]).optional(),
+  ip: z.string().optional(),
 });
 
 // preset objects are transformed into addons by a preset transformer.
