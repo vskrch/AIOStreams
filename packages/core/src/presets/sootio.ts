@@ -54,6 +54,18 @@ export class SootioPreset extends Preset {
         Env.SOOTIO_URL
       ),
       {
+        id: 'httpProviders',
+        name: 'HTTP Stream Providers',
+        description: 'The HTTP stream providers to use for the addon.',
+        type: 'multi-select',
+        options: [
+          { label: '4KHDHub', value: 'http4khdhub' },
+          { label: 'Stremsrc', value: 'httpStremsrc' },
+          { label: 'UHDMovies', value: 'httpUHDMovies' },
+        ],
+        default: [],
+      },
+      {
         id: 'services',
         name: 'Services',
         description:
@@ -117,7 +129,10 @@ export class SootioPreset extends Preset {
       SUPPORTED_SERVICES: supportedServices,
       DESCRIPTION: 'Debrid addon.',
       OPTIONS: options,
-      SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
+      SUPPORTED_STREAM_TYPES: [
+        constants.DEBRID_STREAM_TYPE,
+        constants.HTTP_STREAM_TYPE,
+      ],
       SUPPORTED_RESOURCES: supportedResources,
     };
   }
@@ -132,17 +147,30 @@ export class SootioPreset extends Preset {
 
     const usableServices = this.getUsableServices(userData, options.services);
 
-    if (!usableServices || usableServices.length === 0) {
+    if (
+      (!options.httpProviders || options.httpProviders.length === 0) &&
+      (!usableServices || usableServices.length === 0)
+    ) {
       throw new Error(
-        `${this.METADATA.NAME} requires at least one usable service, but none were found. Please enable at least one of the following services: ${this.METADATA.SUPPORTED_SERVICES.join(
+        `${this.METADATA.NAME} requires at least one usable service or HTTP stream provider, but none were found. Please enable at least one of the following services or HTTP stream providers: ${this.METADATA.SUPPORTED_SERVICES.join(
           ', '
         )}`
       );
     }
 
-    if (options.useMultipleInstances) {
+    if (
+      options.useMultipleInstances &&
+      usableServices &&
+      usableServices.length > 0
+    ) {
+      let httpProvidersAdded: boolean = false;
       return usableServices.map((service) => {
-        return this.generateAddon(userData, options, [service.id]);
+        const newOptions = { ...options, httpProviders: [] };
+        if (options.httpProviders && !httpProvidersAdded) {
+          newOptions.httpProviders = options.httpProviders;
+          httpProvidersAdded = true;
+        }
+        return this.generateAddon(userData, newOptions, [service.id]);
       });
     }
 
@@ -150,7 +178,7 @@ export class SootioPreset extends Preset {
       this.generateAddon(
         userData,
         options,
-        usableServices.map((service) => service.id)
+        usableServices?.map((service) => service.id)
       ),
     ];
   }
@@ -165,14 +193,20 @@ export class SootioPreset extends Preset {
       identifier:
         serviceIds && serviceIds.length > 1
           ? 'multi'
-          : serviceIds
+          : serviceIds && serviceIds.length > 0
             ? constants.SERVICE_DETAILS[serviceIds[0]].shortName
             : undefined,
-      displayIdentifier: serviceIds
-        ? serviceIds
-            .map((id) => constants.SERVICE_DETAILS[id].shortName)
-            .join(' | ')
-        : undefined,
+      displayIdentifier:
+        serviceIds && serviceIds.length > 0
+          ? serviceIds
+              .map((id) => constants.SERVICE_DETAILS[id].shortName)
+              .join(' | ') +
+            (options.httpProviders && options.httpProviders.length > 0
+              ? ` | HTTP`
+              : '')
+          : options.httpProviders && options.httpProviders.length > 0
+            ? `HTTP`
+            : undefined,
       manifestUrl: this.generateManifestUrl(userData, options, serviceIds),
       enabled: true,
       mediaTypes: options.mediaTypes || [],
@@ -198,7 +232,10 @@ export class SootioPreset extends Preset {
     if (url.endsWith('/manifest.json')) {
       return url;
     }
-    if (!serviceIds?.length) {
+    if (
+      !serviceIds?.length &&
+      (!options.httpProviders || options.httpProviders.length === 0)
+    ) {
       throw new Error(
         `${this.METADATA.NAME} requires at least one usable service, but none were found. Please enable at least one of the following services: ${this.METADATA.SUPPORTED_SERVICES.join(
           ', '
@@ -215,14 +252,35 @@ export class SootioPreset extends Preset {
       premiumize: 'Premiumize',
     };
     const config = {
-      DebridProvider: serviceNameMap[serviceIds[0]],
-      DebridApiKey: this.getServiceCredential(serviceIds[0], userData),
-      DebridServices: serviceIds.map((id) => ({
-        provider: serviceNameMap[id],
-        apiKey: this.getServiceCredential(id, userData),
-      })),
+      DebridProvider:
+        serviceIds && serviceIds.length > 0
+          ? serviceNameMap[serviceIds[0]]
+          : 'httpstreaming',
+      DebridApiKey:
+        serviceIds && serviceIds.length > 0
+          ? this.getServiceCredential(serviceIds[0], userData)
+          : undefined,
+      DebridServices: [
+        ...(serviceIds && serviceIds.length > 0
+          ? [
+              {
+                provider: serviceNameMap[serviceIds[0]],
+                apiKey: this.getServiceCredential(serviceIds[0], userData),
+              },
+            ]
+          : []),
+        options.httpProviders && options.httpProviders.length > 0
+          ? {
+              provider: 'httpstreaming',
+              http4khdhub: options.httpProviders.includes('http4khdhub'),
+              httpStremsrc: options.httpProviders.includes('httpStremsrc'),
+              httpUHDMovies: options.httpProviders.includes('httpUHDMovies'),
+            }
+          : undefined,
+      ].filter((item) => item !== undefined),
       Languages: [],
     };
+
     return `${url}/${this.urlEncodeJSON(config)}/manifest.json`;
   }
 }
