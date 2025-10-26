@@ -330,7 +330,6 @@ export class TorrentSourceHandler extends SourceHandler {
     const { results, errors } = await processTorrents(
       fetchResult.torrents.map((torrent) => ({
         ...torrent,
-        confirmed: true,
         type: 'torrent',
       })),
       this.services,

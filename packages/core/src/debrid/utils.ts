@@ -144,6 +144,18 @@ export const isTitleWrong = (
   return false;
 };
 
+export const isTitleWrongN = (
+  parsed: { title?: string },
+  metadata?: { titles?: string[] }
+) => {
+  if (parsed.title && metadata?.titles) {
+    const normalisedParsedTitle = normaliseTitle(parsed.title);
+    return !metadata.titles
+      .map(normaliseTitle)
+      .some((title) => title == normalisedParsedTitle);
+  }
+  return false;
+};
 export async function selectFileInTorrentOrNZB(
   torrentOrNZB: Torrent | NZB,
   debridDownload: DebridDownload,
@@ -167,6 +179,7 @@ export async function selectFileInTorrentOrNZB(
   options?: {
     chosenFilename?: string;
     chosenIndex?: number;
+    useLevenshteinMatching?: boolean;
   }
 ): Promise<DebridFile | undefined> {
   if (!debridDownload.files?.length) {
@@ -178,15 +191,8 @@ export async function selectFileInTorrentOrNZB(
   }
 
   const isVideo = debridDownload.files.map((file) => isVideoFile(file));
-  if (metadata?.titles && metadata.titles.length) {
-    const uniqueTitles = [
-      ...new Set(metadata?.titles.map(normaliseTitle)),
-    ].slice(0, 100);
-    metadata = {
-      ...metadata,
-      titles: uniqueTitles,
-    };
-  }
+  const isNotVideo = debridDownload.files.map((file) => isNotVideoFile(file));
+  const videoExists = isVideo.map((f) => f == true);
 
   // Create a scoring system for each file
   const fileScores = [];
@@ -195,8 +201,13 @@ export async function selectFileInTorrentOrNZB(
     let score = 0;
     const parsed = parsedFiles.get(file.name ?? '');
 
+    if (isNotVideo[index]) {
+      continue;
+    }
+
     if (!parsed) {
       logger.warn(`Parsed file not found for ${file.name}`);
+      continue;
     }
 
     // Base score from video file status (highest priority)
@@ -233,9 +244,12 @@ export async function selectFileInTorrentOrNZB(
     }
 
     // Title matching (third priority)
+    const titleMatchFunc =
+      options?.useLevenshteinMatching == false ? isTitleWrongN : isTitleWrong;
     if (
       parsed?.title &&
-      !isTitleWrong(
+      (videoExists ? isVideo[index] : true) &&
+      !titleMatchFunc(
         {
           title: preprocessTitle(
             parsed.title,
@@ -277,6 +291,10 @@ export async function selectFileInTorrentOrNZB(
     }
   }
 
+  if (fileScores.length === 0) {
+    logger.warn(`Torrent ${torrentOrNZB.title} had no files selected`);
+    return undefined;
+  }
   // Sort by score descending
   fileScores.sort((a, b) => b.score - a.score);
 
@@ -364,6 +382,64 @@ export function isVideoFile(file: DebridFile): boolean {
   return (
     file.mimeType?.includes('video') ||
     videoExtensions.some((ext) => file.name?.endsWith(ext) ?? false)
+  );
+}
+
+export function isNotVideoFile(file: DebridFile): boolean {
+  const nonVideoExtensions = [
+    '.txt',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.bmp',
+    '.svg',
+    '.webp',
+    '.nfo',
+    '.sfv',
+    '.srt',
+    '.ass',
+    '.sub',
+    '.idx',
+    '.cue',
+    '.log',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.ppt',
+    '.pptx',
+    '.pdf',
+    '.rtf',
+    '.odt',
+    '.ods',
+    '.odp',
+    '.csv',
+    '.tsv',
+    '.exe',
+    '.bat',
+    '.apk',
+    '.dll',
+    '.iso',
+    '.zip',
+    '.rar',
+    '.7z',
+    '.tar',
+    '.gz',
+    '.bz2',
+    '.xz',
+    '.md',
+    '.json',
+    '.xml',
+    '.ini',
+    '.dat',
+    '.db',
+    '.dbf',
+    '.bak',
+  ];
+  return (
+    (file.mimeType && !file.mimeType.includes('video')) ||
+    nonVideoExtensions.some((ext) => file.name?.endsWith(ext) ?? false)
   );
 }
 
