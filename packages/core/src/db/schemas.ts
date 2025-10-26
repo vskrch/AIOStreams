@@ -640,7 +640,7 @@ export type StreamResponse = z.infer<typeof StreamResponseSchema>;
 
 export type Stream = z.infer<typeof StreamSchema>;
 
-const ParsedFileSchema = z.object({
+export const ParsedFileSchema = z.object({
   releaseGroup: z.string().optional(),
   resolution: z.string().optional(),
   quality: z.string().optional(),
