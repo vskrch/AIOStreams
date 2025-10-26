@@ -292,7 +292,9 @@ export async function selectFileInTorrentOrNZB(
   }
 
   if (fileScores.length === 0) {
-    logger.warn(`Torrent ${torrentOrNZB.title} had no files selected`);
+    logger.warn(`Torrent ${torrentOrNZB.title} had no files selected`, {
+      files: debridDownload.files.map((f) => f.name),
+    });
     return undefined;
   }
   // Sort by score descending
@@ -420,7 +422,6 @@ export function isNotVideoFile(file: DebridFile): boolean {
     '.bat',
     '.apk',
     '.dll',
-    '.iso',
     '.zip',
     '.rar',
     '.7z',
