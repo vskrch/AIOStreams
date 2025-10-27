@@ -282,6 +282,10 @@ export class Cache<K, V> {
     return this.backend.update(key, value);
   }
 
+  async delete(key: K): Promise<boolean> {
+    return this.backend.delete(key);
+  }
+
   async clear(): Promise<void> {
     return this.backend.clear();
   }

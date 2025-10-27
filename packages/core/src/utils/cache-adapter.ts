@@ -12,6 +12,7 @@ const REDIS_TIMEOUT = Env.REDIS_TIMEOUT;
 export interface CacheBackend<K, V> {
   get(key: K, updateTTL?: boolean): Promise<V | undefined>;
   set(key: K, value: V, ttl: number, forceWrite?: boolean): Promise<void>;
+  delete(key: K): Promise<boolean>;
   update(key: K, value: V): Promise<void>;
   clear(): Promise<void>;
   getTTL(key: K): Promise<number>;
@@ -71,6 +72,10 @@ export class MemoryCacheBackend<K, V> implements CacheBackend<K, V> {
     if (item) {
       item.value = value;
     }
+  }
+
+  async delete(key: K): Promise<boolean> {
+    return this.cache.delete(key);
   }
 
   async clear(): Promise<void> {
@@ -287,6 +292,23 @@ export class RedisCacheBackend<K, V> implements CacheBackend<K, V> {
         timeout: this.timeout,
         shouldProceed: () => this.client.isOpen,
         getContext: () => `updating key ${String(key)} in Redis`,
+      }
+    );
+  }
+
+  async delete(key: K): Promise<boolean> {
+    const redisKey = this.getKey(key);
+
+    return withTimeout<boolean>(
+      async () => {
+        const result = await this.client.del(redisKey);
+        return result > 0;
+      },
+      false,
+      {
+        timeout: this.timeout,
+        shouldProceed: () => this.client.isOpen,
+        getContext: () => `deleting key ${String(key)} from Redis`,
       }
     );
   }
@@ -552,6 +574,20 @@ export class SQLCacheBackend<K, V> implements CacheBackend<K, V> {
       );
     } catch (err) {
       logger.error(`Error updating key ${String(key)} in SQL cache: ${err}`);
+    }
+  }
+
+  async delete(key: K): Promise<boolean> {
+    const sqlKey = this.getKey(key);
+
+    try {
+      const result = await this.db.execute('DELETE FROM cache WHERE key = ?', [
+        sqlKey,
+      ]);
+      return (result.changes || result.rowCount || 0) > 0;
+    } catch (err) {
+      logger.error(`Error deleting key ${String(key)} from SQL cache: ${err}`);
+      return false;
     }
   }
 
