@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { isIP } from 'net';
 import {
   createLogger,
   APIError,
@@ -14,15 +13,7 @@ import {
 const logger = createLogger('server');
 
 // Valid resources that require authentication
-// const VALID_RESOURCES = ['stream', 'configure'];
 const VALID_RESOURCES = [...constants.RESOURCES, 'manifest.json', 'configure'];
-
-// Helper function to validate if a string is a valid IP address
-function isValidIp(ip: string | undefined): boolean {
-  if (!ip) return false;
-  // isIP returns 4 for IPv4, 6 for IPv6, and 0 for invalid
-  return isIP(ip) !== 0;
-}
 
 export const userDataMiddleware = async (
   req: Request,
@@ -107,8 +98,7 @@ export const userDataMiddleware = async (
 
     userData.encryptedPassword = encryptedPassword;
     userData.uuid = uuid;
-    // Only set IP if it's a valid IP address or undefined
-    userData.ip = isValidIp(req.userIp) ? req.userIp : undefined;
+    userData.ip = req.userIp;
 
     if (resource !== 'configure') {
       try {
