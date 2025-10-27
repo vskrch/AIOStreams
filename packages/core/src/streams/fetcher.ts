@@ -199,8 +199,39 @@ class StreamFetcher {
       if (!condition) {
         throw new Error('Dynamic addon fetching condition is not set');
       }
+      // parse a condition and look for totalTimeTaken\s?((>|<|=)(=)?)\d
+      // and return the times
+      const extractTimes = (condition: string): number[] => {
+        const times = new Set<number>();
+        // Match patterns like: totalTimeTaken > 5000, totalTimeTaken >= 1000, totalTimeTaken < 3000, etc.
+        const regex = /totalTimeTaken\s*(?:>|<|=|>=|<=|==|!=)\s*(\d+)/g;
+        let match;
+
+        while ((match = regex.exec(condition)) !== null) {
+          const timeValue = parseInt(match[1], 10);
+          times.add(timeValue);
+        }
+
+        // Also check for reverse patterns: 5000 > totalTimeTaken, etc.
+        const reverseRegex = /(\d+)\s*(?:>|<|=|>=|<=|==|!=)\s*totalTimeTaken/g;
+        while ((match = reverseRegex.exec(condition)) !== null) {
+          const timeValue = parseInt(match[1], 10);
+          times.add(timeValue);
+        }
+
+        return Array.from(times).sort((a, b) => a - b);
+      };
+
+      const checkpointTimes = extractTimes(condition);
+      if (checkpointTimes.length > 0) {
+        logger.debug(`Extracted checkpoints to check exit condition at`, {
+          checkpoints: checkpointTimes,
+          count: checkpointTimes.length,
+        });
+      }
 
       await new Promise<void>((resolve) => {
+        let addonFetchStartTime: number = 0;
         const queriedAddons: string[] = [];
         const allAddons: string[] = Array.from(
           new Set(addons.map((addon) => addon.name))
@@ -219,12 +250,15 @@ class StreamFetcher {
         );
 
         let activePromises = addons.length;
+        let resolved: boolean = false;
+        const timeouts: NodeJS.Timeout[] = [];
         if (activePromises === 0) {
           resolve();
           return;
         }
 
         const checkExit = async () => {
+          if (resolved) return;
           const timeTaken = Date.now() - start;
           const evaluator = new ExitConditionEvaluator(
             allStreams,
@@ -244,13 +278,29 @@ class StreamFetcher {
               // subtract 1 because this function is awaited before activePromises is decremented
               `Exit condition met with results from ${queriedAddons.length} addons. (${activePromises - 1} addons still fetching) Returning results.`
             );
+            resolved = true;
             resolve();
           }
         };
 
+        checkpointTimes.forEach((checkpointTime) => {
+          const timeout = setTimeout(() => {
+            if (!resolved) {
+              logger.debug(`Performing scheduled exit condition checkpoint`, {
+                checkpoint: checkpointTime,
+                time: (performance.now() - addonFetchStartTime).toFixed(0),
+              });
+              checkExit();
+            }
+          }, checkpointTime + 50);
+          timeouts.push(timeout);
+        });
+
+        addonFetchStartTime = performance.now();
         addons.forEach((addon) => {
           fetchAndProcessAddons([addon])
             .then(async (result) => {
+              if (resolved) return;
               const progress = presetProgress[addon.preset.id];
               progress.remaining--;
               if (progress.remaining === 0) {
@@ -280,7 +330,9 @@ class StreamFetcher {
             })
             .finally(() => {
               activePromises--;
-              if (activePromises === 0) {
+              if (activePromises === 0 && !resolved) {
+                resolved = true;
+                timeouts.forEach(clearTimeout);
                 resolve();
               }
             });
