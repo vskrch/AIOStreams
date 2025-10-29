@@ -443,7 +443,7 @@ there is no need to provide these details here.
             : [],
         debridConfig: debridConfig,
         hideUnsupportedHosters: options.hideUnsupportedHosters,
-        version: '1.3.4',
+        version: '1.3.5',
       },
       'urlEncode'
     );
