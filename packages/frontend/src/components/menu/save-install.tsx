@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { CopyIcon, DownloadIcon, PlusIcon, UploadIcon } from 'lucide-react';
 import { useStatus } from '@/context/status';
 import { BiCopy } from 'react-icons/bi';
+import { copyToClipboard } from '@/utils/clipboard';
 import { PageControls } from '../shared/page-controls';
 import { useDisclosure } from '@/hooks/disclosure';
 import { Modal } from '../ui/modal';
@@ -304,18 +305,10 @@ function Content() {
   const encodedManifest = encodeURIComponent(manifestUrl);
 
   const copyManifestUrl = async () => {
-    try {
-      if (!navigator.clipboard) {
-        toast.error(
-          'The Clipboard API is not supported on this browser or context, please manually copy the URL'
-        );
-        return;
-      }
-      await navigator.clipboard.writeText(manifestUrl);
-      toast.success('Manifest URL copied to clipboard');
-    } catch (err) {
-      toast.error('Failed to copy manifest URL');
-    }
+    await copyToClipboard(manifestUrl, {
+      successMessage: 'Manifest URL copied to clipboard',
+      errorMessage: 'Failed to copy manifest URL',
+    });
   };
 
   const handleDelete = async () => {
@@ -431,10 +424,11 @@ function Content() {
                         </span>
                         <BiCopy
                           className="min-h-5 min-w-5 cursor-pointer"
-                          onClick={() => {
-                            navigator.clipboard.writeText(uuid);
-                            toast.success('UUID copied to clipboard');
-                          }}
+                          onClick={() =>
+                            copyToClipboard(uuid, {
+                              successMessage: 'UUID copied to clipboard',
+                            })
+                          }
                         />
                       </div>
                       <p className="text-sm text-[--muted]">

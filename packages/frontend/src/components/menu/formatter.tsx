@@ -24,6 +24,7 @@ import { Tooltip } from '../ui/tooltip';
 import { FaFileImport, FaFileExport } from 'react-icons/fa';
 import { IconButton } from '../ui/button';
 import { ImportModal } from '../shared/import-modal';
+import { copyToClipboard } from '@/utils/clipboard';
 const formatterChoices = Object.values(constants.FORMATTER_DETAILS);
 
 // Remove the throttle utility and replace with FormatQueue
@@ -614,22 +615,10 @@ function SnippetsButton() {
                 intent="primary-outline"
                 className="sm:ml-4 flex-shrink-0"
                 onClick={async () => {
-                  if (!navigator.clipboard) {
-                    toast.error(
-                      'The clipboard API is not available in this browser or context.'
-                    );
-                    return;
-                  }
-                  try {
-                    await navigator.clipboard.writeText(snippet.value);
-                    toast.success('Snippet copied to clipboard');
-                  } catch (error) {
-                    console.error(
-                      'Failed to copy snippet to clipboard:',
-                      error
-                    );
-                    toast.error('Failed to copy snippet to clipboard');
-                  }
+                  await copyToClipboard(snippet.value, {
+                    successMessage: 'Snippet copied to clipboard',
+                    errorMessage: 'Failed to copy snippet to clipboard',
+                  });
                 }}
                 title="Copy snippet"
               >

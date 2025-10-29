@@ -1,5 +1,6 @@
 import React from 'react';
 import { toast } from 'sonner';
+import { copyToClipboard } from '@/utils/clipboard';
 
 interface MarkdownLiteProps {
   children: string;
@@ -120,14 +121,10 @@ function processInlineMarkdown(text: string, stopPropagation: boolean) {
               if (stopPropagation) {
                 e.stopPropagation();
               }
-              // copy to clipboard
-              try {
-                await navigator.clipboard.writeText(match.slice(1, -1));
-                toast.success('Copied to clipboard');
-              } catch (error) {
-                console.error('Failed to copy to clipboard:', error);
-                toast.error('Failed to copy to clipboard');
-              }
+              await copyToClipboard(match.slice(1, -1), {
+                successMessage: 'Copied to clipboard',
+                errorMessage: 'Failed to copy to clipboard',
+              });
             }}
             className="bg-muted px-1 py-0.5 rounded text-[--brand] font-mono text-xs break-all cursor-pointer"
           >

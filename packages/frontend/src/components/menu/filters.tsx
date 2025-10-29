@@ -84,6 +84,7 @@ import { TbFilterCode } from 'react-icons/tb';
 import { PasswordInput } from '../ui/password-input';
 import MarkdownLite from '../shared/markdown-lite';
 import { useMode } from '@/context/mode';
+import { copyToClipboard } from '@/utils/clipboard';
 
 type Resolution = (typeof RESOLUTIONS)[number];
 type Quality = (typeof QUALITIES)[number];
@@ -2590,10 +2591,11 @@ function Content() {
                       size="sm"
                       intent="primary-subtle"
                       icon={<FaRegCopy />}
-                      onClick={() => {
-                        navigator.clipboard.writeText(url);
-                        toast.success('URL copied to clipboard');
-                      }}
+                      onClick={() =>
+                        copyToClipboard(url, {
+                          successMessage: 'URL copied to clipboard',
+                        })
+                      }
                     />
                   </div>
                 )
