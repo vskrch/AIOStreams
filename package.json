@@ -32,5 +32,11 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@grpc/grpc-js": "1.13.4",
+      "@bufbuild/protobuf": "2.9.0"
+    }
   }
 }
