@@ -434,7 +434,9 @@ export async function validateConfig(
       await tmdb.validateAuthorisation();
     } catch (error) {
       if (!options?.skipErrorsFromAddonsOrProxies) {
-        throw error;
+        throw new Error(
+          `Failed to validate TMDB API Key/Access Token: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
       logger.warn(error instanceof Error ? error.message : String(error));
     }

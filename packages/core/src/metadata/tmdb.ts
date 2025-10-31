@@ -438,12 +438,12 @@ export class TMDBMetadata {
     const url = new URL(API_BASE_URL + '/authentication');
     this.addSearchParams(url);
     const validationResponse = await makeRequest(url.toString(), {
-      timeout: 2000,
+      timeout: 3500,
       headers: this.getHeaders(),
     });
     if (!validationResponse.ok) {
       throw new Error(
-        `Failed to validate TMDB authorisation, ensure you have set a valid access token or API key: ${validationResponse.statusText}`
+        `Got HTTP error during validation, ensure a valid access token or API key was set: ${validationResponse.status} - ${validationResponse.statusText}`
       );
     }
     const validationData = (await validationResponse.json()) as {
