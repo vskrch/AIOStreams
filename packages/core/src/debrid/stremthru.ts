@@ -158,6 +158,7 @@ export class StremThruInterface implements DebridService {
         result?.data,
         `Missing data from StremThru addMagnet: ${JSON.stringify(result)}`
       );
+      result.data.files = result.data.files ?? [];
 
       return {
         id: result.data.id,
