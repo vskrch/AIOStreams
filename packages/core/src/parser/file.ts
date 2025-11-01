@@ -60,41 +60,6 @@ class FileParser {
       filename.match(PARSE_REGEX.releaseGroup)?.[1] ?? parsed.group;
     const title = parsed.title;
     const year = parsed.year ? parsed.year.toString() : undefined;
-    // const season = parsed.season;
-    // const seasons = parsed.seasons;
-    // const episode = parsed.episode;
-    // const formattedSeasonString = seasons?.length
-    //   ? seasons.length === 1
-    //     ? `S${getPaddedNumber(seasons[0], 2)}`
-    //     : `S${getPaddedNumber(seasons[0], 2)}-${getPaddedNumber(
-    //         seasons[seasons.length - 1],
-    //         2
-    //       )}`
-    //   : season
-    //     ? `S${getPaddedNumber(season, 2)}`
-    //     : undefined;
-    // const formattedEpisodeString = episode
-    //   ? `E${getPaddedNumber(episode, 2)}`
-    //   : undefined;
-
-    // const seasonEpisode = [
-    //   formattedSeasonString,
-    //   formattedEpisodeString,
-    // ].filter((v) => v !== undefined);
-    const formattedSeasonString = parsed.seasons?.length
-      ? parsed.seasons.length === 1
-        ? `S${getPaddedNumber(parsed.seasons[0], 2)}`
-        : `S${getPaddedNumber(parsed.seasons[0], 2)}-${getPaddedNumber(parsed.seasons[parsed.seasons.length - 1], 2)}`
-      : undefined;
-    const formattedEpisodeString = parsed.episodes?.length
-      ? parsed.episodes.length === 1
-        ? `E${getPaddedNumber(parsed.episodes[0], 2)}`
-        : `E${getPaddedNumber(parsed.episodes[0], 2)}-${getPaddedNumber(parsed.episodes[parsed.episodes.length - 1], 2)}`
-      : undefined;
-    const seasonEpisode = [
-      formattedSeasonString,
-      formattedEpisodeString,
-    ].filter((v) => v !== undefined);
 
     return {
       resolution,
@@ -115,11 +80,8 @@ class FileParser {
       upscaled: parsed.upscaled ?? false,
       network: parsed.network,
       container: parsed.container,
-      season: parsed.seasons?.[0],
       seasons: parsed.seasons,
-      episode: parsed.episodes?.[0],
       episodes: parsed.episodes,
-      seasonEpisode,
     };
   }
 }

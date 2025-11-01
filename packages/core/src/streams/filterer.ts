@@ -652,35 +652,44 @@ class StreamFilterer {
       // if the requested content is a movie and season/episode is present, filter out
       if (
         type === 'movie' &&
-        (stream.parsedFile?.season || stream.parsedFile?.episode)
+        (stream.parsedFile?.seasons?.length ||
+          stream.parsedFile?.episodes?.length)
       ) {
         return false;
       }
+      let seasons = stream.parsedFile?.seasons;
 
       // if the requested content is series and no season or episode info is present, filter out if strict is true
-      if (
-        type === 'series' &&
-        seasonEpisodeMatchingOptions.strict &&
-        !stream.parsedFile?.season &&
-        !stream.parsedFile?.episode
-      ) {
-        return false;
-      }
+      if (type === 'series' && seasonEpisodeMatchingOptions.strict) {
+        if (
+          !stream.parsedFile?.seasons?.length &&
+          !stream.parsedFile?.episodes?.length
+        ) {
+          return false;
+        }
 
-      // is requested season present
+        if (
+          !stream.parsedFile.seasons?.length &&
+          stream.parsedFile.episodes?.length
+        ) {
+          // assume season is 1 when empty and episode is present in strict mode.
+          seasons = [1];
+        }
+      }
       if (
         requestedSeason &&
-        ((stream.parsedFile?.season &&
-          stream.parsedFile.season !== requestedSeason) ||
-          (stream.parsedFile?.seasons &&
-            !stream.parsedFile.seasons.includes(requestedSeason)))
+        seasons &&
+        seasons.length > 0 &&
+        !seasons.includes(requestedSeason)
       ) {
         // If absolute episode matches, and parsed season is 1, allow even if season is incorrect
         if (
-          stream.parsedFile?.season === 1 &&
-          stream.parsedFile?.episode &&
+          seasons?.[0] === 1 &&
+          stream.parsedFile?.episodes?.length &&
           requestedMetadata?.absoluteEpisode &&
-          stream.parsedFile.episode === requestedMetadata.absoluteEpisode
+          stream.parsedFile?.episodes?.includes(
+            requestedMetadata.absoluteEpisode
+          )
         ) {
           // allow
         } else {
@@ -691,14 +700,18 @@ class StreamFilterer {
       // is the present episode incorrect (does not match either the requested episode or absolute episode if present)
       if (
         requestedEpisode &&
-        stream.parsedFile?.episode &&
-        stream.parsedFile.episode !== requestedEpisode &&
+        stream.parsedFile?.episodes?.length &&
+        !stream.parsedFile?.episodes?.includes(requestedEpisode) &&
         (requestedMetadata?.absoluteEpisode
-          ? stream.parsedFile.episode !== requestedMetadata.absoluteEpisode
+          ? !stream.parsedFile?.episodes?.includes(
+              requestedMetadata.absoluteEpisode
+            )
           : true)
       ) {
         return false;
       }
+
+      // if episode is present, but season is not
 
       return true;
     };
@@ -1333,12 +1346,19 @@ class StreamFilterer {
       if (
         this.userData.excludeSeasonPacks &&
         type === 'series' &&
-        stream.parsedFile?.season &&
-        !stream.parsedFile?.episode
+        stream.parsedFile?.seasons?.length &&
+        !stream.parsedFile?.episodes?.length
       ) {
+        const seasons = stream.parsedFile?.seasons;
+        const seasonStr =
+          seasons?.length === 1
+            ? `S${String(seasons[0]).padStart(2, '0')}`
+            : seasons?.length
+              ? `S${String(seasons[0]).padStart(2, '0')}-${String(seasons[seasons.length - 1]).padStart(2, '0')}`
+              : undefined;
         this.incrementRemovalReason(
           'excludeSeasonPacks',
-          `${stream.parsedFile.title} - ${stream.parsedFile.season}`
+          `${stream.parsedFile.title} - ${seasonStr}`
         );
         return false;
       }
@@ -1449,10 +1469,23 @@ class StreamFilterer {
       }
 
       if (!performSeasonEpisodeMatch(stream)) {
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const s = stream.parsedFile?.seasons;
+        const e = stream.parsedFile?.episodes;
+        const formattedSeasonString = s?.length
+          ? `S${pad(s[0])}${s.length > 1 ? `-${pad(s[s.length - 1])}` : ''}`
+          : undefined;
+        const formattedEpisodeString = e?.length
+          ? `E${pad(e[0])}${e.length > 1 ? `-${pad(e[e.length - 1])}` : ''}`
+          : undefined;
+        const seasonEpisode = [
+          formattedSeasonString,
+          formattedEpisodeString,
+        ].filter(Boolean);
         const detail =
           stream.parsedFile?.title +
           ' ' +
-          (stream.parsedFile?.seasonEpisode?.join(' x ') || 'Unknown');
+          (seasonEpisode?.join(' • ') || 'Unknown');
 
         this.incrementRemovalReason('seasonEpisodeMatching', detail);
         return false;

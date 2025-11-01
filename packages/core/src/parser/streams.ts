@@ -220,7 +220,7 @@ class StreamParser {
 
     for (const line of potentialFilenames) {
       const parsed = FileParser.parse(line);
-      if (parsed.year || parsed.season || parsed.episode) {
+      if (parsed.year || parsed.seasons?.length || parsed.episodes?.length) {
         filename = line;
         break;
       }
@@ -430,8 +430,6 @@ class StreamParser {
     return {
       title: folderParsed?.title || fileParsed?.title,
       year: fileParsed?.year || folderParsed?.year,
-      season: fileParsed?.season || folderParsed?.season,
-      episode: fileParsed?.episode || folderParsed?.episode,
       seasons: fileParsed?.seasons || folderParsed?.seasons,
       episodes: fileParsed?.episodes || folderParsed?.episodes,
       resolution: fileParsed?.resolution || folderParsed?.resolution,
@@ -446,13 +444,13 @@ class StreamParser {
       upscaled: fileParsed?.upscaled || folderParsed?.upscaled,
       network: fileParsed?.network || folderParsed?.network,
       container: fileParsed?.container || folderParsed?.container,
-      seasonEpisode:
-        fileParsed?.seasonEpisode && fileParsed?.seasonEpisode.length > 0
-          ? fileParsed?.seasonEpisode
-          : folderParsed?.seasonEpisode &&
-              folderParsed?.seasonEpisode.length > 0
-            ? folderParsed?.seasonEpisode
-            : undefined,
+      // seasonEpisode:
+      //   fileParsed?.seasonEpisode && fileParsed?.seasonEpisode.length > 0
+      //     ? fileParsed?.seasonEpisode
+      //     : folderParsed?.seasonEpisode &&
+      //         folderParsed?.seasonEpisode.length > 0
+      //       ? folderParsed?.seasonEpisode
+      //       : undefined,
       visualTags: Array.from(
         new Set([
           ...(folderParsed?.visualTags ?? []),
