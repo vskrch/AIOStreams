@@ -21,16 +21,19 @@ class PTT {
   private static _pttConfig: {
     network: 'tcp' | 'unix';
     address: string;
-  } =
-    os.platform() === 'win32'
-      ? {
-          network: 'tcp',
-          address: `:${Env.PTT_PORT}`,
-        }
-      : {
-          network: 'unix',
-          address: Env.PTT_SOCKET,
-        };
+  } = {
+    network: 'tcp',
+    address: `:${Env.PTT_PORT}`,
+  };
+  // os.platform() === 'win32'
+  //   ? {
+  //       network: 'tcp',
+  //       address: `:${Env.PTT_PORT}`,
+  //     }
+  //   : {
+  //       network: 'unix',
+  //       address: Env.PTT_SOCKET,
+  //     };
 
   private constructor() {}
 

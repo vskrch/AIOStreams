@@ -344,7 +344,7 @@ export const Env = cleanEnv(process.env, {
     desc: 'Port to run the addon on',
   }),
   PTT_PORT: port({
-    default: 3001,
+    default: 7070,
     desc: 'Port to run the PTT server on (only used on Windows)',
   }),
   PTT_SOCKET: str({
