@@ -18,8 +18,7 @@ import {
   DebridDownload,
   isNotVideoFile,
 } from '../../debrid/index.js';
-import { PTT } from '../../parser/index.js';
-import { ParseResult } from 'go-ptt';
+import { parseTorrentTitle, ParsedResult } from '@viren070/parse-torrent-title';
 import { preprocessTitle } from '../../parser/utils.js';
 
 // we have a list of torrents which need to be
@@ -132,20 +131,22 @@ async function processTorrentsForDebridService(
   });
 
   // Parse only torrent titles and perform validation checks
+  const processingStart = Date.now();
+  const parseStart = Date.now();
   const torrentTitles = torrents.map((torrent) => torrent.title ?? '');
-  const parsedTitles = await PTT.parse(torrentTitles);
-  const parsedTitlesMap = new Map<string, ParseResult>();
+  const parsedTitles: ParsedResult[] = torrentTitles.map((title) =>
+    parseTorrentTitle(title)
+  );
+  const parsedTitlesMap = new Map<string, ParsedResult>();
   for (const [index, result] of parsedTitles.entries()) {
-    if (result) {
-      parsedTitlesMap.set(torrentTitles[index], result);
-    }
+    parsedTitlesMap.set(torrentTitles[index], result);
   }
 
   // Filter torrents that pass validation checks
   const validTorrents: {
     torrent: Torrent;
     magnetCheckResult: DebridDownload | undefined;
-    parsedTitle: ParseResult;
+    parsedTitle: ParsedResult;
   }[] = [];
   for (const torrent of torrents) {
     const magnetCheckResult = magnetCheckResults.find(
@@ -155,7 +156,7 @@ async function processTorrentsForDebridService(
 
     if (metadata && parsedTorrent) {
       const preprocessedTitle = preprocessTitle(
-        parsedTorrent.title,
+        parsedTorrent.title ?? '',
         torrent.title ?? '',
         metadata.titles
       );
@@ -192,15 +193,14 @@ async function processTorrentsForDebridService(
   }
 
   // Parse all file strings in one call
-  const allParsedFiles = await PTT.parse(allFileStrings);
-  const parsedFiles = new Map<string, ParseResult>();
+  const allParsedFiles: ParsedResult[] = allFileStrings.map((string) =>
+    parseTorrentTitle(string)
+  );
+  const parsedFiles = new Map<string, ParsedResult>();
   for (const [index, result] of allParsedFiles.entries()) {
-    if (result) {
-      parsedFiles.set(allFileStrings[index], result);
-    }
+    parsedFiles.set(allFileStrings[index], result);
   }
-
-  const processingStart = Date.now();
+  const parseTime = getTimeTakenSincePoint(parseStart);
   for (const { torrent, magnetCheckResult, parsedTitle } of validTorrents) {
     let file: DebridFile | undefined;
 
@@ -229,9 +229,12 @@ async function processTorrentsForDebridService(
     }
   }
 
-  logger.debug(
-    `Processed ${torrents.length} torrents for ${service.id} in ${getTimeTakenSincePoint(processingStart)}`
-  );
+  logger.debug(`Finished processing of torrents`, {
+    service: service.id,
+    torrents: torrents.length,
+    totalTime: getTimeTakenSincePoint(processingStart),
+    parseTime,
+  });
 
   return results;
 }
@@ -244,16 +247,16 @@ export async function processTorrentsForP2P(
 
   // Parse only torrent titles and perform validation checks
   const torrentTitles = torrents.map((torrent) => torrent.title ?? '');
-  const parsedTitles = await PTT.parse(torrentTitles);
-  const parsedTitlesMap = new Map<string, ParseResult>();
+  const parsedTitles: ParsedResult[] = torrentTitles.map((title) =>
+    parseTorrentTitle(title)
+  );
+  const parsedTitlesMap = new Map<string, ParsedResult>();
   for (const [index, result] of parsedTitles.entries()) {
-    if (result) {
-      parsedTitlesMap.set(torrentTitles[index], result);
-    }
+    parsedTitlesMap.set(torrentTitles[index], result);
   }
 
   // Filter torrents that pass validation checks
-  const validTorrents: { torrent: Torrent; parsedTitle: ParseResult }[] = [];
+  const validTorrents: { torrent: Torrent; parsedTitle: ParsedResult }[] = [];
   for (const torrent of torrents) {
     const parsedTorrent = parsedTitlesMap.get(torrent.title ?? '');
     if (metadata && parsedTorrent) {
@@ -278,12 +281,12 @@ export async function processTorrentsForP2P(
     }
   }
 
-  const allParsedFiles = await PTT.parse(allFileStrings);
-  const parsedFiles = new Map<string, ParseResult>();
+  const allParsedFiles: ParsedResult[] = allFileStrings.map((string) =>
+    parseTorrentTitle(string)
+  );
+  const parsedFiles = new Map<string, ParsedResult>();
   for (const [index, result] of allParsedFiles.entries()) {
-    if (result) {
-      parsedFiles.set(allFileStrings[index], result);
-    }
+    parsedFiles.set(allFileStrings[index], result);
   }
 
   for (const { torrent } of validTorrents) {
@@ -396,19 +399,19 @@ async function processNZBsForDebridService(
 
   // Parse only NZB titles and perform validation checks
   const nzbTitles = nzbs.map((nzb) => nzb.title ?? '');
-  const parsedTitles = await PTT.parse(nzbTitles);
-  const parsedTitlesMap = new Map<string, ParseResult>();
+  const parsedTitles: ParsedResult[] = nzbTitles.map((title) =>
+    parseTorrentTitle(title)
+  );
+  const parsedTitlesMap = new Map<string, ParsedResult>();
   for (const [index, result] of parsedTitles.entries()) {
-    if (result) {
-      parsedTitlesMap.set(nzbTitles[index], result);
-    }
+    parsedTitlesMap.set(nzbTitles[index], result);
   }
 
   // Filter NZBs that pass validation checks
   const validNZBs: {
     nzb: NZB;
     nzbCheckResult: any;
-    parsedTitle: ParseResult;
+    parsedTitle: ParsedResult;
   }[] = [];
   for (const nzb of nzbs) {
     const nzbCheckResult = nzbCheckResults.find(
@@ -437,12 +440,12 @@ async function processNZBsForDebridService(
     }
   }
 
-  const allParsedFiles = await PTT.parse(allFileStrings);
-  const parsedFiles = new Map<string, ParseResult>();
+  const allParsedFiles: ParsedResult[] = allFileStrings.map((string) =>
+    parseTorrentTitle(string)
+  );
+  const parsedFiles = new Map<string, ParsedResult>();
   for (const [index, result] of allParsedFiles.entries()) {
-    if (result) {
-      parsedFiles.set(allFileStrings[index], result);
-    }
+    parsedFiles.set(allFileStrings[index], result);
   }
 
   const processingStart = Date.now();

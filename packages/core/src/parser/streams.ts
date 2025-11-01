@@ -437,6 +437,14 @@ class StreamParser {
       quality: fileParsed?.quality || folderParsed?.quality,
       encode: fileParsed?.encode || folderParsed?.encode,
       releaseGroup: fileParsed?.releaseGroup || folderParsed?.releaseGroup,
+      edition: fileParsed?.edition || folderParsed?.edition,
+      remastered: fileParsed?.remastered || folderParsed?.remastered,
+      repack: fileParsed?.repack || folderParsed?.repack,
+      uncensored: fileParsed?.uncensored || folderParsed?.uncensored,
+      unrated: fileParsed?.unrated || folderParsed?.unrated,
+      upscaled: fileParsed?.upscaled || folderParsed?.upscaled,
+      network: fileParsed?.network || folderParsed?.network,
+      container: fileParsed?.container || folderParsed?.container,
       seasonEpisode:
         fileParsed?.seasonEpisode && fileParsed?.seasonEpisode.length > 0
           ? fileParsed?.seasonEpisode

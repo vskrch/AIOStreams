@@ -74,6 +74,14 @@ export interface ParseValue {
     regexMatched: string | null;
     encode: string | null;
     audioChannels: string[] | null;
+    edition: string | null;
+    remastered: boolean | null;
+    repack: boolean | null;
+    uncensored: boolean | null;
+    unrated: boolean | null;
+    upscaled: boolean | null;
+    network: string | null;
+    container: string | null;
     indexer: string | null;
     year: string | null;
     title: string | null;
@@ -276,6 +284,14 @@ export abstract class BaseFormatter {
         age: stream.age || null,
         message: stream.message || null,
         proxied: stream.proxied !== undefined ? stream.proxied : null,
+        edition: stream.parsedFile?.edition || null,
+        remastered: stream.parsedFile?.remastered || null,
+        repack: stream.parsedFile?.repack || null,
+        uncensored: stream.parsedFile?.uncensored || null,
+        unrated: stream.parsedFile?.unrated || null,
+        upscaled: stream.parsedFile?.upscaled || null,
+        network: stream.parsedFile?.network || null,
+        container: stream.parsedFile?.container || null,
       },
       addon: {
         name: stream.addon?.name || null,

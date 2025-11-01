@@ -11,7 +11,6 @@ import {
   logStartupFooter,
   Cache,
   FeatureControl,
-  PTT,
   AnimeDatabase,
   ProwlarrAddon,
   TemplateManager,
@@ -24,15 +23,6 @@ async function initialiseDatabase() {
     await DB.getInstance().initialise(Env.DATABASE_URI, []);
   } catch (error) {
     logger.error('Failed to initialise database:', error);
-    throw error;
-  }
-}
-
-async function initialisePTT() {
-  try {
-    await PTT.initialise();
-  } catch (error) {
-    logger.error('Failed to initialise PTT Server:', error);
     throw error;
   }
 }
@@ -83,7 +73,6 @@ async function start() {
     await initialiseTemplates();
     await initialiseDatabase();
     await initialiseRedis();
-    await initialisePTT();
     initialiseAnimeDatabase();
     FeatureControl.initialise();
     await initialiseProwlarr();
@@ -108,7 +97,6 @@ async function start() {
 
 async function shutdown() {
   await Cache.close();
-  await PTT.cleanup();
   FeatureControl.cleanup();
   await DB.getInstance().close();
 }

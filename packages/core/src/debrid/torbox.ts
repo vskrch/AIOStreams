@@ -1,6 +1,5 @@
 import { TorboxApi } from '@torbox/torbox-api';
 import { StremThruError } from 'stremthru';
-import { ParseResult } from 'go-ptt';
 import {
   Env,
   ServiceId,
@@ -9,7 +8,6 @@ import {
   Cache,
   DistributedLock,
 } from '../utils/index.js';
-import { PTT } from '../parser/index.js';
 import { selectFileInTorrentOrNZB } from './utils.js';
 import {
   DebridService,
@@ -19,6 +17,7 @@ import {
   DebridError,
 } from './base.js';
 import { StremThruInterface } from './stremthru.js';
+import { ParsedResult, parseTorrentTitle } from '@viren070/parse-torrent-title';
 
 const logger = createLogger('debrid:torbox');
 
@@ -378,12 +377,12 @@ export class TorboxDebridService implements DebridService {
       allStrings.push(usenetDownload.name ?? '');
       allStrings.push(...usenetDownload.files.map((file) => file.name ?? ''));
 
-      const parseResults = await PTT.parse(allStrings);
-      const parsedFiles = new Map<string, ParseResult>();
+      const parseResults: ParsedResult[] = allStrings.map((string) =>
+        parseTorrentTitle(string)
+      );
+      const parsedFiles = new Map<string, ParsedResult>();
       for (const [index, result] of parseResults.entries()) {
-        if (result) {
-          parsedFiles.set(allStrings[index], result);
-        }
+        parsedFiles.set(allStrings[index], result);
       }
 
       const file = await selectFileInTorrentOrNZB(

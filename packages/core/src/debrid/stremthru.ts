@@ -16,8 +16,7 @@ import {
   DebridError,
 } from './base.js';
 import { StremThruServiceId } from '../presets/stremthru.js';
-import { PTT } from '../parser/index.js';
-import { ParseResult } from 'go-ptt';
+import { parseTorrentTitle, ParsedResult } from '@viren070/parse-torrent-title';
 import assert from 'assert';
 
 const logger = createLogger('debrid:stremthru');
@@ -313,12 +312,12 @@ export class StremThruInterface implements DebridService {
     const allStrings: string[] = [];
     allStrings.push(magnetDownload.name ?? '');
     allStrings.push(...magnetDownload.files.map((file) => file.name ?? ''));
-    const parseResults = await PTT.parse(allStrings);
-    const parsedFiles = new Map<string, ParseResult>();
+    const parseResults: ParsedResult[] = allStrings.map((string) =>
+      parseTorrentTitle(string)
+    );
+    const parsedFiles = new Map<string, ParsedResult>();
     for (const [index, result] of parseResults.entries()) {
-      if (result) {
-        parsedFiles.set(allStrings[index], result);
-      }
+      parsedFiles.set(allStrings[index], result);
     }
 
     const file = await selectFileInTorrentOrNZB(

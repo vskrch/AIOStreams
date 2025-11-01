@@ -655,6 +655,14 @@ export const ParsedFileSchema = z.object({
   seasons: z.array(z.number()).optional(),
   episode: z.number().optional(),
   seasonEpisode: z.array(z.string()).optional(),
+  edition: z.string().optional(),
+  remastered: z.boolean().optional(),
+  repack: z.boolean().optional(),
+  uncensored: z.boolean().optional(),
+  unrated: z.boolean().optional(),
+  upscaled: z.boolean().optional(),
+  network: z.string().optional(),
+  container: z.string().optional(),
 });
 
 export const ParsedStreamSchema = z.object({
