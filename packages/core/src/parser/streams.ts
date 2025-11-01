@@ -433,6 +433,7 @@ class StreamParser {
       season: fileParsed?.season || folderParsed?.season,
       episode: fileParsed?.episode || folderParsed?.episode,
       seasons: fileParsed?.seasons || folderParsed?.seasons,
+      episodes: fileParsed?.episodes || folderParsed?.episodes,
       resolution: fileParsed?.resolution || folderParsed?.resolution,
       quality: fileParsed?.quality || folderParsed?.quality,
       encode: fileParsed?.encode || folderParsed?.encode,

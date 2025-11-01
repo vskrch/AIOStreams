@@ -654,6 +654,7 @@ export const ParsedFileSchema = z.object({
   season: z.number().optional(),
   seasons: z.array(z.number()).optional(),
   episode: z.number().optional(),
+  episodes: z.array(z.number()).optional(),
   seasonEpisode: z.array(z.string()).optional(),
   edition: z.string().optional(),
   remastered: z.boolean().optional(),

@@ -118,6 +118,7 @@ class FileParser {
       season: parsed.seasons?.[0],
       seasons: parsed.seasons,
       episode: parsed.episodes?.[0],
+      episodes: parsed.episodes,
       seasonEpisode,
     };
   }
