@@ -662,6 +662,7 @@ export const ParsedFileSchema = z.object({
   upscaled: z.boolean().optional(),
   network: z.string().optional(),
   container: z.string().optional(),
+  extension: z.string().optional(),
 });
 
 export const ParsedStreamSchema = z.object({

@@ -82,6 +82,7 @@ export interface ParseValue {
     upscaled: boolean | null;
     network: string | null;
     container: string | null;
+    extension: string | null;
     indexer: string | null;
     year: string | null;
     title: string | null;
@@ -314,6 +315,7 @@ export abstract class BaseFormatter {
         upscaled: stream.parsedFile?.upscaled || null,
         network: stream.parsedFile?.network || null,
         container: stream.parsedFile?.container || null,
+        extension: stream.parsedFile?.extension || null,
       },
       addon: {
         name: stream.addon?.name || null,

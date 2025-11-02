@@ -426,12 +426,20 @@ class StreamParser {
     const fileParsed = parsedStream.filename
       ? FileParser.parse(parsedStream.filename)
       : undefined;
-
+    function arrayFallback<T>(
+      arr1: T[] | undefined,
+      arr2: T[] | undefined
+    ): T[] | undefined {
+      return arr1?.length ? arr1 : arr2?.length ? arr2 : undefined;
+    }
+    function arrayMerge<T>(arr1: T[] | undefined, arr2: T[] | undefined): T[] {
+      return Array.from(new Set([...(arr1 ?? []), ...(arr2 ?? [])]));
+    }
     return {
       title: folderParsed?.title || fileParsed?.title,
       year: fileParsed?.year || folderParsed?.year,
-      seasons: fileParsed?.seasons || folderParsed?.seasons,
-      episodes: fileParsed?.episodes || folderParsed?.episodes,
+      seasons: arrayFallback(fileParsed?.seasons, folderParsed?.seasons),
+      episodes: arrayFallback(fileParsed?.episodes, folderParsed?.episodes),
       resolution: fileParsed?.resolution || folderParsed?.resolution,
       quality: fileParsed?.quality || folderParsed?.quality,
       encode: fileParsed?.encode || folderParsed?.encode,
@@ -444,37 +452,16 @@ class StreamParser {
       upscaled: fileParsed?.upscaled || folderParsed?.upscaled,
       network: fileParsed?.network || folderParsed?.network,
       container: fileParsed?.container || folderParsed?.container,
-      // seasonEpisode:
-      //   fileParsed?.seasonEpisode && fileParsed?.seasonEpisode.length > 0
-      //     ? fileParsed?.seasonEpisode
-      //     : folderParsed?.seasonEpisode &&
-      //         folderParsed?.seasonEpisode.length > 0
-      //       ? folderParsed?.seasonEpisode
-      //       : undefined,
-      visualTags: Array.from(
-        new Set([
-          ...(folderParsed?.visualTags ?? []),
-          ...(fileParsed?.visualTags ?? []),
-        ])
+      extension: fileParsed?.extension || folderParsed?.extension,
+      visualTags: arrayMerge(folderParsed?.visualTags, fileParsed?.visualTags),
+      audioTags: arrayMerge(folderParsed?.audioTags, fileParsed?.audioTags),
+      audioChannels: arrayMerge(
+        folderParsed?.audioChannels,
+        fileParsed?.audioChannels
       ),
-      audioTags: Array.from(
-        new Set([
-          ...(folderParsed?.audioTags ?? []),
-          ...(fileParsed?.audioTags ?? []),
-        ])
-      ),
-      audioChannels: Array.from(
-        new Set([
-          ...(folderParsed?.audioChannels ?? []),
-          ...(fileParsed?.audioChannels ?? []),
-        ])
-      ),
-      languages: Array.from(
-        new Set([
-          ...(folderParsed?.languages ?? []),
-          ...(fileParsed?.languages ?? []),
-          ...this.getLanguages(stream, parsedStream),
-        ])
+      languages: arrayMerge(
+        arrayMerge(folderParsed?.languages, fileParsed?.languages),
+        this.getLanguages(stream, parsedStream)
       ),
     };
   }

@@ -80,6 +80,7 @@ class FileParser {
       upscaled: parsed.upscaled ?? false,
       network: parsed.network,
       container: parsed.container,
+      extension: parsed.extension,
       seasons: parsed.seasons,
       episodes: parsed.episodes,
     };
