@@ -266,7 +266,10 @@ class StreamSorter {
           if (minLanguageIndex === undefined) {
             return 0;
           }
-          for (const language of stream.parsedFile?.languages || ['Unknown']) {
+          const effectiveLanguages = stream.parsedFile?.languages?.length
+            ? stream.parsedFile.languages
+            : ['Unknown'];
+          for (const language of effectiveLanguages) {
             const idx = userData.preferredLanguages?.indexOf(language as any);
             if (idx !== undefined && idx !== -1 && idx < minLanguageIndex) {
               minLanguageIndex = idx;
