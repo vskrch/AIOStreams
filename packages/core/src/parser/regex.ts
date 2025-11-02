@@ -43,15 +43,17 @@ type PARSE_REGEX = {
 export const PARSE_REGEX: PARSE_REGEX = {
   resolutions: {
     '2160p': createRegex(
-      '(bd|hd|m)?(4k|2160(p|i)?)|u(ltra)?[ .\\-_]?hd|3840\s?x\s?(\d{4})'
+      '(bd|hd|m)?(4k|2160(p|i)?)|u(ltra)?[ .\\-_]?hd|3840\\s?x\\s?(\\d{4})'
     ),
     '1440p': createRegex(
-      '(bd|hd|m)?(1440(p|i)?)|2k|w?q(uad)?[ .\\-_]?hd|2560\s?x(\d{4})'
+      '(bd|hd|m)?(1440(p|i)?)|2k|w?q(uad)?[ .\\-_]?hd|2560\\s?x(\\d{4})'
     ),
     '1080p': createRegex(
-      '(bd|hd|m)?(1080(p|i)?)|f(ull)?[ .\\-_]?hd|1920\s?x\s?(\d{3,4})'
+      '(bd|hd|m)?(1080(p|i)?)|f(ull)?[ .\\-_]?hd|1920\\s?x\\s?(\\d{3,4})'
     ),
-    '720p': createRegex('(bd|hd|m)?((720|800)(p|i)?)|hd|1280\s?x\s?(\d{3,4})'),
+    '720p': createRegex(
+      '(bd|hd|m)?((720|800)(p|i)?)|hd|1280\\s?x\\s?(\\d{3,4})'
+    ),
     '576p': createRegex('(bd|hd|m)?((576|534)(p|i)?)'),
     '480p': createRegex('(bd|hd|m)?(480(p|i)?)|sd'),
     '360p': createRegex('(bd|hd|m)?(360(p|i)?)'),
@@ -61,7 +63,7 @@ export const PARSE_REGEX: PARSE_REGEX = {
   qualities: {
     'BluRay REMUX': createRegex('(bd|br|b|uhd)?remux'),
     BluRay: createRegex(
-      '(?<!remux.*)(blu[ .\\-_]?ray|((bd|br)[ .\\-_]?rip))(?!.*remux)'
+      '(?<!remux.*)(bd|blu[ .\\-_]?ray|((bd|br)[ .\\-_]?rip))(?!.*remux)'
     ),
     'WEB-DL': createRegex('web[ .\\-_]?(dl)?(?![ .\\-_]?(rip|DLRip|cam))'),
     WEBRip: createRegex('web[ .\\-_]?rip'),
