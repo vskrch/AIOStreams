@@ -1051,11 +1051,6 @@ const logStartupInfo = () => {
         '     '
       );
     }
-    logKeyValue(
-      '  StremThru URL:',
-      Env.DEFAULT_STREAMFUSION_STREMTHRU_URL,
-      '     '
-    );
 
     // DMM Cast (Note: no URL env var, only timeout and user agent)
     if (Env.DEFAULT_DMM_CAST_TIMEOUT || Env.DEFAULT_DMM_CAST_USER_AGENT) {

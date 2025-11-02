@@ -37,31 +37,21 @@ export class StreamFusionPreset extends Preset {
         required: true,
       },
       {
-        id: 'usePublicTorrentCacheServer',
-        name: 'Use Public Torrent Cache Server',
-        description:
-          'For faster results, you can use the public torrent cache server. Only historiacl public torrents from stremio-jackett will be cached on it. Disable this for results from other sources.',
-        type: 'boolean',
-        required: false,
-        default: false,
-      },
-      {
-        id: 'torboxSearch',
-        name: 'Torbox Search',
-        description:
-          "Enable or disable the use of Torbox's Public Torrent Search Engine",
-        type: 'boolean',
-        required: false,
-        default: false,
-      },
-      {
-        id: 'torboxUsenet',
-        name: 'Torbox Usenet',
-        description:
-          "Enable or disable the use of Torbox's Usenet search and download functionality.",
-        type: 'boolean',
-        required: false,
-        default: false,
+        id: 'torrentProviders',
+        name: 'Torrent Providers',
+        description: 'Which torrent providers to use',
+        type: 'multi-select',
+        options: [
+          {
+            label: 'Public Cache Server',
+            value: 'publicCacheServer',
+          },
+          {
+            label: 'Zilean API',
+            value: 'zilean',
+          },
+        ],
+        default: ['publicCacheServer', 'zilean'],
       },
       {
         id: 'catalogs',
@@ -79,7 +69,7 @@ export class StreamFusionPreset extends Preset {
             label: 'YggFlix',
           },
         ],
-        default: ['yggtorrent', 'yggflix'],
+        default: ['yggtorrent'],
       },
       {
         id: 'torrenting',
@@ -229,6 +219,10 @@ export class StreamFusionPreset extends Preset {
     };
 
     url = url.replace(/\/$/, '');
+    const torrentProviders = options.torrentProviders ?? [
+      'zilean',
+      'publicCacheServer',
+    ];
     const configString = this.base64EncodeJSON({
       addonHost: options.url ? new URL(options.url).origin : this.METADATA.URL,
       apiKey: options.streamFusionApiKey,
@@ -268,19 +262,19 @@ export class StreamFusionPreset extends Preset {
             specialCases
           )
         : '',
-      TBUsenet: options.torboxUsenet,
-      TBSearch: options.torboxSearch,
+      TBUsenet: false,
+      TBSearch: false,
       maxSize: 150,
       exclusionKeywords: [],
-      languages: ['en', 'fr', 'multi'],
+      languages: ['en', 'fr', 'multi', 'vfq'],
       sort: 'quality',
       resultsPerQuality: 30,
       maxResults: 100,
       minCachedResults: 10,
       exclusion: [],
       cacheUrl: 'https://stremio-jackett-cacher.elfhosted.com/',
-      cache: options.usePublicTorrentCacheServer ?? true,
-      zilean: true,
+      cache: torrentProviders.includes('publicCacheServer'),
+      zilean: torrentProviders.includes('zilean'),
       yggflix: true,
       sharewood: true,
       yggtorrentCtg: options.catalogs?.includes('yggtorrent') ?? false,
@@ -294,7 +288,6 @@ export class StreamFusionPreset extends Preset {
           ? constants.SERVICE_DETAILS[serviceIds[0]].name
           : '',
       stremthru: true,
-      stremthruUrl: Env.DEFAULT_STREAMFUSION_STREMTHRU_URL,
     });
 
     return `${url}${configString ? '/' + configString : ''}/manifest.json`;

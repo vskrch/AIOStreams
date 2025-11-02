@@ -1214,10 +1214,6 @@ export const Env = cleanEnv(process.env, {
     default: undefined,
     desc: 'Default StreamFusion user agent',
   }),
-  DEFAULT_STREAMFUSION_STREMTHRU_URL: url({
-    default: 'https://stremthru.13377001.xyz',
-    desc: 'Default StreamFusion StremThru URL',
-  }),
 
   SOOTIO_URL: urlOrUrlList({
     default: ['https://sootio.elfhosted.com'],
