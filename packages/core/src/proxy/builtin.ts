@@ -180,6 +180,7 @@ export class BuiltinProxyStats {
   );
 
   private static ACTIVE_THRESHOLD = 6 * 60 * 60 * 1000; // 6 hours
+  private static HISTORY_RETENTION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   constructor() {}
 
@@ -261,7 +262,30 @@ export class BuiltinProxyStats {
 
   public async getConnectionHistory(user: string): Promise<ConnectionRecord[]> {
     const encryptedData = await this.connectionHistory.get(user);
-    return encryptedData ? this.decryptConnectionRecords(encryptedData) : [];
+    if (!encryptedData) {
+      return [];
+    }
+
+    const connections = this.decryptConnectionRecords(encryptedData);
+    const now = Date.now();
+    const cutoffTime = now - BuiltinProxyStats.HISTORY_RETENTION;
+
+    // Filter out records older than HISTORY_RETENTION
+    const recentConnections = connections.filter(
+      (conn) => conn.lastSeen > cutoffTime
+    );
+
+    // If any records were filtered out, update the cache
+    if (recentConnections.length < connections.length) {
+      await this.connectionHistory.set(
+        user,
+        this.encryptConnectionRecords(recentConnections),
+        BuiltinProxyStats.HISTORY_RETENTION,
+        true
+      );
+    }
+
+    return recentConnections;
   }
 
   public async addConnection(
@@ -310,7 +334,7 @@ export class BuiltinProxyStats {
         await this.connectionHistory.set(
           user,
           this.encryptConnectionRecords(historyConnections),
-          7 * 24 * 60 * 60,
+          BuiltinProxyStats.HISTORY_RETENTION,
           true
         );
       } else {
