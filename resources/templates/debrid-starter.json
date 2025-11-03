@@ -5,7 +5,7 @@
     "description": "A starter template for Debrid users.",
     "source": "external",
     "author": "Viren",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "category": "Debrid",
     "serviceRequired": true,
     "services": [
@@ -269,7 +269,7 @@
       "streamTypes": ["usenet"]
     },
     "excludedStreamExpressions": [
-      "queryType == 'anime' ? resolution(streams, '2160p') : []"
+      "queryType == 'anime.movie' ? resolution(streams, '2160p') : []"
     ]
   }
 }
