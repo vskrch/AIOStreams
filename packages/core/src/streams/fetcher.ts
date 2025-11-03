@@ -60,21 +60,25 @@ class StreamFetcher {
     const start = Date.now();
     let queryType = type;
     if (AnimeDatabase.getInstance().isAnime(id)) {
-      queryType = 'anime';
+      queryType = `anime.${type}`;
     }
 
     addons = addons.filter((addon) => {
       if (
         addon.mediaTypes &&
         addon.mediaTypes.length > 0 &&
-        ['movie', 'series', 'anime'].includes(queryType)
+        ['movie', 'series', 'anime.series', 'anime.movie'].includes(queryType)
       ) {
+        let mappedType = queryType;
+        if (queryType === 'anime.series' || queryType === 'anime.movie') {
+          mappedType = 'anime';
+        }
         const result = addon.mediaTypes.includes(
-          queryType as 'movie' | 'series' | 'anime'
+          mappedType as 'movie' | 'series' | 'anime'
         );
         if (!result) {
           logger.debug(
-            `Skipping ${getAddonName(addon)} because its specified media types do not include ${queryType}`
+            `Skipping ${getAddonName(addon)} because its specified media types do not include ${mappedType}`
           );
         }
         return result;

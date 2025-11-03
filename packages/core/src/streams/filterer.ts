@@ -1566,7 +1566,7 @@ class StreamFilterer {
     let queryType = type;
 
     if (AnimeDatabase.getInstance().isAnime(id)) {
-      queryType = 'anime';
+      queryType = `anime.${queryType}`;
     }
     const selector = new StreamSelector(queryType);
     const streamsToKeep = new Set<string>();
@@ -1596,7 +1596,7 @@ class StreamFilterer {
     let queryType = type;
 
     if (AnimeDatabase.getInstance().isAnime(id)) {
-      queryType = 'anime';
+      queryType = `anime.${queryType}`;
     }
 
     const passthroughStreams = streams
