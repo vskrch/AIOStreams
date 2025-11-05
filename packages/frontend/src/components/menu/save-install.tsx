@@ -300,8 +300,13 @@ function Content() {
       toast.error('Failed to export configuration');
     }
   };
-
-  const manifestUrl = `${baseUrl}/stremio/${uuid}/${encryptedPassword}/manifest.json`;
+  const uuidRegex =
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+  const manifestUrl = uuid
+    ? uuidRegex.test(uuid)
+      ? `${baseUrl}/stremio/${uuid}/${encryptedPassword}/manifest.json`
+      : `${baseUrl}/stremio/u/${uuid}/manifest.json`
+    : '';
   const encodedManifest = encodeURIComponent(manifestUrl);
 
   const copyManifestUrl = async () => {

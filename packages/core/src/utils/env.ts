@@ -181,10 +181,10 @@ const userAgent = makeValidator((x) => {
 });
 
 // comma separated list of alias:uuid
-const aliasedUUIDs = makeValidator((x) => {
+const aliasedUUIDs = makeExactValidator((x) => {
   try {
-    const aliases: Record<string, { uuid: string; password: string }> = {};
-    const parsed = x.split(',').map((x) => {
+    const aliases: Map<string, { uuid: string; password: string }> = new Map();
+    x.split(',').forEach((x) => {
       const [alias, uuid, password] = x.split(':');
       if (!alias || !uuid || !password) {
         throw new Error('Invalid alias:uuid:password pair');
@@ -195,7 +195,7 @@ const aliasedUUIDs = makeValidator((x) => {
       ) {
         throw new Error('Invalid UUID');
       }
-      aliases[alias] = { uuid, password };
+      aliases.set(alias, { uuid, password });
     });
     return aliases;
   } catch (e) {
@@ -393,7 +393,7 @@ export const Env = cleanEnv(process.env, {
     desc: 'Mapping of URLs to another, converts requests to the original URL to the mapped URL',
   }),
   ALIASED_CONFIGURATIONS: aliasedUUIDs({
-    default: {},
+    default: new Map(),
     desc: 'Comma separated list of alias:uuid:encryptedPassword pairs. Can then access at /stremio/u/alias/manifest.json ',
   }),
   TRUSTED_UUIDS: str({
