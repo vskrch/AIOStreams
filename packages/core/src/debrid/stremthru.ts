@@ -357,7 +357,8 @@ export class StremThruInterface implements DebridService {
     await StremThruInterface.playbackLinkCache.set(
       cacheKey,
       playbackLink,
-      Env.BUILTIN_DEBRID_PLAYBACK_LINK_CACHE_TTL
+      Env.BUILTIN_DEBRID_PLAYBACK_LINK_CACHE_TTL,
+      true
     );
 
     return playbackLink;

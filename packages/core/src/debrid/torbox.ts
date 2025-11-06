@@ -425,7 +425,8 @@ export class TorboxDebridService implements DebridService {
     await TorboxDebridService.playbackLinkCache.set(
       cacheKey,
       playbackLink,
-      Env.BUILTIN_DEBRID_INSTANT_AVAILABILITY_CACHE_TTL
+      Env.BUILTIN_DEBRID_INSTANT_AVAILABILITY_CACHE_TTL,
+      true
     );
 
     return playbackLink;

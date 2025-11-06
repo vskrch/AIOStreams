@@ -619,7 +619,8 @@ export class NzbDAVService implements DebridService {
     await NzbDAVService.playbackLinkCache.set(
       cacheKey,
       playbackLink,
-      Env.BUILTIN_DEBRID_PLAYBACK_LINK_CACHE_TTL
+      Env.BUILTIN_DEBRID_PLAYBACK_LINK_CACHE_TTL,
+      true
     );
 
     return playbackLink;
