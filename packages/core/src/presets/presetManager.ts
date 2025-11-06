@@ -65,6 +65,7 @@ import { KnabenPreset } from './knaben.js';
 import { BitmagnetPreset } from './bitmagnet.js';
 import { SootioPreset } from './sootio.js';
 import { TorrentGalaxyPreset } from './torrentGalaxy.js';
+import { UsenetStreamerPreset } from './usenetStreamer.js';
 let PRESET_LIST: string[] = [
   'custom',
   'torznab',
@@ -97,6 +98,7 @@ let PRESET_LIST: string[] = [
   'easynews',
   'easynewsPlus',
   'easynewsPlusPlus',
+  'usenet-streamer',
   'dmm-cast',
   'nuvio-streams',
   'webstreamr',
@@ -278,6 +280,8 @@ export class PresetManager {
         return SootioPreset;
       case 'torrent-galaxy':
         return TorrentGalaxyPreset;
+      case 'usenet-streamer':
+        return UsenetStreamerPreset;
       default:
         throw new Error(`Preset ${id} not found`);
     }
