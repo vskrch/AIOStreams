@@ -83,6 +83,7 @@ class FileParser {
       extension: parsed.extension,
       seasons: parsed.seasons,
       episodes: parsed.episodes,
+      seasonPack: !!(parsed.seasons?.length && !parsed.episodes?.length),
     };
   }
 }

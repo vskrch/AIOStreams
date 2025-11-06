@@ -667,6 +667,7 @@ export const ParsedFileSchema = z.object({
   network: z.string().optional(),
   container: z.string().optional(),
   extension: z.string().optional(),
+  seasonPack: z.boolean().optional(),
 });
 
 export const ParsedStreamSchema = z.object({
