@@ -426,7 +426,7 @@ const SERVICE_DETAILS: Record<
         id: 'aiostreamsAuth',
         name: 'AIOStreams Proxy Auth',
         description:
-          'The AIOStreams Proxy Auth username:password pair from the `AIOSTREAMS_AUTH` environment variable. It is required to play streams from Nzb DAV.',
+          'It is required to proxy the NzbDAV streams through AIOStreams. Provide a username:password pair from the `AIOSTREAMS_AUTH` environment variable.',
         type: 'password',
         required: true,
       },

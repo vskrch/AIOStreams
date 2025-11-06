@@ -6,6 +6,10 @@ import { Env } from '../utils/index.js';
 export class NZBHydraPreset extends NewznabPreset {
   static override get METADATA() {
     const supportedResources = [constants.STREAM_RESOURCE];
+    const supportedServices = [
+      constants.TORBOX_SERVICE,
+      constants.NZBDAV_SERVICE,
+    ] as const;
     const options: Option[] = [
       {
         id: 'name',
@@ -26,6 +30,21 @@ export class NZBHydraPreset extends NewznabPreset {
           max: Env.MAX_TIMEOUT,
           forceInUi: false,
         },
+      },
+      {
+        id: 'services',
+        name: 'Services',
+        description:
+          'Optionally override the services that are used. If not specified, then the services that are enabled and supported will be used.',
+        type: 'multi-select',
+        required: false,
+        showInSimpleMode: false,
+        options: supportedServices.map((service) => ({
+          value: service,
+          label: constants.SERVICE_DETAILS[service].name,
+        })),
+        default: undefined,
+        emptyIsUndefined: true,
       },
       {
         id: 'mediaTypes',
@@ -77,6 +96,16 @@ export class NZBHydraPreset extends NewznabPreset {
         type: 'boolean',
         required: false,
         default: true,
+      },
+
+      {
+        id: 'useMultipleInstances',
+        name: 'Use Multiple Instances',
+        description:
+          'Newznab supports multiple services in one instance of the addon - which is used by default. If this is enabled, then the addon will be created for each service.',
+        type: 'boolean',
+        default: false,
+        showInSimpleMode: false,
       },
     ];
 

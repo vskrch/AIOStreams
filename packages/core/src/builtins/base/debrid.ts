@@ -13,6 +13,7 @@ import {
   encryptString,
   Env,
   formatZodError,
+  fromUrlSafeBase64,
   getSimpleTextHash,
   getTimeTakenSincePoint,
   SERVICE_DETAILS,
@@ -40,6 +41,8 @@ import { MetadataService } from '../../metadata/service.js';
 import { Logger } from 'winston';
 import pLimit from 'p-limit';
 import { cleanTitle } from '../../parser/utils.js';
+import { NzbDavConfig, NzbDAVService } from '../../debrid/nzbdav.js';
+import { createProxy } from '../../proxy/index.js';
 
 export interface SearchMetadata extends TitleMetadata {
   primaryTitle?: string;
@@ -249,11 +252,67 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       Env.BUILTIN_PLAYBACK_LINK_VALIDITY
     );
 
+    const results = [...processedTorrents.results, ...processedNzbs.results];
+    let nzbdavAuth;
+    const usingNzbDav = this.userData.services.some((s) => s.id === 'nzbdav');
+    const encodedNzbdavAuth = this.userData.services.find(
+      (s) => s.id === 'nzbdav'
+    )?.credential;
+    if (usingNzbDav && encodedNzbdavAuth) {
+      const { success, data } = NzbDavConfig.safeParse(
+        JSON.parse(fromUrlSafeBase64(encodedNzbdavAuth))
+      );
+
+      nzbdavAuth = data;
+    }
+    let proxyIndices: number[] = [];
+    if (nzbdavAuth) {
+      proxyIndices = results
+        .map((result, index) => ({ result, index }))
+        .filter(({ result }) => result.service?.id === 'nzbdav')
+        .map(({ index }) => index);
+    }
+
     const resultStreams = await Promise.all(
-      [...processedTorrents.results, ...processedNzbs.results].map((result) =>
+      results.map((result) =>
         this._createStream(result, encryptedStoreAuths, metadataId)
       )
     );
+
+    // proxy the indexes in streamsToProxy
+    if (proxyIndices.length > 0 && nzbdavAuth) {
+      const proxy = createProxy({
+        id: 'builtin',
+        enabled: true,
+        credentials: nzbdavAuth.aiostreamsAuth,
+      });
+
+      const proxiedStreams = await proxy.generateUrls(
+        proxyIndices
+          .map((i) => resultStreams[i])
+          .map((stream) => ({
+            url: stream.url!,
+            filename: stream.behaviorHints?.filename ?? undefined,
+            headers: {
+              request: {
+                Authorization: `Basic ${Buffer.from(
+                  `${nzbdavAuth.webdavUser}:${nzbdavAuth.webdavPassword}`
+                ).toString('base64')}`,
+              },
+            },
+          }))
+      );
+
+      if (proxiedStreams) {
+        for (let i = 0; i < proxyIndices.length; i++) {
+          const index = proxyIndices[i];
+          const proxiedUrl = proxiedStreams[i];
+          if (proxiedUrl) {
+            resultStreams[index].url = proxiedUrl;
+          }
+        }
+      }
+    }
 
     const processingErrors = [
       ...processedTorrents.errors,

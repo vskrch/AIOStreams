@@ -281,7 +281,7 @@ class NzbDAVApi {
   }
 }
 
-const NzbDavConfig = z.object({
+export const NzbDavConfig = z.object({
   nzbdavUrl: z
     .string()
     .transform((s) => s.trim().replace(/^\/+/, '').replace(/\/+$/, '')),
@@ -314,7 +314,29 @@ export class NzbDAVService implements DebridService {
     this.nzbdavApi = new NzbDAVApi(this.auth.nzbdavUrl, this.auth.nzbdavApiKey);
   }
 
-  private async collectFilesRecursively(
+  private async collectFiles(
+    path: string
+  ): Promise<{ files: FileStat[]; depth: number }> {
+    // First, try using deep mode (recursive)
+    try {
+      const contents = (await this.webdavClient.getDirectoryContents(path, {
+        deep: true,
+      })) as FileStat[];
+
+      const files = contents.filter((item) => item.type === 'file');
+
+      return { files, depth: 0 };
+    } catch (error) {
+      logger.warn(`Deep listing failed, falling back to manual traversal`, {
+        path,
+        error: (error as Error).message,
+      });
+      // Fall back to manual traversal
+      return this.collectFilesManually(path, 0);
+    }
+  }
+
+  private async collectFilesManually(
     path: string,
     currentDepth: number = 0
   ): Promise<{ files: FileStat[]; depth: number }> {
@@ -367,7 +389,7 @@ export class NzbDAVService implements DebridService {
     const allFiles: FileStat[] = [...files];
 
     for (const dir of directories) {
-      const { files: subFiles } = await this.collectFilesRecursively(
+      const { files: subFiles } = await this.collectFilesManually(
         dir.filename,
         currentDepth + 1
       );
@@ -453,12 +475,17 @@ export class NzbDAVService implements DebridService {
       return cachedLink;
     }
 
-    logger.debug(`Adding NZB to NzbDAV for ${nzb}`, { hash, filename });
+    logger.debug(`Resolving NZB`, {
+      hash,
+      filename,
+      nzbUrl: maskSensitiveInfo(nzb),
+    });
 
     const category = metadata?.season || metadata?.episode ? 'Tv' : 'Movies';
 
     // Add NZB and get nzoId
-    const { nzoId } = await this.nzbdavApi.addUrl(nzb, category, filename);
+    const addResult = await this.nzbdavApi.addUrl(nzb, category, filename);
+    const nzoId = addResult.nzoId;
 
     // Poll history until download is complete
     const pollStartTime = Date.now();
@@ -468,19 +495,17 @@ export class NzbDAVService implements DebridService {
     const jobCategory = slot.category || category;
 
     logger.debug(`NZB download completed`, {
+      nzoId,
       jobName,
       jobCategory,
-      nzoId,
       time: getTimeTakenSincePoint(pollStartTime),
     });
 
     // Get list of all files in the content folder recursively, stopping when we find video files
     const contentPath = `/content/${jobCategory}/${jobName}`;
-
     const listStartTime = Date.now();
 
-    const { files: allFiles, depth } =
-      await this.collectFilesRecursively(contentPath);
+    const { files: allFiles, depth } = await this.collectFiles(contentPath);
 
     if (allFiles.length === 0) {
       throw new DebridError('No files found in NZB download', {
@@ -519,32 +544,38 @@ export class NzbDAVService implements DebridService {
       files: debridFiles,
     };
 
-    // Parse all file names for matching
-    const allStrings = [jobName, ...debridFiles.map((f) => f.name ?? '')];
-    const parseResults: ParsedResult[] = allStrings.map((string) =>
-      parseTorrentTitle(string)
-    );
-    const parsedFiles = new Map<string, ParsedResult>();
-    for (const [index, result] of parseResults.entries()) {
-      parsedFiles.set(allStrings[index], result);
+    let selectedFile;
+
+    if (debridFiles.length === 1) {
+      selectedFile = debridFiles[0];
+    } else {
+      // Parse all file names for matching
+      const allStrings = [jobName, ...debridFiles.map((f) => f.name ?? '')];
+      const parseResults: ParsedResult[] = allStrings.map((string) =>
+        parseTorrentTitle(string)
+      );
+      const parsedFiles = new Map<string, ParsedResult>();
+      for (const [index, result] of parseResults.entries()) {
+        parsedFiles.set(allStrings[index], result);
+      }
+
+      const nzbInfo = {
+        type: 'usenet' as const,
+        nzb,
+        hash,
+        title: jobName,
+        metadata,
+        size: debridFiles.reduce((sum, f) => sum + f.size, 0),
+      };
+
+      // Select a file based on the available metadata and files
+      selectedFile = await selectFileInTorrentOrNZB(
+        nzbInfo,
+        debridDownload,
+        parsedFiles,
+        metadata
+      );
     }
-
-    const nzbInfo = {
-      type: 'usenet' as const,
-      nzb,
-      hash,
-      title: jobName,
-      metadata,
-      size: debridFiles.reduce((sum, f) => sum + f.size, 0),
-    };
-
-    // Select a file based on the available metadata and files
-    const selectedFile = await selectFileInTorrentOrNZB(
-      nzbInfo,
-      debridDownload,
-      parsedFiles,
-      metadata
-    );
 
     if (!selectedFile) {
       throw new DebridError('No matching file found', {
@@ -564,38 +595,11 @@ export class NzbDAVService implements DebridService {
     });
 
     const filePath = selectedFile.path || `${contentPath}/${selectedFile.name}`;
-    const webdavLink = `${this.auth.nzbdavUrl}${filePath}`;
-
-    const playbackLink = (
-      await new BuiltinProxy({
-        enabled: true,
-        id: 'builtin',
-        credentials: this.auth.aiostreamsAuth,
-      }).generateUrls([
-        {
-          url: webdavLink,
-          filename: selectedFile.name || filename,
-          headers: {
-            request: {
-              Authorization: `Basic ${Buffer.from(
-                `${this.auth.webdavUser}:${this.auth.webdavPassword}`
-              ).toString('base64')}`,
-            },
-          },
-        },
-      ])
-    )?.[0];
-
-    if (!playbackLink) {
-      throw new DebridError('Failed to generate proxied playback link', {
-        statusCode: 500,
-        statusText: 'Internal Server Error',
-        code: 'UNKNOWN',
-        headers: {},
-        body: { webdavLink },
-        type: 'api_error',
-      });
-    }
+    let playbackLink = `${this.auth.nzbdavUrl}${filePath}`;
+    // const playbackUrl = new URL(playbackLink);
+    // playbackUrl.username = this.auth.webdavUser;
+    // playbackUrl.password = encodeURIComponent(this.auth.webdavPassword);
+    // playbackLink = playbackUrl.toString();
 
     logger.debug(`Generated playback link`, { playbackLink });
 
