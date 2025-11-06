@@ -273,11 +273,12 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
         .map(({ index }) => index);
     }
 
-    const resultStreams = await Promise.all(
+    let resultStreams = await Promise.all(
       results.map((result) =>
         this._createStream(result, encryptedStoreAuths, metadataId)
       )
     );
+    const proxyErrors: Stream[] = [];
 
     // proxy the indexes in streamsToProxy
     if (proxyIndices.length > 0 && nzbdavAuth) {
@@ -311,6 +312,17 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
             resultStreams[index].url = proxiedUrl;
           }
         }
+      } else {
+        proxyErrors.push(
+          this._createErrorStream({
+            title: `${this.name}`,
+            description: `Failed to proxy NzbDAV streams, ensure your proxy auth is correct.`,
+          })
+        );
+        // remove all nzbdav streams
+        resultStreams = resultStreams.filter(
+          (_, i) => !proxyIndices.includes(i)
+        );
       }
     }
 
@@ -331,7 +343,12 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       });
     });
 
-    return [...resultStreams, ...searchErrors, ...processingErrors];
+    return [
+      ...resultStreams,
+      ...proxyErrors,
+      ...searchErrors,
+      ...processingErrors,
+    ];
   }
 
   protected buildQueries(

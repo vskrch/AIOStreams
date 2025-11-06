@@ -433,6 +433,18 @@ export class NzbDAVService implements DebridService {
   }
 
   public async checkNzbs(hashes: string[]): Promise<DebridDownload[]> {
+    // validate proxy auth
+    try {
+      BuiltinProxy.validateAuth(this.auth.aiostreamsAuth);
+    } catch (error) {
+      throw new DebridError(`Invalid AIOStreams proxy auth`, {
+        statusCode: 401,
+        statusText: 'Unauthorized',
+        code: 'UNAUTHORIZED',
+        headers: {},
+        type: 'api_error',
+      });
+    }
     // All NZBs are "cached" with NzbDAV since it's streaming-based
     return hashes.map((h, index) => ({
       id: index,
