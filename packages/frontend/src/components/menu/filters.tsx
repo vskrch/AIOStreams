@@ -2826,7 +2826,8 @@ function Content() {
                     }}
                   />
                 </SettingsCard>
-                {mode === 'pro' && (
+                {/* Only show this setting if its enabled, otherwise hide it. */}
+                {mode === 'pro' && userData.excludeSeasonPacks && (
                   <SettingsCard
                     title="Exclude Season Packs"
                     description="Whether to filter out results that contain entire seasons."
