@@ -21,7 +21,7 @@ import { z } from 'zod';
 const SearchApiResultSchema = z.object({
   infoHash: z.string().nullable(),
   seeders: z.number().nullable(),
-  age: z.string().nullable(),
+  age: z.number().nullable(),
   sources: z.array(z.string()).nullable(),
   ytId: z.string().nullable(),
   externalUrl: z.string().nullable(),

@@ -35,6 +35,19 @@ export function formatDuration(durationInMs: number): string {
   }
 }
 
+/**
+ *
+ * @param hours - number of hours
+ * @returns formatted string in days or hours e.g. "23h", "1d", "1023d"
+ */
+export function formatHours(hours: number): string {
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}d`;
+}
+
 export function makeSmall(code: string): string {
   return code
     .split('')

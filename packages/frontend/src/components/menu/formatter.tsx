@@ -191,6 +191,28 @@ function Content() {
     }));
   };
 
+  function parseAgeToHours(ageString: string): number | undefined {
+    const match = ageString.match(/^(\d+)([a-zA-Z])$/);
+    if (!match) {
+      return undefined;
+    }
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2].toLowerCase();
+
+    switch (unit) {
+      case 'd':
+        return value * 24;
+      case 'h':
+        return value;
+      case 'm':
+        return value / 60;
+      case 'y':
+        return value * 24 * 365;
+      default:
+        return undefined;
+    }
+  }
   const formatStream = useCallback(async () => {
     if (isFormatting) return;
 
@@ -232,7 +254,7 @@ function Content() {
                 id: providerId,
                 cached: isCached,
               },
-        age,
+        age: parseAgeToHours(age),
         duration,
         size: fileSize,
         proxied,

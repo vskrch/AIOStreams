@@ -59,6 +59,8 @@ export interface FilterStatistics {
     requiredKeywords: Reason;
     excludedSeederRange: Reason;
     requiredSeederRange: Reason;
+    excludedAgeRange: Reason;
+    requiredAgeRange: Reason;
     excludedFilterCondition: Reason;
     requiredFilterCondition: Reason;
     size: Reason;
@@ -75,6 +77,7 @@ export interface FilterStatistics {
     streamType: Reason;
     size: Reason;
     seeder: Reason;
+    age: Reason;
     regex: Reason;
     keywords: Reason;
     streamExpression: Reason;
@@ -118,6 +121,8 @@ class StreamFilterer {
         requiredKeywords: { total: 0, details: {} },
         excludedSeederRange: { total: 0, details: {} },
         requiredSeederRange: { total: 0, details: {} },
+        excludedAgeRange: { total: 0, details: {} },
+        requiredAgeRange: { total: 0, details: {} },
         excludedFilterCondition: { total: 0, details: {} },
         requiredFilterCondition: { total: 0, details: {} },
         size: { total: 0, details: {} },
@@ -134,6 +139,7 @@ class StreamFilterer {
         streamType: { total: 0, details: {} },
         size: { total: 0, details: {} },
         seeder: { total: 0, details: {} },
+        age: { total: 0, details: {} },
         regex: { total: 0, details: {} },
         keywords: { total: 0, details: {} },
         streamExpression: { total: 0, details: {} },
@@ -862,6 +868,13 @@ class StreamFilterer {
       });
     };
 
+    const normaliseAgeRange = (ageRange: [number, number] | undefined) => {
+      return normaliseRange(ageRange, {
+        min: constants.MIN_AGE_HOURS,
+        max: constants.MAX_AGE_HOURS,
+      });
+    };
+
     const normaliseSizeRange = (sizeRange: [number, number] | undefined) => {
       return normaliseRange(sizeRange, {
         min: constants.MIN_SIZE,
@@ -877,6 +890,21 @@ class StreamFilterer {
           return stream.service?.cached ? 'cached' : 'uncached';
         case 'usenet':
           return stream.service?.cached ? 'cached' : 'uncached';
+        case 'p2p':
+          return 'p2p';
+        default:
+          return undefined;
+      }
+    };
+
+    const getAgeStreamType = (
+      stream: ParsedStream
+    ): 'debrid' | 'usenet' | 'p2p' | undefined => {
+      switch (stream.type) {
+        case 'debrid':
+          return 'debrid';
+        case 'usenet':
+          return 'usenet';
         case 'p2p':
           return 'p2p';
         default:
@@ -1061,7 +1089,14 @@ class StreamFilterer {
         this.userData.requiredSeederRange
       );
 
+      const includedAgeRange = normaliseAgeRange(this.userData.includeAgeRange);
+      const excludedAgeRange = normaliseAgeRange(this.userData.excludeAgeRange);
+      const requiredAgeRange = normaliseAgeRange(
+        this.userData.requiredAgeRange
+      );
+
       const typeForSeederRange = getStreamType(stream);
+      const typeForAgeRange = getAgeStreamType(stream);
 
       if (
         includedSeederRange &&
@@ -1081,6 +1116,22 @@ class StreamFilterer {
           (stream.torrent?.seeders ?? 0) < includedSeederRange[1]
         ) {
           this.incrementIncludedReason('seeder', `<${includedSeederRange[1]}`);
+          return true;
+        }
+      }
+
+      if (
+        includedAgeRange &&
+        (!this.userData.ageRangeTypes?.length ||
+          (typeForAgeRange &&
+            this.userData.ageRangeTypes.includes(typeForAgeRange)))
+      ) {
+        if (includedAgeRange[0] && (stream.age ?? 0) > includedAgeRange[0]) {
+          this.incrementIncludedReason('age', `>${includedAgeRange[0]}h`);
+          return true;
+        }
+        if (includedAgeRange[1] && (stream.age ?? 0) < includedAgeRange[1]) {
+          this.incrementIncludedReason('age', `<${includedAgeRange[1]}h`);
           return true;
         }
       }
@@ -1447,6 +1498,54 @@ class StreamFilterer {
           this.incrementRemovalReason(
             'excludedSeederRange',
             `> ${excludedSeederRange[1]}`
+          );
+          return false;
+        }
+      }
+
+      if (
+        requiredAgeRange &&
+        (!this.userData.ageRangeTypes?.length ||
+          (typeForAgeRange &&
+            this.userData.ageRangeTypes.includes(typeForAgeRange)))
+      ) {
+        if (requiredAgeRange[0] && (stream.age ?? 0) < requiredAgeRange[0]) {
+          this.incrementRemovalReason(
+            'requiredAgeRange',
+            `< ${requiredAgeRange[0]}h`
+          );
+          return false;
+        }
+        if (
+          stream.age !== undefined &&
+          requiredAgeRange[1] &&
+          (stream.age ?? 0) > requiredAgeRange[1]
+        ) {
+          this.incrementRemovalReason(
+            'requiredAgeRange',
+            `> ${requiredAgeRange[1]}h`
+          );
+          return false;
+        }
+      }
+
+      if (
+        excludedAgeRange &&
+        (!this.userData.ageRangeTypes?.length ||
+          (typeForAgeRange &&
+            this.userData.ageRangeTypes.includes(typeForAgeRange)))
+      ) {
+        if (excludedAgeRange[0] && (stream.age ?? 0) > excludedAgeRange[0]) {
+          this.incrementRemovalReason(
+            'excludedAgeRange',
+            `< ${excludedAgeRange[0]}h`
+          );
+          return false;
+        }
+        if (excludedAgeRange[1] && (stream.age ?? 0) < excludedAgeRange[1]) {
+          this.incrementRemovalReason(
+            'excludedAgeRange',
+            `> ${excludedAgeRange[1]}h`
           );
           return false;
         }

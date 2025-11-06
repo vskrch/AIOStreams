@@ -8,6 +8,7 @@ import { ImportModal } from '../shared/import-modal';
 import { useUserData } from '@/context/userData';
 import {
   FaBolt,
+  FaClock,
   FaFilm,
   FaHourglassStart,
   FaLanguage,
@@ -67,6 +68,8 @@ import {
   MAX_SIZE,
   MIN_SEEDERS,
   MAX_SEEDERS,
+  MIN_AGE_HOURS,
+  MAX_AGE_HOURS,
 } from '../../../../core/src/utils/constants';
 import { PageControls } from '../shared/page-controls';
 import { Switch } from '../ui/switch';
@@ -85,6 +88,18 @@ import { PasswordInput } from '../ui/password-input';
 import MarkdownLite from '../shared/markdown-lite';
 import { useMode } from '@/context/mode';
 import { copyToClipboard } from '@/utils/clipboard';
+
+/**
+ * Formats age in hours to a human-readable string.
+ * Shows hours if < 24, otherwise shows days.
+ */
+function formatAgeDisplay(hours: number): string {
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}d`;
+}
 
 type Resolution = (typeof RESOLUTIONS)[number];
 type Quality = (typeof QUALITIES)[number];
@@ -302,6 +317,10 @@ function Content() {
               <TabsTrigger value="seeders">
                 <MdPerson className="text-lg mr-3" />
                 Seeders
+              </TabsTrigger>
+              <TabsTrigger value="age">
+                <FaClock className="text-lg mr-3" />
+                Age
               </TabsTrigger>
               {mode === 'pro' && (
                 <>
@@ -1184,6 +1203,299 @@ function Content() {
                         }));
                       }}
                       help="Stream types that will use the seeder ranges defined above. Leave blank to apply to all stream types."
+                      multiple
+                    />
+                  </div>
+                </div>
+              </SettingsCard>
+            </>
+          </TabsContent>
+          <TabsContent value="age" className="space-y-4">
+            <>
+              <HeadingWithPageControls heading="Age" />
+              <SettingsCard
+                title="Age Filters"
+                description="Configure required, excluded, and included age ranges (in hours since upload)"
+              >
+                <div className="space-y-4">
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-1 min-w-0">
+                        <Slider
+                          min={MIN_AGE_HOURS}
+                          max={MAX_AGE_HOURS}
+                          step={24}
+                          defaultValue={[MIN_AGE_HOURS, MAX_AGE_HOURS]}
+                          value={
+                            userData.requiredAgeRange || [
+                              MIN_AGE_HOURS,
+                              MAX_AGE_HOURS,
+                            ]
+                          }
+                          onValueChange={(newValue) =>
+                            newValue !== undefined &&
+                            newValue?.[0] !== undefined &&
+                            newValue?.[1] !== undefined &&
+                            setUserData((prev) => ({
+                              ...prev,
+                              requiredAgeRange: [newValue[0], newValue[1]],
+                            }))
+                          }
+                          minStepsBetweenThumbs={1}
+                          label="Required Age Range"
+                          help="Streams with age outside this range will be excluded"
+                        />
+                        <div className="flex justify-between mt-1 text-xs text-[--muted]">
+                          <span>
+                            {formatAgeDisplay(
+                              userData.requiredAgeRange?.[0] || MIN_AGE_HOURS
+                            )}
+                          </span>
+                          <span>
+                            {formatAgeDisplay(
+                              userData.requiredAgeRange?.[1] || MAX_AGE_HOURS
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 md:w-[240px] shrink-0">
+                        <NumberInput
+                          label="Min"
+                          step={24}
+                          value={
+                            userData.requiredAgeRange?.[0] || MIN_AGE_HOURS
+                          }
+                          min={MIN_AGE_HOURS}
+                          max={userData.requiredAgeRange?.[1] || MAX_AGE_HOURS}
+                          onValueChange={(newValue) =>
+                            newValue !== undefined &&
+                            setUserData((prev) => ({
+                              ...prev,
+                              requiredAgeRange: [
+                                newValue,
+                                prev.requiredAgeRange?.[1] || MAX_AGE_HOURS,
+                              ],
+                            }))
+                          }
+                        />
+                        <NumberInput
+                          label="Max"
+                          step={24}
+                          value={
+                            userData.requiredAgeRange?.[1] || MAX_AGE_HOURS
+                          }
+                          min={userData.requiredAgeRange?.[0] || MIN_AGE_HOURS}
+                          max={MAX_AGE_HOURS}
+                          onValueChange={(newValue) =>
+                            newValue !== undefined &&
+                            setUserData((prev) => ({
+                              ...prev,
+                              requiredAgeRange: [
+                                prev.requiredAgeRange?.[0] || MIN_AGE_HOURS,
+                                newValue,
+                              ],
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {mode === 'pro' && (
+                      <>
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="flex-1 min-w-0">
+                            <Slider
+                              min={MIN_AGE_HOURS}
+                              max={MAX_AGE_HOURS}
+                              step={24}
+                              defaultValue={[MIN_AGE_HOURS, MAX_AGE_HOURS]}
+                              value={
+                                userData.excludeAgeRange || [
+                                  MIN_AGE_HOURS,
+                                  MAX_AGE_HOURS,
+                                ]
+                              }
+                              onValueChange={(newValue) =>
+                                newValue !== undefined &&
+                                newValue?.[0] !== undefined &&
+                                newValue?.[1] !== undefined &&
+                                setUserData((prev) => ({
+                                  ...prev,
+                                  excludeAgeRange: [newValue[0], newValue[1]],
+                                }))
+                              }
+                              minStepsBetweenThumbs={1}
+                              label="Excluded Age Range"
+                              help="Streams with age in this range will be excluded"
+                            />
+                            <div className="flex justify-between mt-1 text-xs text-[--muted]">
+                              <span>
+                                {formatAgeDisplay(
+                                  userData.excludeAgeRange?.[0] || MIN_AGE_HOURS
+                                )}
+                              </span>
+                              <span>
+                                {formatAgeDisplay(
+                                  userData.excludeAgeRange?.[1] || MAX_AGE_HOURS
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 md:w-[240px] shrink-0">
+                            <NumberInput
+                              label="Min"
+                              step={24}
+                              value={
+                                userData.excludeAgeRange?.[0] || MIN_AGE_HOURS
+                              }
+                              min={MIN_AGE_HOURS}
+                              max={
+                                userData.excludeAgeRange?.[1] || MAX_AGE_HOURS
+                              }
+                              onValueChange={(newValue) =>
+                                newValue !== undefined &&
+                                setUserData((prev) => ({
+                                  ...prev,
+                                  excludeAgeRange: [
+                                    newValue,
+                                    prev.excludeAgeRange?.[1] || MAX_AGE_HOURS,
+                                  ],
+                                }))
+                              }
+                            />
+                            <NumberInput
+                              label="Max"
+                              step={24}
+                              value={
+                                userData.excludeAgeRange?.[1] || MAX_AGE_HOURS
+                              }
+                              min={
+                                userData.excludeAgeRange?.[0] || MIN_AGE_HOURS
+                              }
+                              max={MAX_AGE_HOURS}
+                              onValueChange={(newValue) =>
+                                newValue !== undefined &&
+                                setUserData((prev) => ({
+                                  ...prev,
+                                  excludeAgeRange: [
+                                    prev.excludeAgeRange?.[0] || MIN_AGE_HOURS,
+                                    newValue,
+                                  ],
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="flex-1 min-w-0">
+                            <Slider
+                              min={MIN_AGE_HOURS}
+                              max={MAX_AGE_HOURS}
+                              step={24}
+                              defaultValue={[MIN_AGE_HOURS, MAX_AGE_HOURS]}
+                              value={
+                                userData.includeAgeRange || [
+                                  MIN_AGE_HOURS,
+                                  MAX_AGE_HOURS,
+                                ]
+                              }
+                              onValueChange={(newValue) =>
+                                newValue !== undefined &&
+                                newValue?.[0] !== undefined &&
+                                newValue?.[1] !== undefined &&
+                                setUserData((prev) => ({
+                                  ...prev,
+                                  includeAgeRange: [newValue[0], newValue[1]],
+                                }))
+                              }
+                              minStepsBetweenThumbs={1}
+                              label="Included Age Range"
+                              help="Streams with age in this range will be included even if they would be excluded otherwise"
+                            />
+                            <div className="flex justify-between mt-1 text-xs text-[--muted]">
+                              <span>
+                                {formatAgeDisplay(
+                                  userData.includeAgeRange?.[0] || MIN_AGE_HOURS
+                                )}
+                              </span>
+                              <span>
+                                {formatAgeDisplay(
+                                  userData.includeAgeRange?.[1] || MAX_AGE_HOURS
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 md:w-[240px] shrink-0">
+                            <NumberInput
+                              label="Min"
+                              step={24}
+                              value={
+                                userData.includeAgeRange?.[0] || MIN_AGE_HOURS
+                              }
+                              min={MIN_AGE_HOURS}
+                              max={
+                                userData.includeAgeRange?.[1] || MAX_AGE_HOURS
+                              }
+                              onValueChange={(newValue) =>
+                                newValue !== undefined &&
+                                setUserData((prev) => ({
+                                  ...prev,
+                                  includeAgeRange: [
+                                    newValue,
+                                    prev.includeAgeRange?.[1] || MAX_AGE_HOURS,
+                                  ],
+                                }))
+                              }
+                            />
+                            <NumberInput
+                              label="Max"
+                              step={24}
+                              value={
+                                userData.includeAgeRange?.[1] || MAX_AGE_HOURS
+                              }
+                              min={
+                                userData.includeAgeRange?.[0] || MIN_AGE_HOURS
+                              }
+                              max={MAX_AGE_HOURS}
+                              onValueChange={(newValue) =>
+                                newValue !== undefined &&
+                                setUserData((prev) => ({
+                                  ...prev,
+                                  includeAgeRange: [
+                                    prev.includeAgeRange?.[0] || MIN_AGE_HOURS,
+                                    newValue,
+                                  ],
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <Combobox
+                      label="Stream Types"
+                      emptyMessage="There aren't any stream types to choose from..."
+                      options={['debrid', 'usenet', 'p2p'].map((type) => ({
+                        label: type,
+                        value: type,
+                      }))}
+                      defaultValue={['usenet']}
+                      value={userData.ageRangeTypes || ['usenet']}
+                      onValueChange={(value) => {
+                        setUserData((prev) => ({
+                          ...prev,
+                          ageRangeTypes: value as (
+                            | 'debrid'
+                            | 'usenet'
+                            | 'p2p'
+                          )[],
+                        }));
+                      }}
+                      help="Stream types that will use the age ranges defined above. Leave blank to apply to all stream types."
                       multiple
                     />
                   </div>

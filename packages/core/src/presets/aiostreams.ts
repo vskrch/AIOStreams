@@ -59,7 +59,10 @@ class AIOStreamsStreamParser extends StreamParser {
       service: aioStream.streamData?.service,
       duration: aioStream.streamData?.duration,
       library: aioStream.streamData?.library ?? false,
-      age: aioStream.streamData?.age,
+      age:
+        typeof aioStream.streamData?.age === 'string'
+          ? this.parseAgeToHours(aioStream.streamData?.age)
+          : aioStream.streamData?.age,
       message: aioStream.streamData?.message,
       torrent: aioStream.streamData?.torrent,
       parsedFile: aioStream.streamData?.parsedFile,

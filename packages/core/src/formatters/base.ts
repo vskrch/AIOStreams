@@ -4,6 +4,7 @@ import { createLogger } from '../utils/logger.js';
 import {
   formatBytes,
   formatDuration,
+  formatHours,
   languageToCode,
   languageToEmoji,
   makeSmall,
@@ -226,6 +227,7 @@ export abstract class BaseFormatter {
     const onlyUserSpecifiedLanguages = sortedLanguages?.filter((lang) =>
       userSpecifiedLanguages.includes(lang as any)
     );
+    const formattedAge = stream.age ? formatHours(stream.age) : null;
     const parseValue: ParseValue = {
       config: {
         addonName: this.userData.addonName || Env.ADDON_NAME,
@@ -304,7 +306,7 @@ export abstract class BaseFormatter {
         seasonEpisode: seasonEpisode || null,
         duration: stream.duration || null,
         infoHash: stream.torrent?.infoHash || null,
-        age: stream.age || null,
+        age: formattedAge,
         message: stream.message || null,
         proxied: stream.proxied !== undefined ? stream.proxied : null,
         edition: stream.parsedFile?.edition || null,
@@ -690,18 +692,17 @@ export abstract class BaseFormatter {
           if (!shouldBeUndefined && key && replaceKey)
             return variable.replaceAll(key, replaceKey);
         }
-        case mod.startsWith('truncate(') && mod.endsWith(')'):
-          {
-            // Extract N from truncate(N)
-            const inside = _mod.substring('truncate('.length, _mod.length - 1);
-            const n = parseInt(inside, 10);
-            if (!isNaN(n) && n >= 0) {
-              if (variable.length > n) {
-                return variable.slice(0, n) + '…';
-              }
-              return variable;
+        case mod.startsWith('truncate(') && mod.endsWith(')'): {
+          // Extract N from truncate(N)
+          const inside = _mod.substring('truncate('.length, _mod.length - 1);
+          const n = parseInt(inside, 10);
+          if (!isNaN(n) && n >= 0) {
+            if (variable.length > n) {
+              return variable.slice(0, n) + '…';
             }
+            return variable;
           }
+        }
       }
     }
 

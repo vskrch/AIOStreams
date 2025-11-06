@@ -768,6 +768,7 @@ const SORT_CRITERIA = [
   'size',
   'service',
   'seeders',
+  'age',
   'addon',
   'regexPatterns',
   'cached',
@@ -782,13 +783,25 @@ export const MAX_SIZE = 100 * 1000 * 1000 * 1000; // 100GB
 export const MIN_SEEDERS = 0;
 export const MAX_SEEDERS = 1000;
 
+export const MIN_AGE_HOURS = 0;
+export const MAX_AGE_HOURS = 6480 * 24; // 6480 days (approx 18 years)
+
 export const DEFAULT_POSTERS = [
   'aHR0cHM6Ly93d3cucG5nbWFydC5jb20vZmlsZXMvMTEvUmlja3JvbGxpbmctUE5HLVBpYy5wbmc=',
 ];
 
 export const DEFAULT_YT_ID = 'eHZGWmpvNVBnRzA=';
 
-export const SORT_CRITERIA_DETAILS = {
+export const SORT_CRITERIA_DETAILS: Record<
+  (typeof SORT_CRITERIA)[number],
+  {
+    name: string;
+    description: string;
+    defaultDirection: 'asc' | 'desc';
+    ascendingDescription: string;
+    descendingDescription: string;
+  }
+> = {
   quality: {
     name: 'Quality',
     description: 'Sort by the quality of the stream',
@@ -882,6 +895,13 @@ export const SORT_CRITERIA_DETAILS = {
     defaultDirection: 'desc',
     ascendingDescription: 'Streams with fewer seeders are preferred',
     descendingDescription: 'Streams with more seeders are preferred',
+  },
+  age: {
+    name: 'Age',
+    description: 'Sort by the age of the stream',
+    defaultDirection: 'desc',
+    ascendingDescription: 'Newer streams are preferred',
+    descendingDescription: 'Older streams are preferred',
   },
   addon: {
     name: 'Addon',

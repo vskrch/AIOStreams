@@ -324,6 +324,33 @@ export abstract class StreamExpressionEngine {
       });
     };
 
+    this.parser.functions.age = function (
+      streams: ParsedStream[],
+      minAge?: number,
+      maxAge?: number
+    ) {
+      if (!Array.isArray(streams) || streams.some((stream) => !stream.type)) {
+        throw new Error('Your streams input must be an array of streams');
+      } else if (typeof minAge !== 'number' && typeof maxAge !== 'number') {
+        throw new Error('Min and max age must be a number');
+      } else if (minAge && minAge < 0) {
+        throw new Error('Min age cannot be negative');
+      } else if (maxAge && maxAge < 0) {
+        throw new Error('Max age cannot be negative');
+      } else if (minAge && maxAge && maxAge < minAge) {
+        throw new Error('Max age cannot be less than min age');
+      }
+      // select streams with age that lie within the range.
+      return streams.filter((stream) => {
+        if (minAge && (stream.age ?? 0) < minAge) {
+          return false;
+        }
+        if (maxAge && (stream.age ?? 0) > maxAge) {
+          return false;
+        }
+        return true;
+      });
+    };
     this.parser.functions.size = function (
       streams: ParsedStream[],
       minSize?: string | number,
@@ -577,7 +604,7 @@ export abstract class StreamExpressionEngine {
       filename: 'test.mkv',
       folderName: 'Test Folder',
       duration: 7200, // 2 hours in seconds
-      age: '1 day',
+      age: 24, // 1 day in hours
       message: 'Test message',
       torrent: {
         infoHash: 'test-hash',

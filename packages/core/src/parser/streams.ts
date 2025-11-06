@@ -302,17 +302,45 @@ class StreamParser {
   protected getAge(
     stream: Stream,
     currentParsedStream: ParsedStream
-  ): string | undefined {
+  ): number | undefined {
     const regex = this.ageRegex;
     if (!regex) {
       return undefined;
     }
     const match = stream.description?.match(regex);
     if (match) {
-      return match[1];
+      return this.parseAgeToHours(match[1]);
     }
 
     return undefined;
+  }
+
+  /**
+   * Converts age strings like "1d", "5h", "30m", "456d" to hours
+   * @param ageString - The age string to parse (e.g. "1d", "5h", "30m")
+   * @returns The age in hours, or undefined if parsing fails
+   */
+  protected parseAgeToHours(ageString: string): number | undefined {
+    const match = ageString.match(/^(\d+)([a-zA-Z])$/);
+    if (!match) {
+      return undefined;
+    }
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2].toLowerCase();
+
+    switch (unit) {
+      case 'd':
+        return value * 24;
+      case 'h':
+        return value;
+      case 'm':
+        return value / 60;
+      case 'y':
+        return value * 24 * 365;
+      default:
+        return undefined;
+    }
   }
 
   protected isProxied(stream: Stream): boolean {

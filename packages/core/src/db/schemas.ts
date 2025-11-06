@@ -356,6 +356,10 @@ export const UserDataSchema = z.object({
     .tuple([z.number().min(0), z.number().min(0)])
     .optional(),
   seederRangeTypes: z.array(z.enum(['p2p', 'cached', 'uncached'])).optional(),
+  excludeAgeRange: z.tuple([z.number().min(0), z.number().min(0)]).optional(),
+  includeAgeRange: z.tuple([z.number().min(0), z.number().min(0)]).optional(),
+  requiredAgeRange: z.tuple([z.number().min(0), z.number().min(0)]).optional(),
+  ageRangeTypes: z.array(z.enum(['usenet', 'debrid', 'p2p'])).optional(),
   digitalReleaseFilter: z.boolean().optional(),
   excludeSeasonPacks: z.boolean().optional(),
   excludeCached: z.boolean().optional(),
@@ -684,7 +688,7 @@ export const ParsedStreamSchema = z.object({
   folderSize: z.number().optional(),
   type: StreamTypes,
   indexer: z.string().optional(),
-  age: z.string().optional(),
+  age: z.number().optional(), // Age in hours since upload
   torrent: z
     .object({
       infoHash: z.string().min(1).optional(),
@@ -888,7 +892,7 @@ export const AIOStream = StreamSchema.extend({
       folderSize: z.number().optional(),
       type: StreamTypes.optional(),
       indexer: z.string().optional(),
-      age: z.string().optional(),
+      age: z.number().or(z.string()).optional(), // Age in hours since upload
       torrent: z
         .object({
           infoHash: z.string().min(1).optional(),
