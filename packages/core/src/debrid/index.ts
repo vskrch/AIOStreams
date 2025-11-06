@@ -8,6 +8,7 @@ import { DebridService, DebridServiceConfig } from './base.js';
 import { StremThruInterface } from './stremthru.js';
 import { TorboxDebridService } from './torbox.js';
 import { StremThruPreset } from '../presets/stremthru.js';
+import { NzbDAVService } from './nzbdav.js';
 
 export function getDebridService(
   serviceName: ServiceId,
@@ -22,6 +23,8 @@ export function getDebridService(
   switch (serviceName) {
     case 'torbox':
       return new TorboxDebridService(config);
+    case 'nzbdav':
+      return new NzbDAVService(config);
     default:
       if (StremThruPreset.supportedServices.includes(serviceName)) {
         return new StremThruInterface({ ...config, serviceName });

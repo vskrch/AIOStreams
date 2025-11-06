@@ -87,7 +87,7 @@ export class NZBHydraPreset extends NewznabPreset {
       URL: `${Env.INTERNAL_URL}/builtins/newznab`,
       TIMEOUT: Env.BUILTIN_DEFAULT_NZBHYDRA_TIMEOUT || Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
-      SUPPORTED_SERVICES: [constants.TORBOX_SERVICE],
+      SUPPORTED_SERVICES: [constants.TORBOX_SERVICE, constants.NZBDAV_SERVICE],
       DESCRIPTION: 'An addon to get usenet results from a NZBHydra instance.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [constants.USENET_STREAM_TYPE],

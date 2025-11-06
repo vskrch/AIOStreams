@@ -325,6 +325,7 @@ router.all(
           ? getProxyAgent(Env.ADDON_PROXY![proxyIndex])
           : undefined;
         const headers = { ...clientHeaders, ...data.requestHeaders };
+        currentUrl = urlObj.toString();
         logger.debug(`[${requestId}] Making upstream request`, {
           username: auth.username,
           method: method,

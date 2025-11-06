@@ -1,6 +1,7 @@
 import { ParsedStream, Stream, UserData } from '../db/index.js';
 import { StreamParser } from '../parser/index.js';
 import { ServiceId } from '../utils/constants.js';
+import { constants, toUrlSafeBase64 } from '../utils/index.js';
 import { Preset } from './preset.js';
 import { stremthruSpecialCases } from './stremthru.js';
 
@@ -62,9 +63,24 @@ export class BuiltinAddonPreset extends Preset {
     userData: UserData,
     specialCases?: Partial<Record<ServiceId, (credentials: any) => any>>
   ) {
+    const nzbDavSpecialCase: Partial<
+      Record<ServiceId, (credentials: any) => any>
+    > = {
+      [constants.NZBDAV_SERVICE]: (credentials: any) =>
+        toUrlSafeBase64(
+          JSON.stringify({
+            nzbdavUrl: credentials.url,
+            nzbdavApiKey: credentials.apiKey,
+            webdavUser: credentials.username,
+            webdavPassword: credentials.password,
+            aiostreamsAuth: credentials.aiostreamsAuth,
+          })
+        ),
+    };
     return super.getServiceCredential(serviceId, userData, {
       ...stremthruSpecialCases,
       ...specialCases,
+      ...nzbDavSpecialCase,
     });
   }
 

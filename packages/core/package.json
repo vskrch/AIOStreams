@@ -29,6 +29,7 @@
     "stremthru": "^0.8.0",
     "super-regex": "^1.0.0",
     "undici": "^7.16.0",
+    "webdav": "^5.8.0",
     "winston": "^3.18.3",
     "xml2js": "^0.6.2",
     "zod": "^4.1.12"

@@ -203,6 +203,7 @@ const PIKPAK_SERVICE = 'pikpak';
 const OFFCLOUD_SERVICE = 'offcloud';
 const SEEDR_SERVICE = 'seedr';
 const EASYNEWS_SERVICE = 'easynews';
+const NZBDAV_SERVICE = 'nzbdav';
 
 const SERVICES = [
   REALDEBRID_SERVICE,
@@ -217,6 +218,7 @@ const SERVICES = [
   OFFCLOUD_SERVICE,
   SEEDR_SERVICE,
   EASYNEWS_SERVICE,
+  NZBDAV_SERVICE,
 ] as const;
 
 export const BUILTIN_SUPPORTED_SERVICES = [
@@ -229,6 +231,7 @@ export const BUILTIN_SUPPORTED_SERVICES = [
   DEBRIDER_SERVICE,
   PIKPAK_SERVICE,
   OFFCLOUD_SERVICE,
+  NZBDAV_SERVICE,
 ] as const;
 
 export type ServiceId = (typeof SERVICES)[number];
@@ -375,6 +378,55 @@ const SERVICE_DETAILS: Record<
         name: 'API Key',
         description:
           'Your Torbox API key. Obtain it from [here](https://torbox.app/settings)',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  [NZBDAV_SERVICE]: {
+    id: NZBDAV_SERVICE,
+    name: 'Nzb DAV',
+    shortName: 'ND',
+    knownNames: ['ND'],
+    signUpText: 'Stream usenet directly from your provider via Nzb DAV.',
+    credentials: [
+      {
+        id: 'url',
+        name: 'Nzb DAV URL',
+        description:
+          'The base URL of your NZB DAV instance. E.g., http://nzbdav:3000 or https://nzbdav.example.com',
+        type: 'string',
+        required: true,
+      },
+      {
+        id: 'apiKey',
+        name: 'Nzb DAV API Key',
+        description:
+          'Your Nzb DAV API Key, found in the SABnzbd section in settings.',
+        type: 'password',
+        required: true,
+      },
+      {
+        id: 'username',
+        name: 'NZB DAV Username',
+        description:
+          'Your Nzb DAV WebDAV Username. Found in the WebDAV section in settings.',
+        type: 'string',
+        required: true,
+      },
+      {
+        id: 'password',
+        name: 'NZB DAV Password',
+        description:
+          'Your NZB DAV WebDAV Password. Found in the WebDAV section in settings.',
+        type: 'password',
+        required: true,
+      },
+      {
+        id: 'aiostreamsAuth',
+        name: 'AIOStreams Proxy Auth',
+        description:
+          'The AIOStreams Proxy Auth username:password pair from the `AIOSTREAMS_AUTH` environment variable. It is required to play streams from Nzb DAV.',
         type: 'password',
         required: true,
       },
@@ -1069,6 +1121,7 @@ export {
   PIKPAK_SERVICE,
   OFFCLOUD_SERVICE,
   SEEDR_SERVICE,
+  NZBDAV_SERVICE,
   EASYNEWS_SERVICE,
   SERVICE_DETAILS,
   TOP_LEVEL_OPTION_DETAILS,

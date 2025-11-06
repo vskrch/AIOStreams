@@ -34,11 +34,16 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
   readonly api: NewznabApi;
   constructor(userData: NewznabAddonConfig, clientIp?: string) {
     super(userData, NewznabAddonConfigSchema, clientIp);
+
     if (
-      !userData.services.find((s) => s.id === constants.TORBOX_SERVICE) ||
-      userData.services.length > 1
+      userData.services.some(
+        (s) =>
+          ![constants.TORBOX_SERVICE, constants.NZBDAV_SERVICE].includes(s.id)
+      )
     ) {
-      throw new Error('The Newznab addon only supports TorBox');
+      throw new Error(
+        'The Newznab addon only supports TorBox and NZB DAV services'
+      );
     }
     this.api = new NewznabApi(
       this.userData.url,

@@ -48,6 +48,7 @@ const moduleMap: { [key: string]: string } = {
   knaben: '🔍  KNABEN',
   'torrent-galaxy': '🌐  TGx',
   templates: '📄  TEMPLATES',
+  nzbdav: '📂  NZBDAV',
 };
 
 // Define colors for each log level using full names

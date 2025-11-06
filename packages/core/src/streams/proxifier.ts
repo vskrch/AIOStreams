@@ -14,6 +14,11 @@ class Proxifier {
   private shouldProxyStream(stream: ParsedStream): boolean {
     const streamService = stream.service ? stream.service.id : 'none';
     const proxy = this.userData.proxy;
+    // all nzb dav streams are proxied
+    if (stream.service?.id === 'nzbdav') {
+      stream.proxied = true;
+      return false;
+    }
     if (!stream.url || !proxy?.enabled || !proxy.url) {
       return false;
     }
