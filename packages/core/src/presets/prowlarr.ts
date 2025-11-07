@@ -189,7 +189,8 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
         constants.NZBDAV_SERVICE,
         constants.ALTMOUNT_SERVICE,
       ],
-      DESCRIPTION: 'An addon to get debrid results from a Prowlarr instance.',
+      DESCRIPTION:
+        'An addon to get torrent and usenet results from a Prowlarr instance via services.',
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [
         constants.DEBRID_STREAM_TYPE,
