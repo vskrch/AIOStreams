@@ -117,6 +117,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
 
   public async getStreams(type: string, id: string): Promise<Stream[]> {
     const parsedId = IdParser.parse(id, type);
+    const errorStreams: Stream[] = [];
     if (
       !parsedId ||
       !BaseDebridAddon.supportedIdTypes.includes(parsedId.type)
@@ -158,9 +159,8 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     const nzbResults =
       searchPromises[1].status === 'fulfilled' ? searchPromises[1].value : [];
 
-    const searchErrors: Stream[] = [];
     if (searchPromises[0].status === 'rejected') {
-      searchErrors.push(
+      errorStreams.push(
         this._createErrorStream({
           title: `${this.name}`,
           description: searchPromises[0].reason.message,
@@ -168,7 +168,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       );
     }
     if (searchPromises[1].status === 'rejected') {
-      searchErrors.push(
+      errorStreams.push(
         this._createErrorStream({
           title: `${this.name}`,
           description: searchPromises[1].reason.message,
@@ -211,21 +211,39 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       torrentResults = [...torrentResults, ...enrichedResults];
     }
 
+    const torrentServices = this.userData.services.filter(
+      (s) => !['nzbdav', 'altmount'].includes(s.id) // usenet only services excluded
+    );
+    const nzbServices = this.userData.services.filter(
+      (s) => ['nzbdav', 'altmount', 'torbox'].includes(s.id) // only keep services that support usenet
+    );
+
+    if (torrentServices.length === 0 && torrentResults.length > 0) {
+      errorStreams.push(
+        this._createErrorStream({
+          title: `${this.name}`,
+          description: `No torrent debrid services configured to process torrent results.`,
+        })
+      );
+    }
+    if (nzbServices.length === 0 && nzbResults.length > 0) {
+      errorStreams.push(
+        this._createErrorStream({
+          title: `${this.name}`,
+          description: `No usenet services configured to process NZB results.`,
+        })
+      );
+    }
+
     const [processedTorrents, processedNzbs] = await Promise.all([
       processTorrents(
         torrentResults as Torrent[],
-        this.userData.services,
+        torrentServices,
         id,
         searchMetadata,
         this.clientIp
       ),
-      processNZBs(
-        nzbResults,
-        this.userData.services,
-        id,
-        searchMetadata,
-        this.clientIp
-      ),
+      processNZBs(nzbResults, nzbServices, id, searchMetadata, this.clientIp),
     ]);
 
     const encryptedStoreAuths = this.userData.services.reduce(
@@ -311,8 +329,6 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
         this._createStream(result, encryptedStoreAuths, metadataId)
       )
     );
-    const proxyErrors: Stream[] = [];
-
     // Proxy NzbDAV streams
     if (nzbdavProxyIndices.length > 0 && nzbdavAuth) {
       const proxy = createProxy({
@@ -346,7 +362,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
           }
         }
       } else {
-        proxyErrors.push(
+        errorStreams.push(
           this._createErrorStream({
             title: `${this.name}`,
             description: `Failed to proxy NzbDAV streams, ensure your proxy auth is correct.`,
@@ -392,7 +408,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
           }
         }
       } else {
-        proxyErrors.push(
+        errorStreams.push(
           this._createErrorStream({
             title: `${this.name}`,
             description: `Failed to proxy Altmount streams, ensure your proxy auth is correct.`,
@@ -405,10 +421,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       }
     }
 
-    const processingErrors = [
-      ...processedTorrents.errors,
-      ...processedNzbs.errors,
-    ].map((error) => {
+    [...processedTorrents.errors, ...processedNzbs.errors].forEach((error) => {
       let errMsg = error.error.message;
       if (error instanceof DebridError) {
         switch (error.code) {
@@ -416,18 +429,15 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
             errMsg = 'Invalid Credentials';
         }
       }
-      return this._createErrorStream({
-        title: `${this.name}`,
-        description: `[${constants.SERVICE_DETAILS[error.serviceId].shortName}] ${errMsg}`,
-      });
+      errorStreams.push(
+        this._createErrorStream({
+          title: `${this.name}`,
+          description: `[${constants.SERVICE_DETAILS[error.serviceId].shortName}] ${errMsg}`,
+        })
+      );
     });
 
-    return [
-      ...resultStreams,
-      ...proxyErrors,
-      ...searchErrors,
-      ...processingErrors,
-    ];
+    return [...resultStreams, ...errorStreams];
   }
 
   protected buildQueries(
