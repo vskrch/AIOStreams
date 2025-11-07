@@ -968,19 +968,21 @@ export function ConfigTemplatesModal({
         ];
       if (!serviceMeta?.credentials) return;
 
-      serviceMeta.credentials.forEach((cred: any) => {
-        serviceInputs.push({
-          key: `service_${serviceId}_${cred.id}`,
-          path: `services.${serviceId}.${cred.id}`,
-          label: `${serviceMeta.name} - ${cred.name || cred.id}`,
-          description: cred.description,
-          type: 'password',
-          required: true,
-          value:
-            userData?.services?.find((s: any) => s.id === serviceId)
-              ?.credentials?.[cred.id] || '',
+      serviceMeta.credentials
+        .filter((cred) => cred.type == 'string' || cred.type == 'password')
+        .forEach((cred) => {
+          serviceInputs.push({
+            key: `service_${serviceId}_${cred.id}`,
+            path: `services.${serviceId}.${cred.id}`,
+            label: `${serviceMeta.name} - ${cred.name || cred.id}`,
+            description: cred.description,
+            type: 'password',
+            required: cred.required ?? true,
+            value:
+              userData?.services?.find((s: any) => s.id === serviceId)
+                ?.credentials?.[cred.id] || '',
+          });
         });
-      });
     });
 
     return serviceInputs;
