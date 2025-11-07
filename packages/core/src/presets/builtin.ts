@@ -77,10 +77,25 @@ export class BuiltinAddonPreset extends Preset {
           })
         ),
     };
+    const altmountSpecialCase: Partial<
+      Record<ServiceId, (credentials: any) => any>
+    > = {
+      [constants.ALTMOUNT_SERVICE]: (credentials: any) =>
+        toUrlSafeBase64(
+          JSON.stringify({
+            altmountUrl: credentials.url,
+            altmountApiKey: credentials.apiKey,
+            webdavUser: credentials.username,
+            webdavPassword: credentials.password,
+            aiostreamsAuth: credentials.aiostreamsAuth,
+          })
+        ),
+    };
     return super.getServiceCredential(serviceId, userData, {
       ...stremthruSpecialCases,
       ...specialCases,
       ...nzbDavSpecialCase,
+      ...altmountSpecialCase,
     });
   }
 

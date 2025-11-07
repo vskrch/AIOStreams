@@ -38,7 +38,11 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
     if (
       userData.services.some(
         (s) =>
-          ![constants.TORBOX_SERVICE, constants.NZBDAV_SERVICE].includes(s.id)
+          ![
+            constants.TORBOX_SERVICE,
+            constants.NZBDAV_SERVICE,
+            constants.ALTMOUNT_SERVICE,
+          ].includes(s.id)
       )
     ) {
       throw new Error(

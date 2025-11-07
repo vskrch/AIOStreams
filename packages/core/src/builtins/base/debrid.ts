@@ -42,6 +42,7 @@ import { Logger } from 'winston';
 import pLimit from 'p-limit';
 import { cleanTitle } from '../../parser/utils.js';
 import { NzbDavConfig, NzbDAVService } from '../../debrid/nzbdav.js';
+import { AltmountConfig, AltmountService } from '../../debrid/altmount.js';
 import { createProxy } from '../../proxy/index.js';
 
 export interface SearchMetadata extends TitleMetadata {
@@ -253,24 +254,56 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     );
 
     const results = [...processedTorrents.results, ...processedNzbs.results];
+
+    // Setup auth for both NzbDAV and Altmount
     let nzbdavAuth;
-    const usingNzbDav = this.userData.services.some((s) => s.id === 'nzbdav');
+    let altmountAuth;
+
     const encodedNzbdavAuth = this.userData.services.find(
       (s) => s.id === 'nzbdav'
     )?.credential;
-    if (usingNzbDav && encodedNzbdavAuth) {
+    const encodedAltmountAuth = this.userData.services.find(
+      (s) => s.id === 'altmount'
+    )?.credential;
+
+    if (encodedNzbdavAuth) {
       const { success, data } = NzbDavConfig.safeParse(
         JSON.parse(fromUrlSafeBase64(encodedNzbdavAuth))
       );
-
-      nzbdavAuth = data;
+      if (success) {
+        nzbdavAuth = data;
+      }
     }
-    let proxyIndices: number[] = [];
+
+    if (encodedAltmountAuth) {
+      const { success, data } = AltmountConfig.safeParse(
+        JSON.parse(fromUrlSafeBase64(encodedAltmountAuth))
+      );
+      if (success) {
+        altmountAuth = data;
+      }
+    }
+
+    // Collect indices for proxying
+    const nzbdavProxyIndices: number[] = [];
+    const altmountProxyIndices: number[] = [];
+
     if (nzbdavAuth) {
-      proxyIndices = results
-        .map((result, index) => ({ result, index }))
-        .filter(({ result }) => result.service?.id === 'nzbdav')
-        .map(({ index }) => index);
+      nzbdavProxyIndices.push(
+        ...results
+          .map((result, index) => ({ result, index }))
+          .filter(({ result }) => result.service?.id === 'nzbdav')
+          .map(({ index }) => index)
+      );
+    }
+
+    if (altmountAuth) {
+      altmountProxyIndices.push(
+        ...results
+          .map((result, index) => ({ result, index }))
+          .filter(({ result }) => result.service?.id === 'altmount')
+          .map(({ index }) => index)
+      );
     }
 
     let resultStreams = await Promise.all(
@@ -280,8 +313,8 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     );
     const proxyErrors: Stream[] = [];
 
-    // proxy the indexes in streamsToProxy
-    if (proxyIndices.length > 0 && nzbdavAuth) {
+    // Proxy NzbDAV streams
+    if (nzbdavProxyIndices.length > 0 && nzbdavAuth) {
       const proxy = createProxy({
         id: 'builtin',
         enabled: true,
@@ -289,7 +322,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       });
 
       const proxiedStreams = await proxy.generateUrls(
-        proxyIndices
+        nzbdavProxyIndices
           .map((i) => resultStreams[i])
           .map((stream) => ({
             url: stream.url!,
@@ -305,8 +338,8 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       );
 
       if (proxiedStreams) {
-        for (let i = 0; i < proxyIndices.length; i++) {
-          const index = proxyIndices[i];
+        for (let i = 0; i < nzbdavProxyIndices.length; i++) {
+          const index = nzbdavProxyIndices[i];
           const proxiedUrl = proxiedStreams[i];
           if (proxiedUrl) {
             resultStreams[index].url = proxiedUrl;
@@ -321,7 +354,53 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
         );
         // remove all nzbdav streams
         resultStreams = resultStreams.filter(
-          (_, i) => !proxyIndices.includes(i)
+          (_, i) => !nzbdavProxyIndices.includes(i)
+        );
+      }
+    }
+
+    // Proxy Altmount streams
+    if (altmountProxyIndices.length > 0 && altmountAuth) {
+      const proxy = createProxy({
+        id: 'builtin',
+        enabled: true,
+        credentials: altmountAuth.aiostreamsAuth,
+      });
+
+      const proxiedStreams = await proxy.generateUrls(
+        altmountProxyIndices
+          .map((i) => resultStreams[i])
+          .map((stream) => ({
+            url: stream.url!,
+            filename: stream.behaviorHints?.filename ?? undefined,
+            headers: {
+              request: {
+                Authorization: `Basic ${Buffer.from(
+                  `${altmountAuth.webdavUser}:${altmountAuth.webdavPassword}`
+                ).toString('base64')}`,
+              },
+            },
+          }))
+      );
+
+      if (proxiedStreams) {
+        for (let i = 0; i < altmountProxyIndices.length; i++) {
+          const index = altmountProxyIndices[i];
+          const proxiedUrl = proxiedStreams[i];
+          if (proxiedUrl) {
+            resultStreams[index].url = proxiedUrl;
+          }
+        }
+      } else {
+        proxyErrors.push(
+          this._createErrorStream({
+            title: `${this.name}`,
+            description: `Failed to proxy Altmount streams, ensure your proxy auth is correct.`,
+          })
+        );
+        // remove all altmount streams
+        resultStreams = resultStreams.filter(
+          (_, i) => !altmountProxyIndices.includes(i)
         );
       }
     }

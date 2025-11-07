@@ -438,9 +438,11 @@ export function isNotVideoFile(file: DebridFile): boolean {
     '.dbf',
     '.bak',
   ];
+  const patterns = [/\.7z\.\d+$/];
   return (
     (file.mimeType && !file.mimeType.includes('video')) ||
-    nonVideoExtensions.some((ext) => file.name?.endsWith(ext) ?? false)
+    nonVideoExtensions.some((ext) => file.name?.endsWith(ext) ?? false) ||
+    patterns.some((pattern) => pattern.test(file.name || ''))
   );
 }
 

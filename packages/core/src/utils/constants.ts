@@ -204,6 +204,7 @@ const OFFCLOUD_SERVICE = 'offcloud';
 const SEEDR_SERVICE = 'seedr';
 const EASYNEWS_SERVICE = 'easynews';
 const NZBDAV_SERVICE = 'nzbdav';
+const ALTMOUNT_SERVICE = 'altmount';
 
 const SERVICES = [
   REALDEBRID_SERVICE,
@@ -219,6 +220,7 @@ const SERVICES = [
   SEEDR_SERVICE,
   EASYNEWS_SERVICE,
   NZBDAV_SERVICE,
+  ALTMOUNT_SERVICE,
 ] as const;
 
 export const BUILTIN_SUPPORTED_SERVICES = [
@@ -232,6 +234,7 @@ export const BUILTIN_SUPPORTED_SERVICES = [
   PIKPAK_SERVICE,
   OFFCLOUD_SERVICE,
   NZBDAV_SERVICE,
+  ALTMOUNT_SERVICE,
 ] as const;
 
 export type ServiceId = (typeof SERVICES)[number];
@@ -385,14 +388,14 @@ const SERVICE_DETAILS: Record<
   },
   [NZBDAV_SERVICE]: {
     id: NZBDAV_SERVICE,
-    name: 'Nzb DAV',
+    name: 'NzbDAV',
     shortName: 'ND',
     knownNames: ['ND'],
     signUpText: 'Stream usenet directly from your provider via Nzb DAV.',
     credentials: [
       {
         id: 'url',
-        name: 'Nzb DAV URL',
+        name: 'NzbDAV URL',
         description:
           'The base URL of your NZB DAV instance. E.g., http://nzbdav:3000 or https://nzbdav.example.com',
         type: 'string',
@@ -400,7 +403,7 @@ const SERVICE_DETAILS: Record<
       },
       {
         id: 'apiKey',
-        name: 'Nzb DAV API Key',
+        name: 'NzbDAV API Key',
         description:
           'Your Nzb DAV API Key, found in the SABnzbd section in settings.',
         type: 'password',
@@ -408,7 +411,7 @@ const SERVICE_DETAILS: Record<
       },
       {
         id: 'username',
-        name: 'NZB DAV Username',
+        name: 'NzbDAV WebDAV Username',
         description:
           'Your Nzb DAV WebDAV Username. Found in the WebDAV section in settings.',
         type: 'string',
@@ -416,9 +419,9 @@ const SERVICE_DETAILS: Record<
       },
       {
         id: 'password',
-        name: 'NZB DAV Password',
+        name: 'NzbDAV WebDAV Password',
         description:
-          'Your NZB DAV WebDAV Password. Found in the WebDAV section in settings.',
+          'Your NzbDAV WebDAV Password. Found in the WebDAV section in settings.',
         type: 'password',
         required: true,
       },
@@ -432,6 +435,56 @@ const SERVICE_DETAILS: Record<
       },
     ],
   },
+  [ALTMOUNT_SERVICE]: {
+    id: ALTMOUNT_SERVICE,
+    name: 'AltMount',
+    shortName: 'AM',
+    knownNames: ['AM'],
+    signUpText: 'Stream usenet directly from your provider via AltMount.',
+    credentials: [
+      {
+        id: 'url',
+        name: 'Altmount URL',
+        description:
+          'The base URL of your AltMount instance. E.g., http://altmount:8080 or https://altmount.example.com',
+        type: 'string',
+        required: true,
+      },
+      {
+        id: 'apiKey',
+        name: 'AltMount API Key',
+        description:
+          'Your AltMount API Key, found at `Configuration -> System` in the AltMount Web UI.',
+        type: 'password',
+        required: true,
+      },
+      {
+        id: 'username',
+        name: 'AltMount WebDAV Username',
+        description:
+          'Your AltMount WebDAV Username, found at `Configuration -> WebDAV Server` in the AltMount Web UI.',
+        type: 'string',
+        required: true,
+      },
+      {
+        id: 'password',
+        name: 'AltMount WebDAV Password',
+        description:
+          'Your AltMount WebDAV Password, found at `Configuration -> WebDAV Server` in the AltMount Web UI.',
+        type: 'password',
+        required: true,
+      },
+      {
+        id: 'aiostreamsAuth',
+        name: 'AIOStreams Proxy Auth',
+        description:
+          'It is required to proxy the AltMount streams through AIOStreams. Provide a username:password pair from the `AIOSTREAMS_AUTH` environment variable.',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+
   [OFFCLOUD_SERVICE]: {
     id: OFFCLOUD_SERVICE,
     name: 'Offcloud',
@@ -1142,6 +1195,7 @@ export {
   OFFCLOUD_SERVICE,
   SEEDR_SERVICE,
   NZBDAV_SERVICE,
+  ALTMOUNT_SERVICE,
   EASYNEWS_SERVICE,
   SERVICE_DETAILS,
   TOP_LEVEL_OPTION_DETAILS,

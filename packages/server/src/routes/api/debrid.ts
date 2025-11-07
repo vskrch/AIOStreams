@@ -114,7 +114,8 @@ router.get(
         let staticFile: string = StaticFiles.INTERNAL_SERVER_ERROR;
         if (error instanceof DebridError) {
           logger.error(
-            `[${storeAuth.id}] Got Debrid error during debrid resolve: ${error.code}: ${error.message}`
+            `[${storeAuth.id}] Got Debrid error during debrid resolve: ${error.code}: ${error.message}`,
+            { ...error, stack: undefined }
           );
           switch (error.code) {
             case 'UNAVAILABLE_FOR_LEGAL_REASONS':

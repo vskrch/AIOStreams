@@ -1,6 +1,3 @@
-// Credit goes to Sanket9225 for the idea and inspiration
-// https://github.com/Sanket9225/UsenetStreamer/blob/master/server.js
-
 import { z } from 'zod';
 import {
   UsenetStreamService,
@@ -8,53 +5,56 @@ import {
 } from './usenet-stream-base.js';
 import { DebridServiceConfig } from './base.js';
 import { ServiceId, createLogger, fromUrlSafeBase64 } from '../utils/index.js';
+import { basename } from 'path';
 
-const logger = createLogger('nzbdav');
+const logger = createLogger('altmount');
 
-export const NzbDavConfig = z.object({
-  nzbdavUrl: z
+export const AltmountConfig = z.object({
+  altmountUrl: z
     .string()
     .transform((s) => s.trim().replace(/^\/+/, '').replace(/\/+$/, '')),
-  nzbdavApiKey: z.string(),
+  altmountApiKey: z.string(),
   webdavUser: z.string(),
   webdavPassword: z.string(),
   aiostreamsAuth: z.string(),
 });
 
-export class NzbDAVService extends UsenetStreamService {
-  readonly serviceName: ServiceId = 'nzbdav';
+export class AltmountService extends UsenetStreamService {
+  readonly serviceName: ServiceId = 'altmount';
   readonly serviceLogger = logger;
 
   constructor(config: DebridServiceConfig) {
-    const parsedConfig = NzbDavConfig.parse(
+    const parsedConfig = AltmountConfig.parse(
       JSON.parse(fromUrlSafeBase64(config.token))
     );
 
     const auth: UsenetStreamServiceConfig = {
-      webdavUrl: `${parsedConfig.nzbdavUrl}/`,
+      webdavUrl: `${parsedConfig.altmountUrl}/webdav/`,
       webdavUser: parsedConfig.webdavUser,
       webdavPassword: parsedConfig.webdavPassword,
-      apiUrl: `${parsedConfig.nzbdavUrl}/api`,
-      apiKey: parsedConfig.nzbdavApiKey,
+      apiUrl: `${parsedConfig.altmountUrl}/sabnzbd/api`,
+      apiKey: parsedConfig.altmountApiKey,
       aiostreamsAuth: parsedConfig.aiostreamsAuth,
     };
 
-    super(config, auth, 'nzbdav');
+    super(config, auth, 'altmount');
   }
 
   protected getContentPathPrefix(): string {
-    return '/content';
+    return '/complete';
   }
 
   protected getExpectedFolderName(nzbUrl: string, filename: string): string {
-    // NzbDAV uses the filename parameter
-    return filename;
+    // Altmount uses basename of the NZB URL
+    return nzbUrl.endsWith('.nzb')
+      ? basename(nzbUrl, '.nzb')
+      : basename(nzbUrl);
   }
 
   protected async generatePlaybackLink(filePath: string): Promise<string> {
-    const parsedConfig = NzbDavConfig.parse(
+    const parsedConfig = AltmountConfig.parse(
       JSON.parse(fromUrlSafeBase64(this.config.token))
     );
-    return `${parsedConfig.nzbdavUrl}${filePath}`;
+    return `${parsedConfig.altmountUrl}/webdav${filePath}`;
   }
 }
