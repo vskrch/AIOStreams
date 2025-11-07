@@ -38,7 +38,7 @@ const HistorySlotSchema = z.object({
   status: z.string().optional(),
   name: z.string().optional(),
   category: z.string().optional(),
-  storage: z.string().optional(),
+  storage: z.string().nullable().optional(),
   fail_message: z.string().optional(),
 });
 
