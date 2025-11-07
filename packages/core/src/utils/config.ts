@@ -243,7 +243,8 @@ export function getEnvironmentServiceDetails(): typeof constants.SERVICE_DETAILS
             type: cred.type,
             // remove required attribute from field to allow users to remove credentials.
             // server will still validate.
-            required: false,
+            // required: false,
+            required: cred.required,
             default: getServiceCredentialDefault(service.id, cred.id)
               ? encryptString(getServiceCredentialDefault(service.id, cred.id)!)
                   .data
