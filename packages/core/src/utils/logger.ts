@@ -49,6 +49,7 @@ const moduleMap: { [key: string]: string } = {
   'torrent-galaxy': '🌐  TGx',
   templates: '📄  TEMPLATES',
   nzbdav: '📂  NZBDAV',
+  altmount: '📂  ALTMOUNT',
 };
 
 // Define colors for each log level using full names

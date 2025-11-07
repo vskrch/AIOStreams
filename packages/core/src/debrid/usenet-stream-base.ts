@@ -7,6 +7,7 @@ import {
   Cache,
   DistributedLock,
   fromUrlSafeBase64,
+  formatZodError,
 } from '../utils/index.js';
 import { isVideoFile, selectFileInTorrentOrNZB } from './utils.js';
 import {
@@ -23,8 +24,7 @@ import { createClient, WebDAVClient, FileStat } from 'webdav';
 import { fetch } from 'undici';
 import { BuiltinProxy } from '../proxy/builtin.js';
 import { basename } from 'path';
-
-const logger = createLogger('usenet-stream-base');
+import { Logger } from 'winston';
 
 // Zod schemas for SABnzbd-compatible API responses (used by streaming usenet services)
 const AddUrlResponseSchema = z.object({
@@ -107,11 +107,15 @@ const convertStatusCodeToError = (code: number): DebridError['code'] => {
  * API client for SABnzbd APIs
  */
 export class SABnzbdApi {
+  private readonly logger: Logger;
   constructor(
     protected readonly apiUrl: string,
     protected readonly apiKey: string,
-    protected readonly serviceName: string
-  ) {}
+    protected readonly serviceName: string,
+    logger: Logger
+  ) {
+    this.logger = logger;
+  }
 
   protected async request<T extends z.ZodType>(
     params: Record<string, string>,
@@ -128,7 +132,7 @@ export class SABnzbdApi {
       url.searchParams.append(key, value);
     });
 
-    logger.debug(`Making ${this.serviceName} API request`, {
+    this.logger.debug(`Making ${this.serviceName} API request`, {
       ...params,
       apikey: maskSensitiveInfo(params.apikey),
       fullUrl: maskSensitiveInfo(url.toString()),
@@ -187,12 +191,15 @@ export class SABnzbdApi {
         }
 
         if (error instanceof ZodError) {
+          this.logger.error(
+            `Failed to parse ${this.serviceName} API response: ${formatZodError(error)}`
+          );
           throw new DebridError(`Invalid ${this.serviceName} API response`, {
             statusCode: response.status,
             statusText: response.statusText,
             code: 'UNKNOWN',
             headers: Object.fromEntries(response.headers.entries()),
-            body: data,
+            body: JSON.stringify(data),
             type: 'api_error',
           });
         }
@@ -286,7 +293,7 @@ export class SABnzbdApi {
       });
     }
 
-    logger.debug(`NZB job successfully added`, {
+    this.logger.debug(`NZB job successfully added`, {
       nzoId,
     });
     return { nzoId };
@@ -396,9 +403,9 @@ export abstract class UsenetStreamService implements DebridService {
 
   readonly supportsUsenet = true;
   abstract readonly serviceName: ServiceId;
-  abstract readonly serviceLogger: ReturnType<typeof createLogger>;
 
   protected readonly auth: UsenetStreamServiceConfig;
+  protected readonly serviceLogger: Logger;
   protected static readonly MIN_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
   protected static readonly MAX_DEPTH = 6;
 
@@ -423,11 +430,17 @@ export abstract class UsenetStreamService implements DebridService {
     serviceName: ServiceId
   ) {
     this.auth = auth;
+    this.serviceLogger = createLogger(serviceName);
     this.webdavClient = createClient(auth.webdavUrl, {
       username: auth.webdavUser,
       password: auth.webdavPassword,
     });
-    this.api = new SABnzbdApi(auth.apiUrl, auth.apiKey, serviceName);
+    this.api = new SABnzbdApi(
+      auth.apiUrl,
+      auth.apiKey,
+      serviceName,
+      this.serviceLogger
+    );
   }
 
   protected async collectFiles(
