@@ -63,8 +63,12 @@ export function languageToCode(language: string): string | undefined {
   const extractLanguage = (lang: string) => lang.split('(')[0].trim();
   const possibleLangs = FULL_LANGUAGE_MAPPING.filter(
     (lang) =>
-      extractLanguage(lang.english_name).toLowerCase() ===
-        language.toLowerCase() ||
+      lang.english_name
+        .split(';')
+        .some(
+          (name) =>
+            extractLanguage(name).toLowerCase() === language.toLowerCase()
+        ) ||
       (lang.internal_english_name &&
         extractLanguage(lang.internal_english_name).toLowerCase() ===
           language.toLowerCase()) ||
