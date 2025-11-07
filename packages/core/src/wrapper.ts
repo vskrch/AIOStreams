@@ -518,7 +518,8 @@ export class Wrapper {
     extras?: string
   ): string {
     const extrasPath = extras ? `/${extras}` : '';
-    return `${this.baseUrl}/${resource}/${type}/${encodeURIComponent(id)}${extrasPath}.json`;
+    const queryParams = new URL(this.manifestUrl).search;
+    return `${this.baseUrl}/${resource}/${type}/${encodeURIComponent(id)}${extrasPath}.json${queryParams ? `?${queryParams.slice(1)}` : ''}`;
   }
 
   private getAddonName(addon: Addon): string {
