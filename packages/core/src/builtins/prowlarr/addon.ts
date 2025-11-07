@@ -20,12 +20,14 @@ import {
   validateInfoHash,
 } from '../utils/debrid.js';
 import { createQueryLimit, useAllTitles } from '../utils/general.js';
+import { createHash } from 'crypto';
 
 export const ProwlarrAddonConfigSchema = BaseDebridConfigSchema.extend({
   url: z.string(),
   apiKey: z.string(),
   indexers: z.array(z.string()),
   tags: z.array(z.string()),
+  sources: z.array(z.string()).optional(),
 });
 
 export type ProwlarrAddonConfig = z.infer<typeof ProwlarrAddonConfigSchema>;
@@ -44,6 +46,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
   private readonly preconfiguredInstance: boolean;
   private readonly indexers: string[] = [];
   private readonly tags: string[] = [];
+  private readonly sources: string[] = [];
   constructor(config: ProwlarrAddonConfig, clientIp?: string) {
     super(config, ProwlarrAddonConfigSchema, clientIp);
 
@@ -52,6 +55,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
       Env.BUILTIN_PROWLARR_API_KEY === config.apiKey;
     this.indexers = config.indexers.map((x) => x.toLowerCase());
     this.tags = config.tags.map((x) => x.toLowerCase());
+    this.sources = (config.sources ?? []).map((x) => x.toLowerCase());
     this.api = new ProwlarrApi({
       baseUrl: config.url,
       apiKey: config.apiKey,
@@ -79,13 +83,13 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
         );
         return false;
       }
-      if (indexer.protocol !== 'torrent') {
-        filterReasons.set(
-          'not torrent protocol',
-          (filterReasons.get('not torrent protocol') ?? 0) + 1
-        );
-        return false;
-      }
+      // if (indexer.protocol !== 'torrent') {
+      //   filterReasons.set(
+      //     'not torrent protocol',
+      //     (filterReasons.get('not torrent protocol') ?? 0) + 1
+      //   );
+      //   return false;
+      // }
       if (Env.BUILTIN_PROWLARR_INDEXERS?.length) {
         if (
           ![
@@ -119,13 +123,15 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     }
   }
 
-  protected async _searchTorrents(
-    parsedId: ParsedId,
-    metadata: SearchMetadata
-  ): Promise<UnprocessedTorrent[]> {
-    const queryLimit = createQueryLimit();
+  /**
+   * Get indexers filtered by protocol (torrent or usenet)
+   */
+  private async getIndexersByProtocol(
+    protocol: 'torrent' | 'usenet'
+  ): Promise<ProwlarrApiIndexer[]> {
     let availableIndexers: ProwlarrApiIndexer[] = [];
     let chosenTags: number[] = [];
+
     if (this.preconfiguredInstance && ProwlarrAddon.preconfiguredIndexers) {
       availableIndexers = ProwlarrAddon.preconfiguredIndexers;
     } else {
@@ -154,7 +160,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     const chosenIndexers = availableIndexers.filter(
       (indexer) =>
         indexer.enable &&
-        indexer.protocol === 'torrent' &&
+        indexer.protocol === protocol &&
         ((!this.indexers.length && !chosenTags.length) ||
           (chosenTags.length &&
             indexer.tags.some((tag) => chosenTags.includes(tag))) ||
@@ -165,8 +171,35 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     );
 
     this.logger.info(
-      `Chosen indexers: ${chosenIndexers.map((indexer) => indexer.name).join(', ')}`
+      `Chosen ${protocol} indexers: ${chosenIndexers.map((indexer) => indexer.name).join(', ')}`
     );
+
+    return chosenIndexers;
+  }
+
+  /**
+   * Common search method that performs the actual Prowlarr API search
+   * @param protocol - The protocol type ('torrent' or 'usenet')
+   * @param parsedId - The parsed content ID
+   * @param metadata - Search metadata
+   * @returns Array of search results from Prowlarr
+   */
+  private async performSearch(
+    protocol: 'torrent' | 'usenet',
+    parsedId: ParsedId,
+    metadata: SearchMetadata
+  ): Promise<ProwlarrApiSearchItem[]> {
+    if (this.sources.length > 0 && !this.sources.includes(protocol)) {
+      return [];
+    }
+
+    const queryLimit = createQueryLimit();
+    const chosenIndexers = await this.getIndexersByProtocol(protocol);
+
+    if (chosenIndexers.length === 0) {
+      this.logger.warn(`No ${protocol} indexers available`);
+      return [];
+    }
 
     const queries = this.buildQueries(parsedId, metadata, {
       useAllTitles: useAllTitles(this.userData.url),
@@ -184,7 +217,7 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
           type: 'search',
         });
         this.logger.info(
-          `Prowlarr search for ${q} took ${getTimeTakenSincePoint(start)}`,
+          `Prowlarr ${protocol} search for ${q} took ${getTimeTakenSincePoint(start)}`,
           {
             results: data.length,
           }
@@ -193,7 +226,15 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
       })
     );
     const allResults = await Promise.all(searchPromises);
-    const results = allResults.flat();
+    return allResults.flat();
+  }
+
+  protected async _searchTorrents(
+    parsedId: ParsedId,
+    metadata: SearchMetadata
+  ): Promise<UnprocessedTorrent[]> {
+    const results = await this.performSearch('torrent', parsedId, metadata);
+    if (results.length === 0) return [];
 
     const seenTorrents = new Set<string>();
     const torrents: UnprocessedTorrent[] = [];
@@ -231,6 +272,31 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
     parsedId: ParsedId,
     metadata: SearchMetadata
   ): Promise<NZB[]> {
-    return [];
+    const results = await this.performSearch('usenet', parsedId, metadata);
+    if (results.length === 0) return [];
+
+    const seenNzbs = new Set<string>();
+    const nzbs: NZB[] = [];
+
+    for (const result of results) {
+      const nzbUrl = result.downloadUrl ?? result.guid;
+      if (!nzbUrl) continue;
+      if (seenNzbs.has(nzbUrl)) continue;
+      seenNzbs.add(nzbUrl);
+
+      const hash = createHash('md5').update(nzbUrl).digest('hex');
+      const ageStr = result.age ? `${Math.ceil(result.age)}d` : '0d';
+
+      nzbs.push({
+        hash,
+        nzb: nzbUrl,
+        age: ageStr,
+        title: result.title,
+        size: result.size,
+        indexer: result.indexer,
+        type: 'usenet',
+      });
+    }
+    return nzbs;
   }
 }

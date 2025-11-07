@@ -98,6 +98,25 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
             } as const,
           ]),
       {
+        id: 'sources',
+        name: 'Sources',
+        description:
+          'The sources to use when fetching from Prowlarr. If not specified, both torrent and usenet indexers will be used, if available.',
+        type: 'multi-select',
+        required: false,
+        showInSimpleMode: false,
+        options: [
+          {
+            label: 'Torrent',
+            value: 'torrent',
+          },
+          {
+            label: 'Usenet',
+            value: 'usenet',
+          },
+        ],
+      },
+      {
         id: 'tags',
         name: 'Tags',
         description:
@@ -165,10 +184,17 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       URL: `${Env.INTERNAL_URL}/builtins/prowlarr`,
       TIMEOUT: Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
-      SUPPORTED_SERVICES: StremThruPreset.supportedServices,
+      SUPPORTED_SERVICES: [
+        ...StremThruPreset.supportedServices,
+        constants.NZBDAV_SERVICE,
+        constants.ALTMOUNT_SERVICE,
+      ],
       DESCRIPTION: 'An addon to get debrid results from a Prowlarr instance.',
       OPTIONS: options,
-      SUPPORTED_STREAM_TYPES: [constants.DEBRID_STREAM_TYPE],
+      SUPPORTED_STREAM_TYPES: [
+        constants.DEBRID_STREAM_TYPE,
+        constants.USENET_STREAM_TYPE,
+      ],
       SUPPORTED_RESOURCES: supportedResources,
       BUILTIN: true,
     };
@@ -265,6 +291,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       url: prowlarrUrl,
       apiKey: prowlarrApiKey,
       indexers: indexers || [],
+      sources: options.sources || [],
       tags: typeof options.tags === 'string' ? options.tags.split(',') : [],
     };
 
