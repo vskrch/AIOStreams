@@ -115,8 +115,22 @@ class NzbDAVApi {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new DebridError(`NzbDAV API error: ${response.statusText}`, {
+      try {
+        const parsed = schema.parse(data);
+        return parsed;
+      } catch (error) {
+        if (!response.ok) {
+          throw new DebridError(`NzbDAV API error: ${response.statusText}`, {
+            statusCode: response.status,
+            statusText: response.statusText,
+            code: 'UNKNOWN',
+            headers: Object.fromEntries(response.headers.entries()),
+            body: data,
+            type: 'api_error',
+          });
+        }
+
+        throw new DebridError(`Invalid NzbDAV API response`, {
           statusCode: response.status,
           statusText: response.statusText,
           code: 'UNKNOWN',
@@ -125,8 +139,6 @@ class NzbDAVApi {
           type: 'api_error',
         });
       }
-
-      return schema.parse(data);
     } catch (error) {
       if (error instanceof DebridError) {
         throw error;
