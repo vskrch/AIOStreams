@@ -27,6 +27,13 @@ export class UsenetStreamerParser extends StreamParser {
       cached: true,
     };
   }
+
+  protected getIndexer(
+    stream: Stream,
+    currentParsedStream: ParsedStream
+  ): string | undefined {
+    return (stream as any).meta?.indexer;
+  }
 }
 
 export class UsenetStreamerPreset extends Preset {
