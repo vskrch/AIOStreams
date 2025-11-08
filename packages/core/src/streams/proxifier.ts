@@ -67,6 +67,19 @@ class Proxifier {
     if (streamsToProxy.length === 0) {
       return streams;
     }
+
+    const normaliseHeaders = (
+      headers: Record<string, string> | undefined
+    ): Record<string, string> | undefined => {
+      if (!headers) {
+        return undefined;
+      }
+      const normalisedHeaders: Record<string, string> = {};
+      for (const [key, value] of Object.entries(headers)) {
+        normalisedHeaders[key.trim().toLowerCase()] = value.trim();
+      }
+      return normalisedHeaders;
+    };
     logger.info(`Proxying ${streamsToProxy.length} streams`);
 
     const proxy = createProxy(this.userData.proxy);
@@ -82,13 +95,13 @@ class Proxifier {
             } catch {}
 
             const headers = {
-              response: stream.responseHeaders,
-              request: stream.requestHeaders,
+              response: normaliseHeaders(stream.responseHeaders),
+              request: normaliseHeaders(stream.requestHeaders),
             };
             if (parsedUrl && parsedUrl.username && parsedUrl.password) {
               headers.request = {
                 ...headers.request,
-                Authorization:
+                authorization:
                   'Basic ' +
                   Buffer.from(
                     `${decodeURIComponent(

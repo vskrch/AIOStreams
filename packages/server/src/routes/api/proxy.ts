@@ -327,7 +327,11 @@ router.all(
         const proxyAgent = useProxy
           ? getProxyAgent(Env.ADDON_PROXY![proxyIndex])
           : undefined;
-        const headers = { ...clientHeaders, ...data.requestHeaders };
+        const headers = Object.fromEntries(
+          Object.entries({ ...clientHeaders, ...data.requestHeaders }).map(
+            ([key, value]) => [key.toLowerCase(), value]
+          )
+        );
         if (urlObj.username && urlObj.password) {
           const basicAuth = Buffer.from(
             `${decodeURIComponent(urlObj.username)}:${decodeURIComponent(
