@@ -145,7 +145,7 @@ export class SABnzbdApi {
           'x-api-key': this.apiKey,
         },
         signal: AbortSignal.timeout(timeoutMs),
-        redirect: 'manual',
+        // redirect: 'manual',
       });
       let data;
 
@@ -790,8 +790,8 @@ export abstract class UsenetStreamService implements DebridService {
 
   protected getPublicWebdavUrlWithAuth(): string {
     let url = new URL(this.auth.publicWebdavUrl);
-    url.username = this.auth.webdavUser;
-    url.password = encodeURIComponent(this.auth.webdavPassword);
+    // url.username = this.auth.webdavUser;
+    // url.password = encodeURIComponent(this.auth.webdavPassword);
     return url.toString().replace(/\/+$/, ''); // Remove trailing slash
   }
 }
