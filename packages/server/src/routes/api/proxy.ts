@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { request, Dispatcher } from 'undici';
 import { pipeline } from 'stream/promises';
 import { createProxy, BuiltinProxyStats, BuiltinProxy } from '@aiostreams/core';
+import { corsMiddleware } from '../../middlewares';
 
 const logger = createLogger('server');
 const router: Router = Router();
@@ -97,6 +98,8 @@ const ProxyDataSchema = z.object({
   requestHeaders: z.record(z.string(), z.string()).optional(),
   responseHeaders: z.record(z.string(), z.string()).optional(),
 });
+
+router.use(corsMiddleware);
 
 // GET /stats endpoint to display proxy statistics
 router.get(

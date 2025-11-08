@@ -20,8 +20,11 @@ import {
 } from '@aiostreams/core';
 import { ZodError } from 'zod';
 import { StaticFiles } from '../../app.js';
+import { corsMiddleware } from '../../middlewares/cors.js';
 const router: Router = Router();
 const logger = createLogger('server');
+
+router.use(corsMiddleware);
 
 // block HEAD requests
 router.use((req: Request, res: Response, next: NextFunction) => {
