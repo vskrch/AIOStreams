@@ -14,7 +14,7 @@ import { z } from 'zod';
 import { request, Dispatcher } from 'undici';
 import { pipeline } from 'stream/promises';
 import { createProxy, BuiltinProxyStats, BuiltinProxy } from '@aiostreams/core';
-import { corsMiddleware } from '../../middlewares';
+import { corsMiddleware } from '../../middlewares/cors.js';
 
 const logger = createLogger('server');
 const router: Router = Router();
