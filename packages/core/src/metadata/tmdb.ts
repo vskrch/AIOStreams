@@ -36,8 +36,8 @@ const MovieDetailsSchema = z.object({
 const TVDetailsSchema = z.object({
   id: z.number(),
   name: z.string(),
-  first_air_date: z.string().optional(),
-  last_air_date: z.string().optional(),
+  first_air_date: z.string().nullable().optional(),
+  last_air_date: z.string().nullable().optional(),
   status: z.string(),
   original_title: z.string().optional(),
   original_language: z.string().optional(),
@@ -337,7 +337,7 @@ export class TMDBMetadata {
       if (tvData.original_title) {
         allTitles.push(tvData.original_title);
       }
-      releaseDate = tvData.first_air_date;
+      releaseDate = tvData.first_air_date ?? undefined;
       yearEnd = tvData.last_air_date
         ? this.parseReleaseDate(tvData.last_air_date)
         : undefined;

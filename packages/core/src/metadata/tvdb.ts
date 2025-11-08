@@ -53,7 +53,7 @@ const TVDBBaseRecordSchema = z.object({
   id: z.number(),
   name: z.string(),
   slug: z.string(),
-  image: z.string().url(),
+  image: z.url().nullable(),
   nameTranslations: z.array(z.string()),
   overviewTranslations: z.array(z.string()),
   aliases: z.array(TVDBAliasSchema),
