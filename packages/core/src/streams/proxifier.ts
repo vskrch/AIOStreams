@@ -73,14 +73,39 @@ class Proxifier {
 
     const proxiedUrls = streamsToProxy.length
       ? await proxy.generateUrls(
-          streamsToProxy.map(({ stream }) => ({
-            url: stream.url!,
-            filename: stream.filename,
-            headers: {
-              request: stream.requestHeaders,
+          streamsToProxy.map(({ stream }) => {
+            let url: string = stream.url!;
+            let parsedUrl: URL | undefined;
+
+            try {
+              parsedUrl = new URL(url);
+            } catch {}
+
+            const headers = {
               response: stream.responseHeaders,
-            },
-          }))
+              request: stream.requestHeaders,
+            };
+            if (parsedUrl && parsedUrl.username && parsedUrl.password) {
+              headers.request = {
+                ...headers.request,
+                Authorization:
+                  'Basic ' +
+                  Buffer.from(
+                    `${decodeURIComponent(
+                      parsedUrl.username
+                    )}:${decodeURIComponent(parsedUrl.password)}`
+                  ).toString('base64'),
+              };
+              parsedUrl.username = '';
+              parsedUrl.password = '';
+              url = parsedUrl.toString();
+            }
+            return {
+              url,
+              filename: stream.filename,
+              headers,
+            };
+          })
         )
       : [];
 
