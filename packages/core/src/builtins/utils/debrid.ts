@@ -40,7 +40,9 @@ interface Metadata {
 export function validateInfoHash(
   infoHash: string | undefined
 ): string | undefined {
-  return infoHash && /^[a-f0-9]{40}$/i.test(infoHash) ? infoHash : undefined;
+  return infoHash && /^[a-f0-9]{40}$/i.test(infoHash)
+    ? infoHash.toLowerCase()
+    : undefined;
 }
 
 export function extractTrackersFromMagnet(magnet: string): string[] {
@@ -127,6 +129,7 @@ async function processTorrentsForDebridService(
   logger.debug(`Retrieved magnet status from debrid`, {
     service: debridService.serviceName,
     magnetCount: torrents.length,
+    cached: magnetCheckResults.filter((r) => r.status === 'cached').length,
     time: getTimeTakenSincePoint(startTime),
   });
 

@@ -104,7 +104,6 @@ export class TorznabAddon extends BaseNabAddon<NabAddonConfig, TorznabApi> {
         )
           ?.toString()
           ?.match(/(?:urn(?::|%3A)btih(?::|%3A))([a-f0-9]{40})/i)?.[1]
-          ?.toLowerCase()
     );
   }
 }
