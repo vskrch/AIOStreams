@@ -1,5 +1,5 @@
 import { ParsedStream, UserData } from '../db/schemas.js';
-import { createLogger } from '../utils/index.js';
+import { constants, createLogger } from '../utils/index.js';
 import { createProxy } from '../proxy/index.js';
 
 const logger = createLogger('proxy');
@@ -18,6 +18,15 @@ class Proxifier {
       return false;
     }
     if (stream.proxied) {
+      return false;
+    }
+    // never proxy nzbdav or altmount streams via global proxy
+    if (
+      stream.service &&
+      [constants.NZBDAV_SERVICE, constants.ALTMOUNT_SERVICE].includes(
+        stream.service.id
+      )
+    ) {
       return false;
     }
     let streamUrl: URL;

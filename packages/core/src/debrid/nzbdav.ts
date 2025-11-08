@@ -22,6 +22,7 @@ export const NzbDavConfig = z.object({
   nzbdavApiKey: z.string(),
   webdavUser: z.string(),
   webdavPassword: z.string(),
+  aiostreamsAuth: z.string().optional(),
 });
 
 export class NzbDAVService extends UsenetStreamService {

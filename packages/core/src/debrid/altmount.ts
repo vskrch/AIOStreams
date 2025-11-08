@@ -20,6 +20,7 @@ export const AltmountConfig = z.object({
   altmountApiKey: z.string(),
   webdavUser: z.string(),
   webdavPassword: z.string(),
+  aiostreamsAuth: z.string().optional(),
 });
 
 export class AltmountService extends UsenetStreamService {
