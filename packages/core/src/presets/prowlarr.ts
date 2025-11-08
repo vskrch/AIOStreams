@@ -14,6 +14,11 @@ import { ProwlarrAddon } from '../builtins/index.js';
 export class ProwlarrPreset extends BuiltinAddonPreset {
   static override get METADATA() {
     const supportedResources = [constants.STREAM_RESOURCE];
+    const supportedServices: ServiceId[] = [
+      ...StremThruPreset.supportedServices,
+      constants.NZBDAV_SERVICE,
+      constants.ALTMOUNT_SERVICE,
+    ];
     const options: Option[] = [
       ...(Env.BUILTIN_PROWLARR_URL && Env.BUILTIN_PROWLARR_API_KEY
         ? [
@@ -159,7 +164,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
         type: 'multi-select',
         required: false,
         showInSimpleMode: false,
-        options: StremThruPreset.supportedServices.map((service) => ({
+        options: supportedServices.map((service) => ({
           value: service,
           label: constants.SERVICE_DETAILS[service].name,
         })),
@@ -184,11 +189,7 @@ export class ProwlarrPreset extends BuiltinAddonPreset {
       URL: `${Env.INTERNAL_URL}/builtins/prowlarr`,
       TIMEOUT: Env.DEFAULT_TIMEOUT,
       USER_AGENT: Env.DEFAULT_USER_AGENT,
-      SUPPORTED_SERVICES: [
-        ...StremThruPreset.supportedServices,
-        constants.NZBDAV_SERVICE,
-        constants.ALTMOUNT_SERVICE,
-      ],
+      SUPPORTED_SERVICES: supportedServices,
       DESCRIPTION:
         'An addon to get torrent and usenet results from a Prowlarr instance via services.',
       OPTIONS: options,
