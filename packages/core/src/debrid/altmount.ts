@@ -13,10 +13,13 @@ export const AltmountConfig = z.object({
   altmountUrl: z
     .string()
     .transform((s) => s.trim().replace(/^\/+/, '').replace(/\/+$/, '')),
+  publicAltmountUrl: z
+    .string()
+    .optional()
+    .transform((s) => s?.trim().replace(/^\/+/, '').replace(/\/+$/, '')),
   altmountApiKey: z.string(),
   webdavUser: z.string(),
   webdavPassword: z.string(),
-  aiostreamsAuth: z.string(),
 });
 
 export class AltmountService extends UsenetStreamService {
@@ -30,11 +33,11 @@ export class AltmountService extends UsenetStreamService {
 
     const auth: UsenetStreamServiceConfig = {
       webdavUrl: `${parsedConfig.altmountUrl}/webdav/`,
+      publicWebdavUrl: `${parsedConfig.publicAltmountUrl ?? parsedConfig.altmountUrl}/webdav/`,
       webdavUser: parsedConfig.webdavUser,
       webdavPassword: parsedConfig.webdavPassword,
       apiUrl: `${parsedConfig.altmountUrl}/sabnzbd/api`,
       apiKey: parsedConfig.altmountApiKey,
-      aiostreamsAuth: parsedConfig.aiostreamsAuth,
     };
 
     super(config, auth, 'altmount');
@@ -49,12 +52,5 @@ export class AltmountService extends UsenetStreamService {
     return nzbUrl.endsWith('.nzb')
       ? basename(nzbUrl, '.nzb')
       : basename(nzbUrl);
-  }
-
-  protected async generatePlaybackLink(filePath: string): Promise<string> {
-    const parsedConfig = AltmountConfig.parse(
-      JSON.parse(fromUrlSafeBase64(this.config.token))
-    );
-    return `${parsedConfig.altmountUrl}/webdav${filePath}`;
   }
 }

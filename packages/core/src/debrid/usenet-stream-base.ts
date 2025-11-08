@@ -382,11 +382,11 @@ export class SABnzbdApi {
  */
 export interface UsenetStreamServiceConfig {
   webdavUrl: string;
+  publicWebdavUrl: string;
   webdavUser: string;
   webdavPassword: string;
   apiUrl: string;
   apiKey: string;
-  aiostreamsAuth: string;
 }
 
 /**
@@ -566,18 +566,6 @@ export abstract class UsenetStreamService implements DebridService {
   }
 
   public async checkNzbs(hashes: string[]): Promise<DebridDownload[]> {
-    // validate proxy auth
-    try {
-      BuiltinProxy.validateAuth(this.auth.aiostreamsAuth);
-    } catch (error) {
-      throw new DebridError(`Invalid AIOStreams proxy auth`, {
-        statusCode: 401,
-        statusText: 'Unauthorized',
-        code: 'UNAUTHORIZED',
-        headers: {},
-        type: 'api_error',
-      });
-    }
     // All NZBs are "cached" since it's streaming-based
     return hashes.map((h, index) => ({
       id: index,
@@ -785,7 +773,7 @@ export abstract class UsenetStreamService implements DebridService {
     });
 
     const filePath = selectedFile.path || `${contentPath}/${selectedFile.name}`;
-    const playbackLink = await this.generatePlaybackLink(filePath);
+    const playbackLink = `${this.getPublicWebdavUrlWithAuth()}${filePath}`;
 
     this.serviceLogger.debug(`Generated playback link`, { playbackLink });
 
@@ -800,9 +788,10 @@ export abstract class UsenetStreamService implements DebridService {
     return playbackLink;
   }
 
-  /**
-   * Generate the playback link for a given file path
-   * This method can be overridden by subclasses to customize the URL format
-   */
-  protected abstract generatePlaybackLink(filePath: string): Promise<string>;
+  protected getPublicWebdavUrlWithAuth(): string {
+    let url = new URL(this.auth.publicWebdavUrl);
+    url.username = this.auth.webdavUser;
+    url.password = encodeURIComponent(this.auth.webdavPassword);
+    return url.toString().replace(/\/+$/, ''); // Remove trailing slash
+  }
 }

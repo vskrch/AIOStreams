@@ -394,12 +394,28 @@ const SERVICE_DETAILS: Record<
     signUpText: 'Stream usenet directly from your provider via Nzb DAV.',
     credentials: [
       {
+        id: 'note',
+        name: 'What do I put for URL and Public URL?',
+        description: `\n**URL:** Use internal URL for local setups (e.g., http://nzbdav:3000), otherwise use a public URL here.\n\n**Public URL:** Only needed if streams use local URL but you need public access. Leave blank if URL is already public or if using a proxy.\n\n**Note:** WebDAV URL/credentials are exposed in the stream URLs if not using a proxy.`,
+        type: 'alert',
+        intent: 'info',
+        required: false,
+      },
+      {
         id: 'url',
         name: 'NzbDAV URL',
         description:
-          'The base URL of your NZB DAV instance. E.g., http://nzbdav:3000 or https://nzbdav.example.com',
+          'The base URL of your NZB DAV instance. E.g., http://nzbdav:3000',
         type: 'string',
         required: true,
+      },
+      {
+        id: 'publicUrl',
+        name: 'Public NzbDAV URL (Optional)',
+        description:
+          'The public URL of your NzbDAV instance. Optional, see note above for details.',
+        type: 'string',
+        required: false,
       },
       {
         id: 'apiKey',
@@ -425,14 +441,6 @@ const SERVICE_DETAILS: Record<
         type: 'password',
         required: true,
       },
-      {
-        id: 'aiostreamsAuth',
-        name: 'AIOStreams Proxy Auth',
-        description:
-          'It is required to proxy the NzbDAV streams through AIOStreams. Provide a username:password pair from the `AIOSTREAMS_AUTH` environment variable.',
-        type: 'password',
-        required: true,
-      },
     ],
   },
   [ALTMOUNT_SERVICE]: {
@@ -443,12 +451,28 @@ const SERVICE_DETAILS: Record<
     signUpText: 'Stream usenet directly from your provider via AltMount.',
     credentials: [
       {
+        id: 'note',
+        name: 'What do I put for URL and Public URL?',
+        description: `\n**URL:** Use internal URL for local setups (e.g., http://altmount:8000), otherwise use a public URL here.\n\n**Public URL:** Only needed if streams use local URL but you need public access. Leave blank if URL is already public or if using a proxy.\n\n**Note:** WebDAV URL/credentials are exposed in the stream URLs if not using a proxy.`,
+        type: 'alert',
+        intent: 'info',
+        required: false,
+      },
+      {
         id: 'url',
         name: 'Altmount URL',
         description:
-          'The base URL of your AltMount instance. E.g., http://altmount:8080 or https://altmount.example.com',
+          'The base URL of your AltMount instance used for requests. e.g., http://altmount:8080',
         type: 'string',
         required: true,
+      },
+      {
+        id: 'publicUrl',
+        name: 'Public Altmount URL',
+        description:
+          'The public URL of your AltMount instance. Optional, see note above for details.',
+        type: 'string',
+        required: false,
       },
       {
         id: 'apiKey',
@@ -471,14 +495,6 @@ const SERVICE_DETAILS: Record<
         name: 'AltMount WebDAV Password',
         description:
           'Your AltMount WebDAV Password, found at `Configuration -> WebDAV Server` in the AltMount Web UI.',
-        type: 'password',
-        required: true,
-      },
-      {
-        id: 'aiostreamsAuth',
-        name: 'AIOStreams Proxy Auth',
-        description:
-          'It is required to proxy the AltMount streams through AIOStreams. Provide a username:password pair from the `AIOSTREAMS_AUTH` environment variable.',
         type: 'password',
         required: true,
       },

@@ -374,11 +374,7 @@ class StreamParser {
     stream: Stream,
     currentParsedStream: ParsedStream
   ): ParsedStream['service'] | undefined {
-    const service = this.parseServiceData(stream.name || '');
-    if (service?.id === 'nzbdav') {
-      currentParsedStream.proxied = true;
-    }
-    return service;
+    return this.parseServiceData(stream.name || '');
   }
 
   protected getInfoHash(

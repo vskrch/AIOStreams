@@ -70,6 +70,7 @@ export class BuiltinAddonPreset extends Preset {
         toUrlSafeBase64(
           JSON.stringify({
             nzbdavUrl: credentials.url,
+            publicNzbdavUrl: credentials.publicUrl,
             nzbdavApiKey: credentials.apiKey,
             webdavUser: credentials.username,
             webdavPassword: credentials.password,
@@ -84,6 +85,7 @@ export class BuiltinAddonPreset extends Preset {
         toUrlSafeBase64(
           JSON.stringify({
             altmountUrl: credentials.url,
+            publicAltmountUrl: credentials.publicUrl,
             altmountApiKey: credentials.apiKey,
             webdavUser: credentials.username,
             webdavPassword: credentials.password,

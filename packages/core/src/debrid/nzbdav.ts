@@ -15,10 +15,13 @@ export const NzbDavConfig = z.object({
   nzbdavUrl: z
     .string()
     .transform((s) => s.trim().replace(/^\/+/, '').replace(/\/+$/, '')),
+  publicNzbdavUrl: z
+    .string()
+    .optional()
+    .transform((s) => s?.trim().replace(/^\/+/, '').replace(/\/+$/, '')),
   nzbdavApiKey: z.string(),
   webdavUser: z.string(),
   webdavPassword: z.string(),
-  aiostreamsAuth: z.string(),
 });
 
 export class NzbDAVService extends UsenetStreamService {
@@ -32,11 +35,11 @@ export class NzbDAVService extends UsenetStreamService {
 
     const auth: UsenetStreamServiceConfig = {
       webdavUrl: `${parsedConfig.nzbdavUrl}/`,
+      publicWebdavUrl: `${parsedConfig.publicNzbdavUrl ?? parsedConfig.nzbdavUrl}/`,
       webdavUser: parsedConfig.webdavUser,
       webdavPassword: parsedConfig.webdavPassword,
       apiUrl: `${parsedConfig.nzbdavUrl}/api`,
       apiKey: parsedConfig.nzbdavApiKey,
-      aiostreamsAuth: parsedConfig.aiostreamsAuth,
     };
 
     super(config, auth, 'nzbdav');
@@ -49,12 +52,5 @@ export class NzbDAVService extends UsenetStreamService {
   protected getExpectedFolderName(nzbUrl: string, filename: string): string {
     // NzbDAV uses the filename parameter
     return filename;
-  }
-
-  protected async generatePlaybackLink(filePath: string): Promise<string> {
-    const parsedConfig = NzbDavConfig.parse(
-      JSON.parse(fromUrlSafeBase64(this.config.token))
-    );
-    return `${parsedConfig.nzbdavUrl}${filePath}`;
   }
 }
