@@ -325,6 +325,16 @@ router.all(
           ? getProxyAgent(Env.ADDON_PROXY![proxyIndex])
           : undefined;
         const headers = { ...clientHeaders, ...data.requestHeaders };
+        if (urlObj.username && urlObj.password) {
+          const basicAuth = Buffer.from(
+            `${decodeURIComponent(urlObj.username)}:${decodeURIComponent(
+              urlObj.password
+            )}`
+          ).toString('base64');
+          headers['authorization'] = `Basic ${basicAuth}`;
+          urlObj.username = '';
+          urlObj.password = '';
+        }
         currentUrl = urlObj.toString();
         logger.debug(`[${requestId}] Making upstream request`, {
           username: auth.username,
