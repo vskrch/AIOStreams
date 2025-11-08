@@ -273,34 +273,34 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
 
     const results = [...processedTorrents.results, ...processedNzbs.results];
 
-    // // Setup auth for both NzbDAV and Altmount
-    // let nzbdavAuth;
-    // let altmountAuth;
+    // Setup auth for both NzbDAV and Altmount
+    let nzbdavAuth: z.infer<typeof NzbDavConfig> | undefined;
+    let altmountAuth: z.infer<typeof AltmountConfig> | undefined;
 
-    // const encodedNzbdavAuth = this.userData.services.find(
-    //   (s) => s.id === 'nzbdav'
-    // )?.credential;
-    // const encodedAltmountAuth = this.userData.services.find(
-    //   (s) => s.id === 'altmount'
-    // )?.credential;
+    const encodedNzbdavAuth = this.userData.services.find(
+      (s) => s.id === 'nzbdav'
+    )?.credential;
+    const encodedAltmountAuth = this.userData.services.find(
+      (s) => s.id === 'altmount'
+    )?.credential;
 
-    // if (encodedNzbdavAuth) {
-    //   const { success, data } = NzbDavConfig.safeParse(
-    //     JSON.parse(fromUrlSafeBase64(encodedNzbdavAuth))
-    //   );
-    //   if (success) {
-    //     nzbdavAuth = data;
-    //   }
-    // }
+    if (encodedNzbdavAuth) {
+      const { success, data } = NzbDavConfig.safeParse(
+        JSON.parse(fromUrlSafeBase64(encodedNzbdavAuth))
+      );
+      if (success) {
+        nzbdavAuth = data;
+      }
+    }
 
-    // if (encodedAltmountAuth) {
-    //   const { success, data } = AltmountConfig.safeParse(
-    //     JSON.parse(fromUrlSafeBase64(encodedAltmountAuth))
-    //   );
-    //   if (success) {
-    //     altmountAuth = data;
-    //   }
-    // }
+    if (encodedAltmountAuth) {
+      const { success, data } = AltmountConfig.safeParse(
+        JSON.parse(fromUrlSafeBase64(encodedAltmountAuth))
+      );
+      if (success) {
+        altmountAuth = data;
+      }
+    }
 
     // // Collect indices for proxying
     // const nzbdavProxyIndices: number[] = [];
@@ -325,9 +325,39 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     // }
 
     let resultStreams = await Promise.all(
-      results.map((result) =>
-        this._createStream(result, encryptedStoreAuths, metadataId)
-      )
+      results.map((result) => {
+        const stream = this._createStream(
+          result,
+          encryptedStoreAuths,
+          metadataId
+        );
+        if (result.service?.id === 'nzbdav' && nzbdavAuth) {
+          stream.behaviorHints = {
+            ...stream.behaviorHints,
+            notWebReady: true,
+            proxyHeaders: {
+              request: {
+                Authorization: `Basic ${Buffer.from(
+                  `${nzbdavAuth.webdavUser}:${nzbdavAuth.webdavPassword}`
+                ).toString('base64')}`,
+              },
+            },
+          };
+        } else if (result.service?.id === 'altmount' && altmountAuth) {
+          stream.behaviorHints = {
+            ...stream.behaviorHints,
+            notWebReady: true,
+            proxyHeaders: {
+              request: {
+                Authorization: `Basic ${Buffer.from(
+                  `${altmountAuth.webdavUser}:${altmountAuth.webdavPassword}`
+                ).toString('base64')}`,
+              },
+            },
+          };
+        }
+        return stream;
+      })
     );
     // // Proxy NzbDAV streams
     // if (nzbdavProxyIndices.length > 0 && nzbdavAuth) {
@@ -684,6 +714,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       behaviorHints: {
         videoSize: torrentOrNzb.file.size,
         filename: torrentOrNzb.file.name,
+        notWebReady: true,
       },
     };
   }
