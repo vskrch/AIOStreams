@@ -100,6 +100,10 @@ export class UsenetStreamerPreset extends Preset {
             id: 'github',
             url: 'https://github.com/Sanket9225/UsenetStreamer',
           },
+          {
+            id: 'buymeacoffee',
+            url: 'https://buymeacoffee.com/gaikwadsank',
+          },
         ],
       },
     ];
