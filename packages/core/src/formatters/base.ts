@@ -590,6 +590,11 @@ export abstract class BaseFormatter {
                   error: `{unknown_${typeof property}_modifier(${lastModMatched})}`,
                 };
               case 'object':
+                if (property == null) {
+                  return {
+                    error: `{cannot_apply_modifier_to_null(${lastModMatched})}`,
+                  };
+                }
                 return { error: `{unknown_array_modifier(${lastModMatched})}` };
               default:
                 return { error: `{unknown_modifier(${lastModMatched})}` };
