@@ -7,6 +7,7 @@ import {
   FULL_LANGUAGE_MAPPING,
 } from '../utils/index.js';
 import FileParser from './file.js';
+import { parseAgeString } from './utils.js';
 const logger = createLogger('parser');
 
 class StreamParser {
@@ -309,7 +310,7 @@ class StreamParser {
     }
     const match = stream.description?.match(regex);
     if (match) {
-      return this.parseAgeToHours(match[1]);
+      return parseAgeString(match[1]);
     }
 
     return undefined;
@@ -320,28 +321,6 @@ class StreamParser {
    * @param ageString - The age string to parse (e.g. "1d", "5h", "30m")
    * @returns The age in hours, or undefined if parsing fails
    */
-  protected parseAgeToHours(ageString: string): number | undefined {
-    const match = ageString.match(/^(\d+)([a-zA-Z])$/);
-    if (!match) {
-      return undefined;
-    }
-
-    const value = parseInt(match[1], 10);
-    const unit = match[2].toLowerCase();
-
-    switch (unit) {
-      case 'd':
-        return value * 24;
-      case 'h':
-        return value;
-      case 'm':
-        return value / 60;
-      case 'y':
-        return value * 24 * 365;
-      default:
-        return undefined;
-    }
-  }
 
   protected isProxied(stream: Stream): boolean {
     return false;

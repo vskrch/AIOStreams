@@ -285,12 +285,11 @@ export class ProwlarrAddon extends BaseDebridAddon<ProwlarrAddonConfig> {
       seenNzbs.add(nzbUrl);
 
       const hash = createHash('md5').update(nzbUrl).digest('hex');
-      const ageStr = result.age ? `${Math.ceil(result.age)}d` : '0d';
 
       nzbs.push({
         hash,
         nzb: nzbUrl,
-        age: ageStr,
+        age: Math.ceil(result.age * 24),
         title: result.title,
         size: result.size,
         indexer: result.indexer,

@@ -42,7 +42,7 @@ interface BaseFile {
   index?: number;
   indexer?: string;
   seeders?: number;
-  age?: string;
+  age?: number;
 }
 
 export interface Torrent extends BaseFile {

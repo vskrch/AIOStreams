@@ -46,8 +46,11 @@ export class TorboxSearchParser extends StreamParser {
     return stream.name?.includes('☁️') ?? false;
   }
 
-  protected get ageRegex(): RegExp | undefined {
-    return this.getRegexForTextAfterEmojis(['🕒']);
+  protected getAge(
+    stream: Stream,
+    currentParsedStream: ParsedStream
+  ): number | undefined {
+    return stream.age as number | undefined;
   }
 
   protected getStreamType(

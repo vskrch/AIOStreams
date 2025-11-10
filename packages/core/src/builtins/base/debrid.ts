@@ -44,6 +44,7 @@ import { cleanTitle } from '../../parser/utils.js';
 import { NzbDavConfig, NzbDAVService } from '../../debrid/nzbdav.js';
 import { AltmountConfig, AltmountService } from '../../debrid/altmount.js';
 import { createProxy } from '../../proxy/index.js';
+import { formatHours } from '../../formatters/utils.js';
 
 export interface SearchMetadata extends TitleMetadata {
   primaryTitle?: string;
@@ -701,9 +702,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     const description = `${torrentOrNzb.title}\n${torrentOrNzb.file.name}\n${
       torrentOrNzb.indexer ? `🔍 ${torrentOrNzb.indexer}` : ''
     } ${'seeders' in torrentOrNzb && torrentOrNzb.seeders ? `👤 ${torrentOrNzb.seeders}` : ''} ${
-      torrentOrNzb.age && torrentOrNzb.age !== '0d'
-        ? `🕒 ${torrentOrNzb.age}`
-        : ''
+      torrentOrNzb.age ? `🕒 ${formatHours(torrentOrNzb.age)}` : ''
     }`;
 
     return {
@@ -719,6 +718,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       name,
       description,
       type: torrentOrNzb.type,
+      age: torrentOrNzb.age,
       infoHash: torrentOrNzb.hash,
       fileIdx: torrentOrNzb.file.index,
       behaviorHints: {

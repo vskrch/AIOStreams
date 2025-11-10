@@ -98,3 +98,26 @@ export function cleanTitle(title: string) {
     .toLowerCase()
     .trim();
 }
+
+export function parseAgeString(ageString: string): number | undefined {
+  const match = ageString.match(/^(\d+)([a-zA-Z])$/);
+  if (!match) {
+    return undefined;
+  }
+
+  const value = parseInt(match[1], 10);
+  const unit = match[2].toLowerCase();
+
+  switch (unit) {
+    case 'd':
+      return value * 24;
+    case 'h':
+      return value;
+    case 'm':
+      return value / 60;
+    case 'y':
+      return value * 24 * 365;
+    default:
+      return undefined;
+  }
+}

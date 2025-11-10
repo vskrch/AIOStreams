@@ -10,6 +10,7 @@ import { Preset, baseOptions } from './preset.js';
 import { constants, Env, formatZodError, RESOURCES } from '../utils/index.js';
 import { StreamParser } from '../parser/index.js';
 import { createLogger } from '../utils/index.js';
+import { parseAgeString } from '../parser/utils.js';
 
 const logger = createLogger('parser');
 
@@ -61,7 +62,7 @@ class AIOStreamsStreamParser extends StreamParser {
       library: aioStream.streamData?.library ?? false,
       age:
         typeof aioStream.streamData?.age === 'string'
-          ? this.parseAgeToHours(aioStream.streamData?.age)
+          ? parseAgeString(aioStream.streamData?.age)
           : aioStream.streamData?.age,
       message: aioStream.streamData?.message,
       torrent: aioStream.streamData?.torrent,

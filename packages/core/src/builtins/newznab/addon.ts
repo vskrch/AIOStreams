@@ -75,14 +75,14 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
         createHash('md5').update(nzbUrl).digest('hex');
       const age = Math.ceil(
         Math.abs(new Date().getTime() - new Date(result.pubDate).getTime()) /
-          (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60)
       );
 
       nzbs.push({
         confirmed: meta.searchType === 'id',
         hash: md5,
         nzb: nzbUrl,
-        age: `${age}d`,
+        age: age,
         title: result.title,
         indexer: result.newznab?.hydraIndexerName?.toString() ?? undefined,
         size:

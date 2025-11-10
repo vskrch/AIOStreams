@@ -31,6 +31,7 @@ import {
 } from '../../debrid/utils.js';
 import { DebridFile, FileInfo, PlaybackInfo } from '../../debrid/index.js';
 import { getTraktAliases } from '../../metadata/trakt.js';
+import { formatHours } from '../../formatters/utils.js';
 
 const logger = createLogger('torbox-search');
 
@@ -126,9 +127,7 @@ abstract class SourceHandler {
     const description = `${torrentOrNzb.title}\n${torrentOrNzb.file.name}\n${
       torrentOrNzb.indexer ? `🔍 ${torrentOrNzb.indexer}` : ''
     } ${'seeders' in torrentOrNzb && torrentOrNzb.seeders ? `👤 ${torrentOrNzb.seeders}` : ''} ${
-      torrentOrNzb.age && torrentOrNzb.age !== '0d'
-        ? `🕒 ${torrentOrNzb.age}`
-        : ''
+      torrentOrNzb.age ? `🕒 ${formatHours(torrentOrNzb.age)}` : ''
     }`;
 
     return {
@@ -144,6 +143,7 @@ abstract class SourceHandler {
       name,
       description,
       type: torrentOrNzb.type,
+      age: torrentOrNzb.age,
       infoHash: torrentOrNzb.hash,
       fileIdx: torrentOrNzb.file.index,
       behaviorHints: {
