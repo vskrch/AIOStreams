@@ -427,33 +427,45 @@ export abstract class BaseFormatter {
         if (precompiledResolvedVariableFns.length == 1)
           return precompiledResolvedVariableFns[0](parseValue);
 
-        const resolvedVariablesWithContext = precompiledResolvedVariableFns.map(
-          (fn) => fn(parseValue)
-        );
-        const reducedResolvedVarWContext = resolvedVariablesWithContext.reduce(
-          (prev, cur, i) => {
-            if (prev.error !== undefined) return prev;
-            if (cur.error !== undefined) return cur;
-            // the comparator key between prev and cur (from splitOnComparators)
-            const compareKey = foundComparators[
-              i - 1
-            ] as keyof typeof ComparatorConstants.comparatorKeyToFuncs;
-            const comparatorFn =
-              ComparatorConstants.comparatorKeyToFuncs[compareKey];
+        // Use lazy evaluation with short-circuit logic for AND/OR operations
+        let result: ResolvedVariable =
+          precompiledResolvedVariableFns[0](parseValue);
 
-            try {
-              const result = comparatorFn(prev.result, cur.result);
-              const finalResult = { result: result };
-              return finalResult;
-            } catch (e) {
-              const errorResult = {
-                error: `{unable_to_compare(<${prev.result}>::${compareKey}::<${cur.result}>, ${e})}`,
-              };
-              return errorResult;
-            }
+        for (let i = 1; i < precompiledResolvedVariableFns.length; i++) {
+          // If previous result has error, propagate it
+          if (result.error !== undefined) return result;
+
+          const compareKey = foundComparators[
+            i - 1
+          ] as keyof typeof ComparatorConstants.comparatorKeyToFuncs;
+
+          // Short-circuit evaluation for AND/OR
+          if (compareKey === 'and' && result.result === false) {
+            return { result: false };
+          } else if (compareKey === 'or' && result.result === true) {
+            return { result: true };
           }
-        );
-        return reducedResolvedVarWContext;
+
+          const nextResolved = precompiledResolvedVariableFns[i](parseValue);
+
+          // If next result has error, propagate it
+          if (nextResolved.error !== undefined) return nextResolved;
+
+          const comparatorFn =
+            ComparatorConstants.comparatorKeyToFuncs[compareKey];
+
+          try {
+            result = {
+              result: comparatorFn(result.result, nextResolved.result),
+            };
+          } catch (e) {
+            return {
+              error: `{unable_to_compare(<${result.result}>::${compareKey}::<${nextResolved.result}>, ${e})}`,
+            };
+          }
+        }
+
+        return result;
       }; // end of COMPARATOR logic
 
       // CHECK TRUE/FALSE logic: compile the true/false templates and apply them to the resolved variable
