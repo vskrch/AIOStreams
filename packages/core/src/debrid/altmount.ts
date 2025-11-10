@@ -39,6 +39,7 @@ export class AltmountService extends UsenetStreamService {
       webdavPassword: parsedConfig.webdavPassword,
       apiUrl: `${parsedConfig.altmountUrl}/sabnzbd/api`,
       apiKey: parsedConfig.altmountApiKey,
+      aiostreamsAuth: parsedConfig.aiostreamsAuth,
     };
 
     super(config, auth, 'altmount');

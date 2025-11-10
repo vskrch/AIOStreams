@@ -387,6 +387,7 @@ export interface UsenetStreamServiceConfig {
   webdavPassword: string;
   apiUrl: string;
   apiKey: string;
+  aiostreamsAuth?: string;
 }
 
 /**
@@ -566,6 +567,21 @@ export abstract class UsenetStreamService implements DebridService {
   }
 
   public async checkNzbs(hashes: string[]): Promise<DebridDownload[]> {
+    // if aiostreamsAuth is present, validate it.
+    if (this.auth.aiostreamsAuth) {
+      try {
+        BuiltinProxy.validateAuth(this.auth.aiostreamsAuth);
+      } catch (error) {
+        throw new DebridError('Invalid AIOStreams Proxy Auth', {
+          statusCode: 401,
+          statusText: 'Unauthorized',
+          code: 'UNAUTHORIZED',
+          headers: {},
+          body: null,
+          type: 'api_error',
+        });
+      }
+    }
     // All NZBs are "cached" since it's streaming-based
     return hashes.map((h, index) => ({
       id: index,

@@ -41,6 +41,7 @@ export class NzbDAVService extends UsenetStreamService {
       webdavPassword: parsedConfig.webdavPassword,
       apiUrl: `${parsedConfig.nzbdavUrl}/api`,
       apiKey: parsedConfig.nzbdavApiKey,
+      aiostreamsAuth: parsedConfig.aiostreamsAuth,
     };
 
     super(config, auth, 'nzbdav');
