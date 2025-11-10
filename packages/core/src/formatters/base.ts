@@ -427,7 +427,16 @@ export abstract class BaseFormatter {
         if (precompiledResolvedVariableFns.length == 1)
           return precompiledResolvedVariableFns[0](parseValue);
 
-        // Use lazy evaluation with short-circuit logic for AND/OR operations
+        // Check if we can safely use short-circuit evaluation
+        // Only short-circuit when all operators are the same type (all 'and' or all 'or')
+        const allOperatorsSame = foundComparators.every(
+          (op, idx, arr) => op === arr[0]
+        );
+        const canShortCircuit =
+          allOperatorsSame &&
+          (foundComparators[0] === 'and' || foundComparators[0] === 'or');
+
+        // Use lazy evaluation with short-circuit logic for AND/OR operations when safe
         let result: ResolvedVariable =
           precompiledResolvedVariableFns[0](parseValue);
 
@@ -439,11 +448,13 @@ export abstract class BaseFormatter {
             i - 1
           ] as keyof typeof ComparatorConstants.comparatorKeyToFuncs;
 
-          // Short-circuit evaluation for AND/OR
-          if (compareKey === 'and' && result.result === false) {
-            return { result: false };
-          } else if (compareKey === 'or' && result.result === true) {
-            return { result: true };
+          // Short-circuit evaluation only when all operators are the same
+          if (canShortCircuit) {
+            if (compareKey === 'and' && result.result === false) {
+              return { result: false };
+            } else if (compareKey === 'or' && result.result === true) {
+              return { result: true };
+            }
           }
 
           const nextResolved = precompiledResolvedVariableFns[i](parseValue);
