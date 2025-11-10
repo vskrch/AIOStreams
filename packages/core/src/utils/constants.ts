@@ -395,8 +395,8 @@ const SERVICE_DETAILS: Record<
     credentials: [
       {
         id: 'note',
-        name: 'What do I put for URL and Public URL?',
-        description: `\n**URL:** Use internal URL for local setups (e.g., http://nzbdav:3000), otherwise use a public URL here.\n\n**Public URL:** Only needed if above URL is local but you want streams to be publicly accessible. Leave blank if URL is already public or if using a proxy.\n\n**Note:** WebDAV URL/credentials are exposed in the stream URLs if not using a proxy. To proxy, you must use the built-in proxy by providing the Auth Token below.`,
+        name: 'Configuration Help',
+        description: `**URL:** Use internal URL for local setups (e.g., http://nzbdav:3000), otherwise use a public URL.\n\n**Public URL:** Only needed if URL is local but streams need to be publicly accessible. Leave blank if URL is public or using a proxy.\n\n**Security Note:** WebDAV credentials are exposed in stream URLs unless proxied. To proxy, provide the Auth Token below (built-in proxy only).\n\nFor detailed setup instructions, see the [Usenet Wiki](https://github.com/Viren070/AIOStreams/wiki/Usenet#configuring-the-service-in-aiostreams).`,
         type: 'alert',
         intent: 'info',
         required: false,
@@ -460,8 +460,8 @@ const SERVICE_DETAILS: Record<
     credentials: [
       {
         id: 'note',
-        name: 'What do I put for URL and Public URL?',
-        description: `\n**URL:** Use internal URL for local setups (e.g., http://altmount:8000), otherwise use a public URL here.\n\n**Public URL:** Only needed if above URL is local but you want streams to be publicly accessible. Leave blank if URL is already public or if using a proxy.\n\n**Note:** WebDAV URL/credentials are exposed in the stream URLs if not using a proxy. To proxy, you must use the built-in proxy by providing the Auth Token below.`,
+        name: 'Configuration Help',
+        description: `**URL:** Use internal URL for local setups (e.g., http://altmount:8000), otherwise use a public URL.\n\n**Public URL:** Only needed if URL is local but streams need to be publicly accessible. Leave blank if URL is public or using a proxy.\n\n**Security Note:** WebDAV credentials are exposed in stream URLs unless proxied. To proxy, provide the Auth Token below (built-in proxy only).\n\nFor detailed setup instructions, see the [Usenet Wiki](https://github.com/Viren070/AIOStreams/wiki/Usenet#configuring-the-service-in-aiostreams).`,
         type: 'alert',
         intent: 'info',
         required: false,
