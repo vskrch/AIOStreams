@@ -414,13 +414,15 @@ export abstract class StreamExpressionEngine {
             'offcloud',
             'premiumize',
             'easynews',
+            'nzbdav',
+            'altmount',
             'easydebrid',
             'debrider',
           ].includes(s)
         )
       ) {
         throw new Error(
-          'Service must be a string and one of: realdebrid, debridlink, alldebrid, torbox, pikpak, seedr, offcloud, premiumize, easynews, easydebrid, debrider'
+          'Service must be a string and one of: realdebrid, debridlink, alldebrid, torbox, pikpak, seedr, offcloud, premiumize, easynews, nzbdav, altmount, easydebrid, debrider'
         );
       }
       return streams.filter((stream) =>
