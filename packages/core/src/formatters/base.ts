@@ -97,6 +97,7 @@ export interface ParseValue {
     seasonPack: boolean;
     seeders: number | null;
     age: string | null;
+    ageHours: number | null;
     duration: number | null;
     infoHash: string | null;
     type: string | null;
@@ -309,6 +310,7 @@ export abstract class BaseFormatter {
         duration: stream.duration || null,
         infoHash: stream.torrent?.infoHash || null,
         age: formattedAge,
+        ageHours: stream.age || null,
         message: stream.message || null,
         proxied: stream.proxied ?? false,
         edition: stream.parsedFile?.edition || null,
