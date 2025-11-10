@@ -654,7 +654,20 @@ export abstract class UsenetStreamService implements DebridService {
           path: expectedContentPath,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      // if error is a 401, rethrow as DebridError
+      const status = typeof error.status === 'number' ? error.status : 500;
+      if (status === 401) {
+        throw new DebridError(`Could not access WebDAV: Unauthorized`, {
+          statusCode: 401,
+          statusText: 'Unauthorized',
+          code: 'UNAUTHORIZED',
+          headers: {},
+          body: null,
+          type: 'api_error',
+          cause: error.message,
+        });
+      }
       this.serviceLogger.debug(`Content path does not exist, will add NZB`, {
         path: expectedContentPath,
         error: (error as Error).message,
