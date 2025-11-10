@@ -56,7 +56,7 @@ export interface ParseValue {
     folderName: string | null;
     size: number | null;
     folderSize: number | null;
-    library: boolean | null;
+    library: boolean;
     quality: string | null;
     resolution: string | null;
     languages: string[] | null;
@@ -76,11 +76,11 @@ export interface ParseValue {
     encode: string | null;
     audioChannels: string[] | null;
     edition: string | null;
-    remastered: boolean | null;
-    repack: boolean | null;
-    uncensored: boolean | null;
-    unrated: boolean | null;
-    upscaled: boolean | null;
+    remastered: boolean;
+    repack: boolean;
+    uncensored: boolean;
+    unrated: boolean;
+    upscaled: boolean;
     network: string | null;
     container: string | null;
     extension: string | null;
@@ -94,14 +94,14 @@ export interface ParseValue {
     episode: number | null;
     formattedEpisodes: string | null;
     seasonEpisode: string[] | null;
-    seasonPack: boolean | null;
+    seasonPack: boolean;
     seeders: number | null;
     age: string | null;
     duration: number | null;
     infoHash: string | null;
     type: string | null;
     message: string | null;
-    proxied: boolean | null;
+    proxied: boolean;
   };
   service?: {
     id: string | null;
@@ -238,7 +238,7 @@ export abstract class BaseFormatter {
         folderName: stream.folderName || null,
         size: stream.size || null,
         folderSize: stream.folderSize || null,
-        library: stream.library !== undefined ? stream.library : null,
+        library: stream.library ?? false,
         quality: stream.parsedFile?.quality || null,
         resolution: stream.parsedFile?.resolution || null,
         languages: sortedLanguages || null,
@@ -305,18 +305,18 @@ export abstract class BaseFormatter {
         formattedEpisodes: formattedEpisodeString || null,
         episodes: stream.parsedFile?.episodes || null,
         seasonEpisode: seasonEpisode || null,
-        seasonPack: stream.parsedFile?.seasonPack || null,
+        seasonPack: stream.parsedFile?.seasonPack ?? false,
         duration: stream.duration || null,
         infoHash: stream.torrent?.infoHash || null,
         age: formattedAge,
         message: stream.message || null,
-        proxied: stream.proxied !== undefined ? stream.proxied : null,
+        proxied: stream.proxied ?? false,
         edition: stream.parsedFile?.edition || null,
-        remastered: stream.parsedFile?.remastered || null,
-        repack: stream.parsedFile?.repack || null,
-        uncensored: stream.parsedFile?.uncensored || null,
-        unrated: stream.parsedFile?.unrated || null,
-        upscaled: stream.parsedFile?.upscaled || null,
+        remastered: stream.parsedFile?.remastered ?? false,
+        repack: stream.parsedFile?.repack ?? false,
+        uncensored: stream.parsedFile?.uncensored ?? false,
+        unrated: stream.parsedFile?.unrated ?? false,
+        upscaled: stream.parsedFile?.upscaled ?? false,
         network: stream.parsedFile?.network || null,
         container: stream.parsedFile?.container || null,
         extension: stream.parsedFile?.extension || null,
