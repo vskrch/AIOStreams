@@ -332,7 +332,12 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
           encryptedStoreAuths,
           metadataId
         );
-        if (result.service?.id === 'nzbdav' && nzbdavAuth) {
+        if (
+          result.service?.id === 'nzbdav' &&
+          nzbdavAuth &&
+          nzbdavAuth.webdavUser &&
+          nzbdavAuth.webdavPassword
+        ) {
           stream.behaviorHints = {
             ...stream.behaviorHints,
             notWebReady: true,
@@ -374,13 +379,16 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
           .map((stream) => ({
             url: stream.url!,
             filename: stream.behaviorHints?.filename ?? undefined,
-            headers: {
-              request: {
-                Authorization: `Basic ${Buffer.from(
-                  `${nzbdavAuth.webdavUser}:${nzbdavAuth.webdavPassword}`
-                ).toString('base64')}`,
-              },
-            },
+            headers:
+              nzbdavAuth.webdavUser && nzbdavAuth.webdavPassword
+                ? {
+                    request: {
+                      Authorization: `Basic ${Buffer.from(
+                        `${nzbdavAuth.webdavUser}:${nzbdavAuth.webdavPassword}`
+                      ).toString('base64')}`,
+                    },
+                  }
+                : undefined,
           }))
       );
 

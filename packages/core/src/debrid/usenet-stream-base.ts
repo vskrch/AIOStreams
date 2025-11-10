@@ -383,8 +383,8 @@ export class SABnzbdApi {
 export interface UsenetStreamServiceConfig {
   webdavUrl: string;
   publicWebdavUrl: string;
-  webdavUser: string;
-  webdavPassword: string;
+  webdavUser?: string;
+  webdavPassword?: string;
   apiUrl: string;
   apiKey: string;
   aiostreamsAuth?: string;
@@ -806,8 +806,10 @@ export abstract class UsenetStreamService implements DebridService {
 
   protected getPublicWebdavUrlWithAuth(): string {
     let url = new URL(this.auth.publicWebdavUrl);
-    url.username = encodeURIComponent(this.auth.webdavUser);
-    url.password = encodeURIComponent(this.auth.webdavPassword);
+    if (this.auth.webdavUser && this.auth.webdavPassword) {
+      url.username = encodeURIComponent(this.auth.webdavUser);
+      url.password = encodeURIComponent(this.auth.webdavPassword);
+    }
     return url.toString().replace(/\/+$/, ''); // Remove trailing slash
   }
 }

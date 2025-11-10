@@ -20,8 +20,8 @@ export const NzbDavConfig = z.object({
     .optional()
     .transform((s) => s?.trim().replace(/^\/+/, '').replace(/\/+$/, '')),
   nzbdavApiKey: z.string(),
-  webdavUser: z.string(),
-  webdavPassword: z.string(),
+  webdavUser: z.string().optional(),
+  webdavPassword: z.string().optional(),
   aiostreamsAuth: z.string().optional(),
 });
 

@@ -431,7 +431,7 @@ const SERVICE_DETAILS: Record<
         description:
           'Your Nzb DAV WebDAV Username. Found in the WebDAV section in settings.',
         type: 'string',
-        required: true,
+        required: false,
       },
       {
         id: 'password',
@@ -439,7 +439,7 @@ const SERVICE_DETAILS: Record<
         description:
           'Your NzbDAV WebDAV Password. Found in the WebDAV section in settings.',
         type: 'password',
-        required: true,
+        required: false,
       },
       {
         id: 'aiostreamsAuth',
