@@ -210,6 +210,15 @@ export async function selectFileInTorrentOrNZB(
       continue;
     }
 
+    if (
+      file.name &&
+      ['sample', 'trailer', 'preview'].some((keyword) =>
+        file.name!.toLowerCase().includes(keyword)
+      )
+    ) {
+      score -= 500;
+    }
+
     // Base score from video file status (highest priority)
     if (isVideo[index]) {
       score += 1000;
@@ -353,6 +362,7 @@ export function isVideoFile(file: DebridFile): boolean {
     '.flv',
     '.gif',
     '.gifv',
+    '.iso',
     '.m2v',
     '.m4p',
     '.m4v',
