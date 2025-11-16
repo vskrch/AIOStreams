@@ -301,6 +301,7 @@ class StreamFilterer {
             ).toString();
           }
         }
+        const metadataStart = Date.now();
         requestedMetadata = await new MetadataService({
           tmdbAccessToken: this.userData.tmdbAccessToken,
           tmdbApiKey: this.userData.tmdbApiKey,
@@ -359,7 +360,11 @@ class StreamFilterer {
         if (yearWithinTitle) {
           yearWithinTitleRegex = new RegExp(`${yearWithinTitle[0]}`, 'g');
         }
-        logger.info(`Fetched metadata for ${id}`, requestedMetadata);
+        logger.info(`Fetched metadata`, {
+          id,
+          time: getTimeTakenSincePoint(metadataStart),
+          ...requestedMetadata,
+        });
       } catch (error) {
         logger.warn(
           `Error fetching titles for ${id}, title/year matching will not be performed: ${error}`
