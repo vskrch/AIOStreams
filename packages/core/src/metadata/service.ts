@@ -298,6 +298,7 @@ export class MetadataService {
             timeout: 10000,
             ttl: 12000,
             retryInterval: 100,
+            type: 'memory',
           }
         );
 
