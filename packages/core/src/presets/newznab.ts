@@ -102,13 +102,27 @@ export class NewznabPreset extends BuiltinAddonPreset {
         default: undefined,
         emptyIsUndefined: true,
       },
+      // {
+      //   id: 'forceQuerySearch',
+      //   name: 'Force Query Search',
+      //   description: 'Force the addon to use the query search parameter',
+      //   type: 'boolean',
+      //   required: false,
+      //   default: false,
+      // },
       {
-        id: 'forceQuerySearch',
-        name: 'Force Query Search',
-        description: 'Force the addon to use the query search parameter',
-        type: 'boolean',
+        id: 'searchMode',
+        name: 'Search Mode',
+        description:
+          'The search mode to use when querying the Torznab endpoint. **Note**: `Both` will result in two addons being created, one for each search mode.',
+        type: 'select',
         required: false,
-        default: false,
+        default: 'auto',
+        options: [
+          { label: 'Auto', value: 'auto' },
+          { label: 'Forced Query', value: 'query' },
+          { label: 'Both', value: 'both' },
+        ],
       },
       {
         id: 'useMultipleInstances',
@@ -149,18 +163,27 @@ export class NewznabPreset extends BuiltinAddonPreset {
         )}`
       );
     }
-    if (options.useMultipleInstances) {
-      return usableServices.map((service) =>
-        this.generateAddon(userData, options, [service.id])
-      );
-    }
-    return [
-      this.generateAddon(
-        userData,
-        options,
-        usableServices.map((service) => service.id)
-      ),
-    ];
+    // prettier-ignore
+    const getQuerySearchValues = (searchMode: string, forceQuerySearch?: boolean): boolean[] => {
+      switch (searchMode) {
+        case 'both': return [true, false];
+        case 'query': return [true];
+        case 'auto': return [false];
+        default: return [forceQuerySearch ?? false];
+      }
+    };
+
+    // prettier-ignore
+    const querySearchValues = getQuerySearchValues(options.searchMode, options.forceQuerySearch);
+
+    // prettier-ignore
+    return querySearchValues.flatMap(forceQuerySearch => {
+      const modifiedOptions = { ...options, forceQuerySearch };
+      
+      return options.useMultipleInstances
+        ? usableServices.map(service => this.generateAddon(userData, modifiedOptions, [service.id]))
+        : [this.generateAddon(userData, modifiedOptions, usableServices.map(service => service.id))];
+    });
   }
 
   private static generateAddon(
@@ -171,6 +194,14 @@ export class NewznabPreset extends BuiltinAddonPreset {
     return {
       name: options.name || this.METADATA.NAME,
       manifestUrl: this.generateManifestUrl(userData, services, options),
+      identifier: (services.length > 1
+        ? 'multi'
+        : constants.SERVICE_DETAILS[services[0]].shortName
+      ).concat(options.forceQuerySearch ? '_Q' : ''),
+      displayIdentifier: services
+        .map((id) => constants.SERVICE_DETAILS[id].shortName)
+        .join(' | ')
+        .concat(options.forceQuerySearch ? ' (Q)' : ''),
       enabled: true,
       library: options.libraryAddon ?? false,
       resources: options.resources || undefined,

@@ -91,14 +91,19 @@ export class NZBHydraPreset extends NewznabPreset {
         required: !Env.BUILTIN_NZBHYDRA_URL || !Env.BUILTIN_NZBHYDRA_API_KEY,
       },
       {
-        id: 'forceQuerySearch',
-        name: 'Force Query Search',
-        description: 'Force the addon to use the query search parameter',
-        type: 'boolean',
+        id: 'searchMode',
+        name: 'Search Mode',
+        description:
+          'The search mode to use when querying the Torznab endpoint. **Note**: `Both` will result in two addons being created, one for each search mode.',
+        type: 'select',
         required: false,
-        default: true,
+        default: 'query',
+        options: [
+          { label: 'Auto', value: 'auto' },
+          { label: 'Forced Query', value: 'query' },
+          { label: 'Both', value: 'both' },
+        ],
       },
-
       {
         id: 'useMultipleInstances',
         name: 'Use Multiple Instances',
