@@ -83,7 +83,7 @@ export class IMDBMetadata {
     }
   }
 
-  private async getImdbSuggestionData(
+  public async getImdbSuggestionData(
     id: string,
     type: string
   ): Promise<Metadata> {
