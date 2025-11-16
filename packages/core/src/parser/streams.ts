@@ -135,7 +135,8 @@ class StreamParser {
       infoHash: stream.infoHash ?? this.getInfoHash(stream, parsedStream),
       seeders: this.getSeeders(stream, parsedStream),
       sources: stream.sources ?? undefined,
-      fileIdx: stream.fileIdx ?? undefined,
+      fileIdx:
+        stream.fileIdx ?? this.getFileIdx(stream, parsedStream) ?? undefined,
     };
 
     return parsedStream;
@@ -371,6 +372,13 @@ class StreamParser {
     return stream.url
       ? stream.url.match(/(?<=[-/[(;:&])[a-fA-F0-9]{40}(?=[-\]\)/:;&])/)?.[0]
       : undefined;
+  }
+
+  protected getFileIdx(
+    stream: Stream,
+    currentParsedStream: ParsedStream
+  ): number | undefined {
+    return undefined;
   }
 
   protected getDuration(
