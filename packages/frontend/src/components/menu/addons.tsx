@@ -321,6 +321,9 @@ function Content() {
     (n) => n.CATEGORY === constants.PresetCategory.MISC
   );
 
+  const addonGridClassName =
+    'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 5xl:grid-cols-6 6xl:grid-cols-7 7xl:grid-cols-8 gap-4';
+
   return (
     <>
       {/* <div className="flex items-center w-full">
@@ -564,7 +567,7 @@ function Content() {
                 <h3 className="flex gap-3 items-center">
                   <RiFolderDownloadFill /> Streams
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className={addonGridClassName}>
                   {streamPresets.map((preset: any) => (
                     <AddonCard
                       key={preset.ID}
@@ -581,7 +584,7 @@ function Content() {
                 <h3 className="flex gap-3 items-center">
                   <MdSubtitles /> Subtitles
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className={addonGridClassName}>
                   {subtitlePresets.map((preset: any) => (
                     <AddonCard
                       key={preset.ID}
@@ -598,7 +601,7 @@ function Content() {
                 <h3 className="flex gap-3 items-center">
                   <MdOutlineDataset /> Meta & Catalogues
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className={addonGridClassName}>
                   {metaCatalogPresets.map((preset: any) => (
                     <AddonCard
                       key={preset.ID}
@@ -615,7 +618,7 @@ function Content() {
                 <h3 className="flex gap-3 items-center">
                   <LuSettings /> Miscellaneous
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className={addonGridClassName}>
                   {miscPresets.map((preset: any) => (
                     <AddonCard
                       key={preset.ID}
@@ -958,12 +961,11 @@ function SortableAddonItem({
 
 // AddonCard component
 function AddonCard({ preset, onAdd }: { preset: any; onAdd: () => void }) {
-  const [showDescriptionPopover, setShowDescriptionPopover] = useState(false);
   const [showBuiltinModal, setShowBuiltinModal] = useState(false);
 
   return (
     <>
-      <div className="border border-[rgb(255_255_255_/_5%)] relative overflow-hidden bg-gray-900 rounded-xl p-3 flex flex-col h-full">
+      <div className="border border-[rgb(255_255_255_/_5%)] relative overflow-hidden bg-gray-900/70 rounded-xl p-3 flex flex-col h-full">
         {/* Built-in ribbon - top-right */}
         {preset.BUILTIN && (
           <div
