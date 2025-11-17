@@ -832,15 +832,15 @@ function SortableAddonItem({
                 className="w-full h-full object-contain rounded-md"
               />
             ) : presetMetadata.ID === 'custom' ? (
-              <div className="w-full h-full flex items-center justify-center rounded-md bg-gray-950">
-                <PlusIcon className="w-4 h-4 text-[--brand]" />
-              </div>
-            ) : (
+              <PlusIcon className="w-full h-full object-contain text-[--brand]" />
+            ) : preset.options.name?.trim()?.[0] ? (
               <div className="w-full h-full flex items-center justify-center rounded-md bg-gray-950">
                 <p className="text-lg font-bold">
-                  {preset.options.name?.[0]?.toUpperCase() || '?'}
+                  {preset.options.name?.trim()?.[0]?.toUpperCase() || '?'}
                 </p>
               </div>
+            ) : (
+              <IoExtensionPuzzle className="w-full h-full object-contain text-[--brand]" />
             )}
           </div>
 
