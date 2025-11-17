@@ -37,6 +37,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
         description: 'The path to the Torznab API. Usually /api.',
         type: 'string',
         required: false,
+        showInSimpleMode: false,
         default: '/api',
       },
       {
@@ -105,6 +106,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
           'The search mode to use when querying the Torznab endpoint. **Note**: `Both` will result in two addons being created, one for each search mode.',
         type: 'select',
         required: false,
+        showInSimpleMode: false,
         default: 'auto',
         options: [
           { label: 'Auto', value: 'auto' },

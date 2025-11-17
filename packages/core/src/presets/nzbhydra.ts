@@ -97,6 +97,7 @@ export class NZBHydraPreset extends NewznabPreset {
           'The search mode to use when querying the Torznab endpoint. **Note**: `Both` will result in two addons being created, one for each search mode.',
         type: 'select',
         required: false,
+        showInSimpleMode: false,
         default: 'query',
         options: [
           { label: 'Auto', value: 'auto' },

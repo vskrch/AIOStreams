@@ -24,7 +24,24 @@ export class NewznabPreset extends BuiltinAddonPreset {
         id: 'newznabUrl',
         name: 'Newznab URL',
         description: 'Provide the URL to the Newznab endpoint ',
-        type: 'url',
+        type: 'select-with-custom',
+        options: [
+          { label: 'altHUB', value: 'https://api.althub.co.za' },
+          {
+            label: 'AnimeTosho (Newznab)',
+            value: 'https://feed.animetosho.org/',
+          },
+          { label: 'DOGnzb', value: 'https://api.dognzb.cr/' },
+          { label: 'DrunkenSlug', value: 'https://drunkenslug.com/' },
+          { label: 'Miatrix', value: 'https://www.miatrix.com' },
+          { label: 'NinjaCentral', value: 'https://ninjacentral.co.za/' },
+          { label: 'NZBgeek', value: 'https://nzbgeek.info/' },
+          {
+            label: 'Tabula Rasa',
+            value: 'https://www.tabula-rasa.pw/api/v1/  ',
+          },
+          { label: 'usenet-crawler', value: 'https://usenetcrawler.com/' },
+        ],
         required: true,
       },
       {
@@ -42,6 +59,7 @@ export class NewznabPreset extends BuiltinAddonPreset {
         type: 'string',
         required: false,
         default: '/api',
+        showInSimpleMode: false,
       },
       {
         id: 'proxyAuth',
@@ -118,6 +136,7 @@ export class NewznabPreset extends BuiltinAddonPreset {
         type: 'select',
         required: false,
         default: 'auto',
+        showInSimpleMode: false,
         options: [
           { label: 'Auto', value: 'auto' },
           { label: 'Forced Query', value: 'query' },
