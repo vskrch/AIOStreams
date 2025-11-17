@@ -28,6 +28,21 @@ export class UsenetStreamerParser extends StreamParser {
     };
   }
 
+  protected getInLibrary(
+    stream: Stream,
+    currentParsedStream: ParsedStream
+  ): boolean {
+    return stream.description?.includes('⚡ Instant') ?? false;
+  }
+
+  protected getMessage(
+    stream: Stream,
+    currentParsedStream: ParsedStream
+  ): string | undefined {
+    const status = stream.description?.match(/(✅|⚠️|🚫)/g)?.[0];
+    if (status) return `NZB Health: ${status}`;
+  }
+
   protected getIndexer(
     stream: Stream,
     currentParsedStream: ParsedStream
