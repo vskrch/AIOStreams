@@ -44,8 +44,12 @@ export class BuiltinStreamParser extends StreamParser {
     stream: Stream,
     currentParsedStream: ParsedStream
   ): number | undefined {
-    return stream.age as number | undefined;
+    if (typeof stream.age === 'number') {
+      currentParsedStream.duration = undefined;
+      return stream.age;
+    }
   }
+
   protected getStreamType(
     stream: Stream,
     service: ParsedStream['service'],
