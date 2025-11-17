@@ -119,6 +119,7 @@ export class CustomPreset extends Preset {
       OPTIONS: options,
       SUPPORTED_STREAM_TYPES: [],
       SUPPORTED_RESOURCES: [],
+      CATEGORY: constants.PresetCategory.MISC,
     };
   }
 

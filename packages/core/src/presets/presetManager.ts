@@ -148,6 +148,7 @@ export class PresetManager {
         OPTIONS: metadata.OPTIONS,
         BUILTIN: metadata.BUILTIN,
         DISABLED: metadata.DISABLED,
+        CATEGORY: metadata.CATEGORY,
       })
     );
   }

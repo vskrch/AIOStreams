@@ -1110,6 +1110,24 @@ export const RESOURCE_LABELS: Record<Resource, string> = {
   [ADDON_CATALOG_RESOURCE]: 'Addon Catalog',
 };
 
+// export const PRESET_CATEGORY_STREAMS = 'streams' as const;
+// econst PRESET_CATEGORY_SUBTITLES = 'subtitles' as const;
+// const PRESET_CATEGORY_META_CATALOGS = 'meta_catalogs' as const;
+// const PRESET_CATEGORY_MISC = 'misc' as const;
+export enum PresetCategory {
+  STREAMS = 'streams',
+  SUBTITLES = 'subtitles',
+  META_CATALOGS = 'meta_catalogs',
+  MISC = 'misc',
+}
+
+export const PRESET_CATEGORIES = [
+  PresetCategory.STREAMS,
+  PresetCategory.SUBTITLES,
+  PresetCategory.META_CATALOGS,
+  PresetCategory.MISC,
+] as const;
+
 const LANGUAGES = [
   'English',
   'Japanese',

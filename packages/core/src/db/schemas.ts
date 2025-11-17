@@ -933,6 +933,7 @@ const PresetMinimalMetadataSchema = z.object({
   SUPPORTED_SERVICES: z.array(z.string()),
   OPTIONS: z.array(OptionDefinition),
   BUILTIN: z.boolean().optional(),
+  CATEGORY: z.enum(constants.PRESET_CATEGORIES).optional(),
 });
 
 const PresetMetadataSchema = PresetMinimalMetadataSchema.extend({
