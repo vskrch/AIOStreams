@@ -334,9 +334,9 @@ function Content() {
         <div className="flex flex-1"></div>
       </div> */}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <StaticTabs
-          className="h-10 w-fit border rounded-full"
+          className="h-10 w-fit max-w-full border rounded-full"
           triggerClass="px-4 py-1 text-md"
           items={[
             {
@@ -482,7 +482,7 @@ function Content() {
 
             {/* Category tabs */}
             <StaticTabs
-              className="h-10 w-fit border rounded-full"
+              className="h-10 w-fit max-w-full border rounded-full"
               triggerClass="px-4 py-1 text-sm"
               items={[
                 {
