@@ -49,7 +49,7 @@ export class NewznabPreset extends BuiltinAddonPreset {
             label: 'TorBox Search',
             value: 'https://search-api.torbox.app/newznab',
           },
-          { label: 'Usenet Crawler', value: 'https://www.usenetcrawler.com/' },
+          { label: 'Usenet Crawler', value: 'https://www.usenet-crawler.com/' },
         ],
         required: true,
       },
