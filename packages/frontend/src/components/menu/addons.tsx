@@ -505,7 +505,7 @@ function Content() {
                     setCategoryFilter(constants.PresetCategory.SUBTITLES),
                 },
                 {
-                  name: 'Meta & Catalogues',
+                  name: 'Metadata & Catalogs',
                   isCurrent:
                     categoryFilter === constants.PresetCategory.META_CATALOGS,
                   onClick: () =>
@@ -599,7 +599,7 @@ function Content() {
             {!!metaCatalogPresets?.length && (
               <Card className="p-4 space-y-6">
                 <h3 className="flex gap-3 items-center">
-                  <MdOutlineDataset /> Meta & Catalogues
+                  <MdOutlineDataset /> Metadata & Catalogs
                 </h3>
                 <div className={addonGridClassName}>
                   {metaCatalogPresets.map((preset: any) => (
