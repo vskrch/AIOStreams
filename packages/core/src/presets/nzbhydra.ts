@@ -158,6 +158,8 @@ export class NZBHydraPreset extends NewznabPreset {
       apiPath: options.apiPath,
       apiKey: nzbhydraApiKey,
       forceQuerySearch: options.forceQuerySearch ?? true,
+      forceInitialLimit: 10000,
+      paginate: false,
     };
 
     const configString = this.base64EncodeJSON(config, 'urlSafe');

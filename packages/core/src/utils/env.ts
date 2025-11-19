@@ -1733,6 +1733,10 @@ export const Env = cleanEnv(process.env, {
     default: 14 * 24 * 60 * 60, // 14 days
     desc: 'Builtin Torznab/Newznab Capabilities cache TTL',
   }),
+  BUILTIN_NAB_MAX_PAGES: num({
+    default: 5,
+    desc: 'Maximum number of pages to fetch from Torznab/Newznab indexers during pagination',
+  }),
 
   BUILTIN_ZILEAN_URL: url({
     default: 'https://zilean.elfhosted.com',

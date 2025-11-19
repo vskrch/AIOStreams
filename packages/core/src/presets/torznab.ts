@@ -115,6 +115,15 @@ export class TorznabPreset extends BuiltinAddonPreset {
         ],
       },
       {
+        id: 'paginate',
+        name: 'Paginate Results',
+        description:
+          'Whether to paginate through all available results when searching. Enabling this can provide more results at the cost of increased search time and more requests.',
+        type: 'boolean',
+        default: false,
+        required: false,
+      },
+      {
         id: 'useMultipleInstances',
         name: 'Use Multiple Instances',
         description:
@@ -223,6 +232,7 @@ export class TorznabPreset extends BuiltinAddonPreset {
       apiPath: options.apiPath,
       apiKey: options.apiKey,
       forceQuerySearch: options.forceQuerySearch ?? false,
+      paginate: options.paginate ?? false,
     };
 
     const configString = this.base64EncodeJSON(config, 'urlSafe');
