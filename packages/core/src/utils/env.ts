@@ -267,6 +267,20 @@ const urlMappings = makeValidator<Record<string, string>>((x) => {
   return mappings;
 });
 
+const boolOrChoice = <T extends string>(choices: T[]) =>
+  makeValidator<boolean | T>((input: string) => {
+    input = input.trim();
+    if (['true', 'false', '1', '0'].includes(input.toLowerCase())) {
+      return input.toLowerCase() === 'true' || input === '1';
+    }
+    if (choices.includes(input as T)) {
+      return input as T;
+    }
+    throw new EnvError(
+      `Invalid value: ${input}. Must be true, false or one of: ${choices.join(', ')}`
+    );
+  });
+
 export const Env = cleanEnv(process.env, {
   VERSION: readonly({
     default: metadata?.version || 'unknown',
@@ -1640,6 +1654,10 @@ export const Env = cleanEnv(process.env, {
     choices: ['redis', 'sql', 'memory'],
     default: undefined,
     desc: 'Builtin Debrid metadata store',
+  }),
+  BUILTIN_DEBRID_FILEINFO_STORE: boolOrChoice(['redis', 'sql', 'memory'])({
+    default: false,
+    desc: 'Builtin Debrid fileinfo store',
   }),
   BUILTIN_PLAYBACK_LINK_VALIDITY: num({
     default: 1 * 24 * 60 * 60, // 1 day

@@ -463,6 +463,19 @@ export const metadataStore = () => {
   return Cache.getInstance<string, TitleMetadata>(prefix, 1_000_000_000, store);
 };
 
+export const fileInfoStore = () => {
+  const prefix = 'fis';
+  let store: 'redis' | 'sql' | 'memory' | undefined;
+  if (Env.BUILTIN_DEBRID_FILEINFO_STORE === true) {
+    store = Env.REDIS_URI ? 'redis' : 'sql';
+  } else if (!Env.BUILTIN_DEBRID_FILEINFO_STORE) {
+    return undefined;
+  } else {
+    store = Env.BUILTIN_DEBRID_FILEINFO_STORE;
+  }
+  return Cache.getInstance<string, FileInfo>(prefix, 1_000_000_000, store);
+};
+
 // export function generatePlaybackUrl(
 //   storeAuth: ServiceAuth,
 //   playbackInfo: MinimisedPlaybackInfo,
@@ -484,5 +497,11 @@ export function generatePlaybackUrl(
   title?: string,
   filename?: string
 ): string {
-  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth}/${toUrlSafeBase64(JSON.stringify(fileInfo))}/${metadataId}/${encodeURIComponent(filename ?? title ?? 'unknown')}`;
+  const fileInfoCache = fileInfoStore();
+  let fileInfoId: string | undefined;
+  if (fileInfoCache) {
+    fileInfoId = getSimpleTextHash(JSON.stringify(fileInfo));
+    fileInfoCache.set(fileInfoId, fileInfo, Env.BUILTIN_PLAYBACK_LINK_VALIDITY);
+  }
+  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth}/${fileInfoId ?? toUrlSafeBase64(JSON.stringify(fileInfo))}/${metadataId}/${encodeURIComponent(filename ?? title ?? 'unknown')}`;
 }
