@@ -498,10 +498,14 @@ export function generatePlaybackUrl(
   filename?: string
 ): string {
   const fileInfoCache = fileInfoStore();
-  let fileInfoId: string | undefined;
-  if (fileInfoCache) {
-    fileInfoId = getSimpleTextHash(JSON.stringify(fileInfo));
-    fileInfoCache.set(fileInfoId, fileInfo, Env.BUILTIN_PLAYBACK_LINK_VALIDITY);
+  let fileInfoStr: string = toUrlSafeBase64(JSON.stringify(fileInfo));
+  if (fileInfoCache && fileInfoStr.length > 500) {
+    fileInfoStr = getSimpleTextHash(JSON.stringify(fileInfo));
+    fileInfoCache.set(
+      fileInfoStr,
+      fileInfo,
+      Env.BUILTIN_PLAYBACK_LINK_VALIDITY
+    );
   }
-  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth}/${fileInfoId ?? toUrlSafeBase64(JSON.stringify(fileInfo))}/${metadataId}/${encodeURIComponent(filename ?? title ?? 'unknown')}`;
+  return `${Env.BASE_URL}/api/v1/debrid/playback/${encryptedStoreAuth}/${fileInfoStr}/${metadataId}/${encodeURIComponent(filename ?? title ?? 'unknown')}`;
 }
