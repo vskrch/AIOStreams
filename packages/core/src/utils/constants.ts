@@ -853,6 +853,7 @@ const SORT_CRITERIA = [
   'size',
   'service',
   'seeders',
+  'private',
   'age',
   'addon',
   'regexPatterns',
@@ -980,6 +981,15 @@ export const SORT_CRITERIA_DETAILS: Record<
     defaultDirection: 'desc',
     ascendingDescription: 'Streams with fewer seeders are preferred',
     descendingDescription: 'Streams with more seeders are preferred',
+  },
+  private: {
+    name: 'Private',
+    description: 'Whether the stream is from a private tracker or not',
+    defaultDirection: 'desc',
+    ascendingDescription:
+      'Streams that are not from private trackers are preferred',
+    descendingDescription:
+      'Streams that are from private trackers are preferred',
   },
   age: {
     name: 'Age',
