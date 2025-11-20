@@ -89,7 +89,7 @@ export class AIOStreamsPreset extends Preset {
         description:
           "What to call this addon. Leave empty if you don't want to include the name of this addon in the stream results.",
         type: 'string',
-        required: true,
+        required: false,
         default: 'AIOStreams',
       },
       {
@@ -175,7 +175,7 @@ export class AIOStreamsPreset extends Preset {
     options: Record<string, any>
   ): Addon {
     return {
-      name: options.name || this.METADATA.NAME,
+      name: options.name ?? this.METADATA.NAME,
       manifestUrl: options.manifestUrl.replace('stremio://', 'https://'),
       enabled: true,
       library: false,
