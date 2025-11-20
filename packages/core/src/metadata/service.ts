@@ -135,6 +135,7 @@ export class MetadataService {
               promises.push(imdbMetadata.getImdbSuggestionData(imdbId, type));
             } else {
               promises.push(Promise.resolve(undefined));
+              promises.push(Promise.resolve(undefined));
             }
 
             // Execute all promises in parallel
