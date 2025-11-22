@@ -631,16 +631,16 @@ function Content() {
             )}
           </PageWrapper>
         )}
-        {/* Add/Edit Addon Modal (ensure both tabs can use it)*/}
-        <AddonModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          mode={modalMode}
-          presetMetadata={modalPreset}
-          initialValues={modalInitialValues as any}
-          onSubmit={handleModalSubmit}
-        />
       </AnimatePresence>
+      {/* Add/Edit Addon Modal (ensure both tabs can use it)*/}
+      <AddonModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        mode={modalMode}
+        presetMetadata={modalPreset}
+        initialValues={modalInitialValues as any}
+        onSubmit={handleModalSubmit}
+      />
     </>
   );
 }
