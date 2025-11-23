@@ -1099,17 +1099,17 @@ function AddonCard({ preset, onAdd }: { preset: any; onAdd: () => void }) {
             Built-in addons are addons whose code lives directly inside
             AIOStreams. You still install and configure them from the
             marketplace just like any other addon (such as Comet or Torrentio),
-            but they run locally on your AIOStreams instance.
+            but they run locally on this AIOStreams instance.
           </p>
           <div className="bg-[--subtle] rounded-lg p-3 space-y-2">
             <p className="text-sm font-medium">Why does this matter?</p>
             <ul className="text-sm text-[--muted] space-y-1.5 list-disc list-inside">
-              <li>
-                No external server calls - everything runs on your machine
-              </li>
-              <li>Not affected by rate limits from external addon providers</li>
+              <li>Not affected by rate limits from other addon servers</li>
               <li>Faster response times since there's no network delay</li>
-              <li>Works even if external addon servers are down</li>
+              <li>
+                Exclusive to AIOStreams and can't be installed directly to
+                Stremio
+              </li>
             </ul>
           </div>
           <p className="text-xs text-[--muted] italic">
