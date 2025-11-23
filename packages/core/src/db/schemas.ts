@@ -161,6 +161,7 @@ const DeduplicatorMode = z.enum([
 
 const DeduplicatorOptions = z.object({
   enabled: z.boolean().optional(),
+  excludeAddons: z.array(z.string().min(1)).optional(),
   multiGroupBehaviour: z
     .enum(['keep_all', 'aggressive', 'conservative'])
     .optional(),

@@ -5,6 +5,7 @@ import {
   DSU,
   getSimpleTextHash,
 } from '../utils/index.js';
+import StreamUtils from './utils.js';
 
 const logger = createLogger('deduplicator');
 
@@ -27,6 +28,7 @@ class StreamDeduplicator {
     deduplicator = {
       enabled: true,
       multiGroupBehaviour: deduplicator.multiGroupBehaviour || 'aggressive',
+      excludeAddons: deduplicator.excludeAddons || [],
       keys: deduplicationKeys,
       cached: deduplicator.cached || 'per_addon',
       uncached: deduplicator.uncached || 'per_addon',
@@ -42,6 +44,18 @@ class StreamDeduplicator {
     const dsu = new DSU<string>();
     const keyToStreamIds = new Map<string, string[]>();
 
+    const excludedStreamIds = new Set<string>();
+    for (const stream of streams) {
+      const isExcluded =
+        stream.addon?.instanceId &&
+        deduplicator.excludeAddons?.includes(stream.addon.preset.id);
+
+      if (isExcluded) {
+        excludedStreamIds.add(stream.id);
+      }
+    }
+
+    // Process ALL streams (including excluded ones) for deduplication grouping
     for (const stream of streams) {
       // Create a unique key based on the selected deduplication methods
       dsu.makeSet(stream.id);
@@ -113,6 +127,12 @@ class StreamDeduplicator {
     }
 
     const processedStreams = new Set<ParsedStream>();
+    for (const excludedStreamId of excludedStreamIds) {
+      const stream = idToStreamMap.get(excludedStreamId);
+      if (stream) {
+        processedStreams.add(stream);
+      }
+    }
 
     for (const group of finalDuplicateGroupsMap.values()) {
       // Group streams by type
@@ -349,9 +369,11 @@ class StreamDeduplicator {
       }
     }
 
-    let deduplicatedStreams = Array.from(processedStreams);
+    let deduplicatedStreams = StreamUtils.mergeStreams(
+      Array.from(processedStreams)
+    );
     logger.info(
-      `Filtered out ${streams.length - deduplicatedStreams.length} duplicate streams to ${deduplicatedStreams.length} streams in ${getTimeTakenSincePoint(start)}`
+      `Filtered out ${streams.length - deduplicatedStreams.length} duplicate streams to ${deduplicatedStreams.length}${Array.from(excludedStreamIds.values()).length > 0 ? ' (' + Array.from(excludedStreamIds.values()).length + ' streams excluded from deduplication) ' : ''} streams in ${getTimeTakenSincePoint(start)}`
     );
     return deduplicatedStreams;
   }
