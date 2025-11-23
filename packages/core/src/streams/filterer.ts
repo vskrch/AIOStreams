@@ -15,7 +15,11 @@ import { StreamSelector } from '../parser/streamExpression.js';
 import StreamUtils from './utils.js';
 import { MetadataService } from '../metadata/service.js';
 import { Metadata } from '../metadata/utils.js';
-import { preprocessTitle, titleMatch } from '../parser/utils.js';
+import {
+  normaliseTitle,
+  preprocessTitle,
+  titleMatch,
+} from '../parser/utils.js';
 import { partial_ratio } from 'fuzzball';
 import { calculateAbsoluteEpisode } from '../builtins/utils/general.js';
 import { formatBytes } from '../formatters/utils.js';
@@ -371,14 +375,6 @@ class StreamFilterer {
         );
       }
     }
-
-    const normaliseTitle = (title: string) => {
-      return title
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^\p{L}\p{N}+]/gu, '')
-        .toLowerCase();
-    };
 
     const applyDigitalReleaseFilter = () => {
       logger.debug(`Applying digital release filter for ${id}`, {
