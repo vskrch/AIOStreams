@@ -271,7 +271,7 @@ export type Group = z.infer<typeof Group>;
 const CatalogModification = z.object({
   id: z.string().min(1), // an id that maps to an actual catalog ID
   type: z.string().min(1), // the type of catalog modification
-  name: z.string().min(1).optional(), // override the name of the catalog
+  name: z.string().optional(), // override the name of the catalog
   shuffle: z.boolean().optional(), // shuffle the catalog
   reverse: z.boolean().optional(), // reverse the catalog
   persistShuffleFor: z.number().min(0).max(24).optional(), // persist the shuffle for a given amount of time (in hours)
