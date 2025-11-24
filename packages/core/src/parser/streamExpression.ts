@@ -491,6 +491,30 @@ export abstract class StreamExpressionEngine {
       return streams.filter((stream) => stream.library);
     };
 
+    this.parser.functions.message = function (
+      streams: ParsedStream[],
+      mode: 'exact' | 'includes',
+      ...messages: string[]
+    ) {
+      if (!Array.isArray(streams) || streams.some((stream) => !stream.type)) {
+        throw new Error('Your streams input must be an array of streams');
+      } else if (
+        messages.length === 0 ||
+        messages.some((m) => typeof m !== 'string')
+      ) {
+        throw new Error(
+          'You must provide one or more message string parameters'
+        );
+      } else if (mode !== 'exact' && mode !== 'includes') {
+        throw new Error("Mode must be either 'exact' or 'includes'");
+      }
+      return streams.filter((stream) => {
+        mode == 'exact'
+          ? messages.includes(stream.message || '')
+          : messages.some((m) => (stream.message || '').includes(m));
+      });
+    };
+
     this.parser.functions.count = function (streams: ParsedStream[]) {
       if (!Array.isArray(streams)) {
         throw new Error(
