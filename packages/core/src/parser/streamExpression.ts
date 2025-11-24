@@ -508,11 +508,11 @@ export abstract class StreamExpressionEngine {
       } else if (mode !== 'exact' && mode !== 'includes') {
         throw new Error("Mode must be either 'exact' or 'includes'");
       }
-      return streams.filter((stream) => {
+      return streams.filter((stream) =>
         mode == 'exact'
           ? messages.includes(stream.message || '')
-          : messages.some((m) => (stream.message || '').includes(m));
-      });
+          : messages.some((m) => (stream.message || '').includes(m))
+      );
     };
 
     this.parser.functions.count = function (streams: ParsedStream[]) {
