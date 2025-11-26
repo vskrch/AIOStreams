@@ -177,6 +177,7 @@ export class NZBHydraPreset extends NewznabPreset {
       apiKey: nzbhydraApiKey,
       forceQuerySearch: options.forceQuerySearch ?? true,
       forceInitialLimit: 10000,
+      checkOwned: options.checkOwned ?? true,
       paginate: false,
     };
 
