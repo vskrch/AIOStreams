@@ -72,7 +72,7 @@ export interface TorrentWithSelectedFile extends Torrent {
   service?: {
     id: BuiltinServiceId;
     cached: boolean;
-    owned: boolean;
+    library: boolean;
   };
 }
 
@@ -81,7 +81,7 @@ export interface NZBWithSelectedFile extends NZB {
   service?: {
     id: BuiltinServiceId;
     cached: boolean;
-    owned: boolean;
+    library: boolean;
   };
 }
 

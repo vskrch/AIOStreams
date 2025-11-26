@@ -61,6 +61,7 @@ export const BaseDebridConfigSchema = z.object({
   tmdbReadAccessToken: z.string().optional(),
   tvdbApiKey: z.string().optional(),
   cacheAndPlay: CacheAndPlaySchema.optional(),
+  checkOwned: z.boolean().optional().default(true),
 });
 export type BaseDebridConfig = z.infer<typeof BaseDebridConfigSchema>;
 
@@ -244,7 +245,14 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
         searchMetadata,
         this.clientIp
       ),
-      processNZBs(nzbResults, nzbServices, id, searchMetadata, this.clientIp),
+      processNZBs(
+        nzbResults,
+        nzbServices,
+        id,
+        searchMetadata,
+        this.clientIp,
+        this.userData.checkOwned
+      ),
     ]);
 
     const encryptedStoreAuths = this.userData.services.reduce(
@@ -706,7 +714,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
         : '⏳'
       : '';
 
-    const name = `[${shortCode} ${cacheIndicator}${torrentOrNzb.service?.owned ? ' ☁️' : ''}] ${this.name}`;
+    const name = `[${shortCode} ${cacheIndicator}${torrentOrNzb.service?.library ? ' ☁️' : ''}] ${this.name}`;
     const description = `${torrentOrNzb.title}\n${torrentOrNzb.file.name}\n${
       torrentOrNzb.indexer ? `🔍 ${torrentOrNzb.indexer}` : ''
     } ${'seeders' in torrentOrNzb && torrentOrNzb.seeders ? `👤 ${torrentOrNzb.seeders}` : ''} ${

@@ -106,6 +106,24 @@ export class NZBHydraPreset extends NewznabPreset {
         ],
       },
       {
+        id: 'paginate',
+        name: 'Paginate Results',
+        description:
+          'Enabling this option will make the addon paginate through all available results to provide a more comprehensive set of results. Enabling this can increase the time taken to return results, some endpoints may not support pagination, and this will also increase the number of requests.',
+        type: 'boolean',
+        default: false,
+        showInSimpleMode: false,
+      },
+      {
+        id: 'checkOwned',
+        name: 'Check Owned NZBs',
+        description:
+          'When searching for NZBs, check if the NZB is already owned (in your library) and mark it as such if so. Note: only applies to nzbDAV/Altmount.',
+        type: 'boolean',
+        default: true,
+        showInSimpleMode: false,
+      },
+      {
         id: 'useMultipleInstances',
         name: 'Use Multiple Instances',
         description:

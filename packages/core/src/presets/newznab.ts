@@ -162,6 +162,15 @@ export class NewznabPreset extends BuiltinAddonPreset {
         showInSimpleMode: false,
       },
       {
+        id: 'checkOwned',
+        name: 'Check Owned NZBs',
+        description:
+          'When searching for NZBs, check if the NZB is already owned (in your library) and mark it as such if so. Note: only applies to nzbDAV/Altmount.',
+        type: 'boolean',
+        default: true,
+        showInSimpleMode: false,
+      },
+      {
         id: 'useMultipleInstances',
         name: 'Use Multiple Instances',
         description:
@@ -266,6 +275,7 @@ export class NewznabPreset extends BuiltinAddonPreset {
   ) {
     const config = {
       ...this.getBaseConfig(userData, services),
+      checkOwned: options.checkOwned ?? true,
       url: options.newznabUrl,
       apiPath: options.apiPath,
       apiKey: options.apiKey,
