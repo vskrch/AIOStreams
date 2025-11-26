@@ -55,7 +55,9 @@ const NabCapsSearchingSchema = z
 const CapabilitiesSchema = z
   .object({
     caps: z.object({
-      server: z.array(z.object({ $: z.object({ title: z.string() }) })),
+      server: z.array(
+        z.object({ $: z.object({ title: z.string().optional() }) })
+      ),
       limits: z
         .array(
           z.object({
@@ -243,25 +245,37 @@ export class BaseNabApi<N extends 'torznab' | 'newznab'> {
         .object({
           rss: z.object({
             channel: z.array(
-              z.object({
-                item: z.array(createTorznabItemSchema()).optional().default([]),
-                'torznab:response': z.array(ResponseAttributeSchema).optional(),
-                'newznab:response': z.array(ResponseAttributeSchema).optional(),
-                response: z.array(ResponseAttributeSchema).optional(),
-              })
+              z.union([
+                z.literal(''),
+                z.object({
+                  item: z
+                    .array(createTorznabItemSchema())
+                    .optional()
+                    .default([]),
+                  'torznab:response': z
+                    .array(ResponseAttributeSchema)
+                    .optional(),
+                  'newznab:response': z
+                    .array(ResponseAttributeSchema)
+                    .optional(),
+                  response: z.array(ResponseAttributeSchema).optional(),
+                }),
+              ])
             ),
           }),
         })
         .transform((data) => {
           const channel = data.rss.channel[0];
           const response =
-            channel['torznab:response']?.[0] ??
-            channel['newznab:response']?.[0] ??
-            channel.response?.[0];
+            channel === ''
+              ? undefined
+              : (channel['torznab:response']?.[0] ??
+                channel['newznab:response']?.[0] ??
+                channel.response?.[0]);
           return {
             offset: response?.offset,
             total: response?.total,
-            results: channel.item,
+            results: channel === '' ? [] : channel.item,
           };
         });
     } else {
@@ -269,25 +283,37 @@ export class BaseNabApi<N extends 'torznab' | 'newznab'> {
         .object({
           rss: z.object({
             channel: z.array(
-              z.object({
-                item: z.array(createNewznabItemSchema()).optional().default([]),
-                'newznab:response': z.array(ResponseAttributeSchema).optional(),
-                'torznab:response': z.array(ResponseAttributeSchema).optional(),
-                response: z.array(ResponseAttributeSchema).optional(),
-              })
+              z.union([
+                z.literal(''),
+                z.object({
+                  item: z
+                    .array(createNewznabItemSchema())
+                    .optional()
+                    .default([]),
+                  'torznab:response': z
+                    .array(ResponseAttributeSchema)
+                    .optional(),
+                  'newznab:response': z
+                    .array(ResponseAttributeSchema)
+                    .optional(),
+                  response: z.array(ResponseAttributeSchema).optional(),
+                }),
+              ])
             ),
           }),
         })
         .transform((data) => {
           const channel = data.rss.channel[0];
           const response =
-            channel['newznab:response']?.[0] ??
-            channel['torznab:response']?.[0] ??
-            channel.response?.[0];
+            channel === ''
+              ? undefined
+              : (channel['torznab:response']?.[0] ??
+                channel['newznab:response']?.[0] ??
+                channel.response?.[0]);
           return {
             offset: response?.offset,
             total: response?.total,
-            results: channel.item,
+            results: channel === '' ? [] : channel.item,
           };
         });
     }
