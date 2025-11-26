@@ -315,8 +315,8 @@ export class SABnzbdApi {
     const tParams = {
       mode: 'history',
       apikey: this.apiKey,
-      start: params.start ?? 0,
-      limit: params.limit ?? 50,
+      start: params.start,
+      limit: params.limit,
       nzo_ids: params.nzoIds ? params.nzoIds.join(',') : undefined,
       category: params.category,
     };
@@ -326,7 +326,7 @@ export class SABnzbdApi {
       statusCode,
       statusText,
       headers,
-    } = await this.request(params, HistoryResponseSchema, 60000);
+    } = await this.request(tParams, HistoryResponseSchema, 60000);
     const transformed = transformHistoryResponse(parsed);
 
     if (transformed.status === false || !transformed.history) {
