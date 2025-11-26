@@ -426,6 +426,13 @@ async function processNZBsForDebridService(
     const nzbCheckResult = nzbCheckResults.find(
       (result) => result.hash === nzb.hash
     );
+    if (nzbCheckResult?.status === 'failed') {
+      logger.debug(`Skipping NZB as its status is failed`, {
+        service: service.id,
+        nzb: nzb.title,
+      });
+      continue;
+    }
     const parsedNzb = parsedTitlesMap.get(nzb.title ?? '');
     if (metadata && parsedNzb) {
       if (isSeasonWrong(parsedNzb, metadata)) {

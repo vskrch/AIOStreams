@@ -619,7 +619,7 @@ export abstract class UsenetStreamService implements DebridService {
         const history = await this.api.history();
         const nzbs: DebridDownload[] = history.slots.map((slot, index) => ({
           id: index,
-          status: 'cached' as const,
+          status: slot.status !== 'failed' ? 'cached' : 'failed',
           name: slot.name,
         }));
         this.serviceLogger.debug(`Listed NZBs from history`, {
@@ -679,7 +679,7 @@ export abstract class UsenetStreamService implements DebridService {
       );
       return {
         id: index,
-        status: 'cached',
+        status: libraryNzb?.status === 'failed' ? 'failed' : 'cached',
         library: !!libraryNzb,
         hash: h,
         name: n,
