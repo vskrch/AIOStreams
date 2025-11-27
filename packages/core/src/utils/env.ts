@@ -1696,6 +1696,10 @@ export const Env = cleanEnv(process.env, {
     default: 7 * 24 * 60 * 60, // 7 days
     desc: 'Builtin Torrent metadata cache TTL',
   }),
+  BUILTIN_MINIMUM_BACKGROUND_REFRESH_INTERVAL: num({
+    default: 1 * 24 * 60 * 60, // 1 day
+    desc: 'Minimum interval between background refreshes for built-in addon search caches. Triggered during normal searches.',
+  }),
 
   BUILTIN_GDRIVE_CLIENT_ID: str({
     default: undefined,

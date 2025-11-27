@@ -10,6 +10,7 @@ import {
 } from '../../../utils/index.js';
 import { Parser } from 'xml2js';
 import { Logger } from 'winston';
+import { searchWithBackgroundRefresh } from '../../utils/general.js';
 
 // --- Generic Custom Error ---
 export class NabApiError extends Error {
@@ -333,12 +334,21 @@ export class BaseNabApi<N extends 'torznab' | 'newznab'> {
     params: Record<string, string | number | boolean> = {}
   ): Promise<SearchResponse<N>> {
     const cacheKey = `${this.baseUrl}${this.apiPath}?t=${searchFunction}&${JSON.stringify(params)}&apikey=${this.apiKey}`;
-    const result = await this.searchCache.wrap(
-      () => this.request(searchFunction, this.SearchResultSchema, params),
-      cacheKey,
-      Env.BUILTIN_NAB_SEARCH_CACHE_TTL
-    );
-    return result as SearchResponse<N>;
+
+    return searchWithBackgroundRefresh({
+      searchCache: this.searchCache as Cache<string, SearchResponse<N>>,
+      searchCacheKey: cacheKey,
+      bgCacheKey: `nab:${cacheKey}`,
+      cacheTTL: Env.BUILTIN_NAB_SEARCH_CACHE_TTL,
+      fetchFn: () =>
+        this.request(
+          searchFunction,
+          this.SearchResultSchema,
+          params
+        ) as Promise<SearchResponse<N>>,
+      isEmptyResult: (result) => result.results.length === 0,
+      logger: this.logger,
+    });
   }
 
   private removeTrailingSlash = (path: string) =>
