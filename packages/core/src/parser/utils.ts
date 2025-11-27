@@ -36,7 +36,7 @@ export function preprocessTitle(
   let preprocessedTitle = parsedTitle;
 
   const separatorPatterns = [
-    /\s*\/\s*/,
+    /\s*[\/\|]\s*/,
     /[\s\.\-\(]+a[\s\.]?k[\s\.]?a[\s\.\)\-]+/i,
     /\s*\(([^)]+)\)$/,
   ];
