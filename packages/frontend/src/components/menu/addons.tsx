@@ -265,7 +265,15 @@ function Content() {
   };
   const streamTypeOptions = (constants.STREAM_TYPES || [])
     .filter(
-      (type) => !['error', 'statistic', 'external', 'youtube'].includes(type)
+      (type) =>
+        ![
+          'error',
+          'statistic',
+          'external',
+          'youtube',
+          'stremio-usenet',
+          'archive',
+        ].includes(type)
     )
     .map((type: string) => ({ label: typeLabelMap[type], value: type }));
 
