@@ -416,7 +416,7 @@ const createEmptyServer = (): NNTPServers[number] => ({
   host: '',
   port: 563,
   ssl: true,
-  connections: 8,
+  connections: 5,
 });
 
 // Decode base64 value to servers array
