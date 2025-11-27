@@ -66,6 +66,8 @@ import { BitmagnetPreset } from './bitmagnet.js';
 import { SootioPreset } from './sootio.js';
 import { TorrentGalaxyPreset } from './torrentGalaxy.js';
 import { UsenetStreamerPreset } from './usenetStreamer.js';
+import { NekoBtPreset } from './nekoBt.js';
+
 let PRESET_LIST: string[] = [
   'custom',
   'torznab',
@@ -82,6 +84,7 @@ let PRESET_LIST: string[] = [
   'torrent-galaxy',
   'bitmagnet',
   'animetosho',
+  'neko-bt',
   'prowlarr',
   'jackett',
   'nzbhydra',
@@ -267,6 +270,8 @@ export class PresetManager {
         return ZileanPreset;
       case 'animetosho':
         return AnimeToshoPreset;
+      case 'neko-bt':
+        return NekoBtPreset;
       case 'prowlarr':
         return ProwlarrPreset;
       case 'jackett':

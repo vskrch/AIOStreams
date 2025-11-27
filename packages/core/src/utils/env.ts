@@ -1778,6 +1778,15 @@ export const Env = cleanEnv(process.env, {
     desc: 'Builtin AnimeTosho timeout',
   }),
 
+  BUILTIN_NEKOBT_URL: url({
+    default: 'https://nekobt.to/api/torznab',
+    desc: 'Builtin NekoBT URL',
+  }),
+  BUILTIN_DEFAULT_NEKOBT_TIMEOUT: num({
+    default: undefined,
+    desc: 'Builtin NekoBT timeout',
+  }),
+
   BUILTIN_BITMAGNET_URL: url({
     default: undefined,
     desc: 'Builtin Bitmagnet URL',

@@ -22,9 +22,10 @@ function matchMultiplePatterns(
     .map(([tag]) => tag);
 }
 
-function mapLanguageCode(code: string): string {
+export function mapLanguageCode(code: string): string {
   switch (code.toLowerCase()) {
     case 'zh-tw':
+    case 'zh-hans':
       return 'zh';
     case 'es-419':
       return 'es-MX';
@@ -33,7 +34,7 @@ function mapLanguageCode(code: string): string {
   }
 }
 
-function convertLangCodeToName(code: string): string | undefined {
+export function convertLangCodeToName(code: string): string | undefined {
   const parts = code.split('-');
   const possibleLangs = FULL_LANGUAGE_MAPPING.filter((language) => {
     if (parts.length === 2) {

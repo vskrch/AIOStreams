@@ -6,7 +6,10 @@ import { Preset } from './preset.js';
 import { stremthruSpecialCases } from './stremthru.js';
 
 export class BuiltinStreamParser extends StreamParser {
-  override getFolder(stream: Stream): string | undefined {
+  protected getFolder(
+    stream: Stream,
+    currentParsedStream: ParsedStream
+  ): string | undefined {
     if (!stream.description) {
       return undefined;
     }
