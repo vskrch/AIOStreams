@@ -395,8 +395,15 @@ const SERVICE_DETAILS: Record<
     shortName: 'SN',
     knownNames: ['SN', 'Stremio NNTP', 'StremioNntp', 'Stremio-NNTP'],
     signUpText:
-      "Stream usenet directly from your provider via Stremio's NNTP capabilities.",
+      "Stream usenet directly from your provider via Stremio's NNTP client.",
     credentials: [
+      {
+        id: 'note',
+        name: '',
+        description: `This is a new Stremio feature that allows Stremio to connect directly to Usenet NNTP servers you provide. It is currently [only supported on Stremio V5 Desktop](https://blog.stremio.com/stremio-new-stream-sources-usenet-rar-zip-ftp-and-more/).`,
+        type: 'alert',
+        intent: 'warning',
+      },
       {
         id: 'servers',
         name: 'NNTP Servers',
