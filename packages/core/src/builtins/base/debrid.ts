@@ -2,6 +2,7 @@ import {
   CacheAndPlaySchema,
   Manifest,
   Meta,
+  NNTPServersSchema,
   Stream,
 } from '../../db/schemas.js';
 import { z, ZodError } from 'zod';
@@ -217,7 +218,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       (s) => !['nzbdav', 'altmount'].includes(s.id) // usenet only services excluded
     );
     const nzbServices = this.userData.services.filter(
-      (s) => ['nzbdav', 'altmount', 'torbox'].includes(s.id) // only keep services that support usenet
+      (s) => ['nzbdav', 'altmount', 'torbox', 'stremio_nntp'].includes(s.id) // only keep services that support usenet
     );
 
     if (torrentServices.length === 0 && torrentResults.length > 0) {
@@ -255,16 +256,50 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       ),
     ]);
 
+    let servers: string[] | undefined;
+    const encodedNntpServers = this.userData?.services.find(
+      (s) => s.id === 'stremio_nntp'
+    )?.credential;
+    try {
+      if (encodedNntpServers) {
+        const nntpServers = NNTPServersSchema.parse(
+          JSON.parse(
+            Buffer.from(encodedNntpServers, 'base64').toString('utf-8')
+          )
+        );
+        // servers - array, a list of strings that each represent a connection to a NNTP (usenet) server (for nzbUrl) in the form of nntp(s)://{user}:{pass}@{nntpDomain}:{nntpPort}/{nntpConnections} (nntps = SSL; nntp = no encryption) (example: nntps://myuser:mypass@news.example.com/4)
+        servers = nntpServers.map(
+          (s) =>
+            `${s.ssl ? 'nntps' : 'nntp'}://${encodeURIComponent(
+              s.username
+            )}:${encodeURIComponent(s.password)}@${s.host}:${s.port}/${
+              s.connections
+            }`
+        );
+      }
+    } catch (error) {
+      if (error instanceof ZodError) {
+        this.logger.error(
+          `Failed to parse NNTP servers for Stremio NNTP stream: ${formatZodError(error)}`
+        );
+      }
+      throw error;
+    }
+
     const encryptedStoreAuths = this.userData.services.reduce(
       (acc, service) => {
         const auth = {
           id: service.id,
           credential: service.credential,
         };
-        acc[service.id] = encryptString(JSON.stringify(auth)).data ?? '';
+        if (service.id === 'stremio_nntp' && servers) {
+          acc[service.id] = servers;
+        } else {
+          acc[service.id] = encryptString(JSON.stringify(auth)).data ?? '';
+        }
         return acc;
       },
-      {} as Record<BuiltinServiceId, string>
+      {} as Record<BuiltinServiceId, string | string[]>
     );
     const debridTitleMetadata: DebridTitleMetadata = {
       titles: searchMetadata.titles,
@@ -337,8 +372,8 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       results.map((result) => {
         const stream = this._createStream(
           result,
-          encryptedStoreAuths,
-          metadataId
+          metadataId,
+          encryptedStoreAuths
         );
         if (
           result.service?.id === 'nzbdav' &&
@@ -673,8 +708,8 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
 
   protected _createStream(
     torrentOrNzb: TorrentWithSelectedFile | NZBWithSelectedFile,
-    encryptedStoreAuths: Record<BuiltinServiceId, string>,
-    metadataId: string
+    metadataId: string,
+    encryptedStoreAuths: Record<BuiltinServiceId, string | string[]>
   ): Stream {
     // Handle debrid streaming
     const encryptedStoreAuth = torrentOrNzb.service
@@ -722,18 +757,27 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
     }`;
 
     return {
-      url: torrentOrNzb.service
-        ? generatePlaybackUrl(
-            encryptedStoreAuth!,
-            metadataId!,
-            fileInfo!,
-            torrentOrNzb.title,
-            torrentOrNzb.file.name
-          )
-        : undefined,
+      url:
+        torrentOrNzb.service && torrentOrNzb.service.id != 'stremio_nntp'
+          ? generatePlaybackUrl(
+              encryptedStoreAuth! as string,
+              metadataId!,
+              fileInfo!,
+              torrentOrNzb.title,
+              torrentOrNzb.file.name
+            )
+          : undefined,
+      nzbUrl: torrentOrNzb.type === 'usenet' ? torrentOrNzb.nzb : undefined,
+      servers:
+        torrentOrNzb.service?.id === 'stremio_nntp'
+          ? (encryptedStoreAuth as string[])
+          : undefined,
       name,
       description,
-      type: torrentOrNzb.type,
+      type:
+        torrentOrNzb.service?.id === 'stremio_nntp'
+          ? 'stremio-usenet'
+          : torrentOrNzb.type,
       age: torrentOrNzb.age,
       infoHash: torrentOrNzb.hash,
       fileIdx: torrentOrNzb.file.index,

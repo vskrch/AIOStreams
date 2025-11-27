@@ -193,6 +193,7 @@ const OptionDefinition = z.object({
     'alert',
     'socials',
     'oauth',
+    'custom-nntp-servers',
   ]),
   oauth: z
     .object({
@@ -606,9 +607,34 @@ export const SubtitleResponseSchema = z.object({
 export type SubtitleResponse = z.infer<typeof SubtitleResponseSchema>;
 export type Subtitle = z.infer<typeof SubtitleSchema>;
 
+export const SourceSchema = z.object({
+  url: z.string(),
+  bytes: z.number().nullable().optional(),
+});
+
+const NNTPServerSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+  host: z.string(),
+  port: z.number(),
+  ssl: z.boolean(),
+  connections: z.number(),
+});
+
+export const NNTPServersSchema = z.array(NNTPServerSchema);
+
+export type NNTPServers = z.infer<typeof NNTPServersSchema>;
+
 export const StreamSchema = z
   .object({
     url: z.string().or(z.null()).optional(),
+    nzbUrl: z.string().or(z.null()).optional(),
+    servers: z.array(z.string().min(1)).nullable().optional(),
+    rarUrls: z.array(SourceSchema).nullable().optional(),
+    zipUrls: z.array(SourceSchema).nullable().optional(),
+    '7zipUrls': z.array(SourceSchema).nullable().optional(),
+    tgzUrls: z.array(SourceSchema).nullable().optional(),
+    tarUrls: z.array(SourceSchema).nullable().optional(),
     ytId: z.string().nullable().optional(),
     infoHash: z.string().nullable().optional(),
     fileIdx: z.number().or(z.null()).optional(),
@@ -718,6 +744,13 @@ export const ParsedStreamSchema = z.object({
   duration: z.number().optional(),
   library: z.boolean().optional(),
   url: z.string().optional(),
+  nzbUrl: z.string().optional(),
+  servers: z.array(z.string().min(1)).optional(),
+  rarUrls: z.array(SourceSchema).nullable().optional(),
+  zipUrls: z.array(SourceSchema).nullable().optional(),
+  '7zipUrls': z.array(SourceSchema).nullable().optional(),
+  tgzUrls: z.array(SourceSchema).nullable().optional(),
+  tarUrls: z.array(SourceSchema).nullable().optional(),
   ytId: z.string().min(1).optional(),
   externalUrl: z.string().min(1).optional(),
   error: z

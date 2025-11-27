@@ -75,6 +75,12 @@ class StreamParser {
       type: 'http',
       proxied: this.isProxied(stream),
       url: this.applyUrlModifications(stream.url ?? undefined),
+      nzbUrl: stream.nzbUrl ?? undefined,
+      tarUrls: stream.tarUrls ?? undefined,
+      tgzUrls: stream.tgzUrls ?? undefined,
+      '7zipUrls': stream['7zipUrls'] ?? undefined,
+      rarUrls: stream.rarUrls ?? undefined,
+      servers: stream.servers ?? undefined,
       externalUrl: stream.externalUrl ?? undefined,
       ytId: stream.ytId ?? undefined,
       requestHeaders: stream.behaviorHints?.proxyHeaders?.request,
@@ -436,6 +442,17 @@ class StreamParser {
       return 'youtube';
     }
 
+    if (stream.nzbUrl) {
+      return 'stremio-usenet';
+    }
+    if (
+      stream['7zipUrls']?.length ||
+      stream.rarUrls?.length ||
+      stream?.tarUrls?.length ||
+      stream.tgzUrls?.length
+    ) {
+      return 'archive';
+    }
     throw new Error('Invalid stream, missing a required stream property');
   }
 

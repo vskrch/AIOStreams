@@ -139,7 +139,12 @@ class StreamDeduplicator {
       const streamsByType = new Map<string, ParsedStream[]>();
       for (const stream of group) {
         let type = stream.type as string;
-        if ((type === 'debrid' || type === 'usenet') && stream.service) {
+        if (
+          (type === 'debrid' ||
+            type === 'usenet' ||
+            type === 'stremio-usenet') &&
+          stream.service
+        ) {
           type = stream.service.cached ? 'cached' : 'uncached';
         }
         if (stream.addon.resultPassthrough) {

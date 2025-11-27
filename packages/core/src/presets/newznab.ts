@@ -10,6 +10,7 @@ export class NewznabPreset extends BuiltinAddonPreset {
       constants.TORBOX_SERVICE,
       constants.NZBDAV_SERVICE,
       constants.ALTMOUNT_SERVICE,
+      constants.STREMIO_NNTP_SERVICE,
     ] as ServiceId[];
     const options: Option[] = [
       {

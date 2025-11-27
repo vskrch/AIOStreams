@@ -205,6 +205,7 @@ const SEEDR_SERVICE = 'seedr';
 const EASYNEWS_SERVICE = 'easynews';
 const NZBDAV_SERVICE = 'nzbdav';
 const ALTMOUNT_SERVICE = 'altmount';
+const STREMIO_NNTP_SERVICE = 'stremio_nntp';
 
 const SERVICES = [
   REALDEBRID_SERVICE,
@@ -221,6 +222,7 @@ const SERVICES = [
   EASYNEWS_SERVICE,
   NZBDAV_SERVICE,
   ALTMOUNT_SERVICE,
+  STREMIO_NNTP_SERVICE,
 ] as const;
 
 export const BUILTIN_SUPPORTED_SERVICES = [
@@ -235,6 +237,7 @@ export const BUILTIN_SUPPORTED_SERVICES = [
   OFFCLOUD_SERVICE,
   NZBDAV_SERVICE,
   ALTMOUNT_SERVICE,
+  STREMIO_NNTP_SERVICE,
 ] as const;
 
 export type ServiceId = (typeof SERVICES)[number];
@@ -382,6 +385,23 @@ const SERVICE_DETAILS: Record<
         description:
           'Your Torbox API key. Obtain it from [here](https://torbox.app/settings)',
         type: 'password',
+        required: true,
+      },
+    ],
+  },
+  [STREMIO_NNTP_SERVICE]: {
+    id: STREMIO_NNTP_SERVICE,
+    name: 'Stremio NNTP',
+    shortName: 'SN',
+    knownNames: ['SN', 'Stremio NNTP', 'StremioNntp', 'Stremio-NNTP'],
+    signUpText:
+      "Stream usenet directly from your provider via Stremio's NNTP capabilities.",
+    credentials: [
+      {
+        id: 'servers',
+        name: 'NNTP Servers',
+        description: 'Provide your Usenet NNTP server addresses',
+        type: 'custom-nntp-servers',
         required: true,
       },
     ],
@@ -1054,6 +1074,8 @@ const SORT_DIRECTIONS = ['asc', 'desc'] as const;
 
 export const P2P_STREAM_TYPE = 'p2p' as const;
 export const LIVE_STREAM_TYPE = 'live' as const;
+export const STREMIO_USENET_STREAM_TYPE = 'stremio-usenet' as const;
+export const ARCHIVE_STREAM_TYPE = 'archive' as const;
 export const USENET_STREAM_TYPE = 'usenet' as const;
 export const DEBRID_STREAM_TYPE = 'debrid' as const;
 export const HTTP_STREAM_TYPE = 'http' as const;
@@ -1065,6 +1087,8 @@ export const STATISTIC_STREAM_TYPE = 'statistic' as const;
 const STREAM_TYPES = [
   P2P_STREAM_TYPE,
   LIVE_STREAM_TYPE,
+  STREMIO_USENET_STREAM_TYPE,
+  ARCHIVE_STREAM_TYPE,
   USENET_STREAM_TYPE,
   DEBRID_STREAM_TYPE,
   HTTP_STREAM_TYPE,
@@ -1256,6 +1280,7 @@ export {
   SEEDR_SERVICE,
   NZBDAV_SERVICE,
   ALTMOUNT_SERVICE,
+  STREMIO_NNTP_SERVICE,
   EASYNEWS_SERVICE,
   SERVICE_DETAILS,
   TOP_LEVEL_OPTION_DETAILS,

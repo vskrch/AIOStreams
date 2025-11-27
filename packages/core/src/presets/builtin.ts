@@ -74,7 +74,9 @@ export class BuiltinStreamParser extends StreamParser {
     service: ParsedStream['service'],
     currentParsedStream: ParsedStream
   ): ParsedStream['type'] {
-    return (stream as any).type === 'usenet' ? 'usenet' : 'debrid';
+    return stream.type === 'torrent'
+      ? 'debrid'
+      : (stream.type as 'usenet' | 'stremio-usenet');
   }
 }
 
@@ -102,6 +104,8 @@ export class BuiltinAddonPreset extends Preset {
             aiostreamsAuth: credentials.aiostreamsAuth,
           })
         ),
+      [constants.STREMIO_NNTP_SERVICE]: (credentials: any) =>
+        credentials.servers, // this will be a base64 encoded json string of the nntp server config { username, password, host, port, useSsl, connections }[]
     };
     const altmountSpecialCase: Partial<
       Record<ServiceId, (credentials: any) => any>
