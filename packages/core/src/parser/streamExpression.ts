@@ -416,6 +416,7 @@ export abstract class StreamExpressionEngine {
             'easynews',
             'nzbdav',
             'altmount',
+            'stremio_nntp',
             'easydebrid',
             'debrider',
           ].includes(s)
