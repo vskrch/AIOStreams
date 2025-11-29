@@ -283,7 +283,7 @@ const CatalogModification = z.object({
   overrideType: z.string().min(1).optional(), // override the type of the catalog
   hideable: z.boolean().optional(), // hide the catalog from the home page
   searchable: z.boolean().optional(), // property of whether the catalog is searchable (not a search only catalog)
-  addonName: z.string().min(1).optional(), // the name of the addon that provides the catalog
+  addonName: z.string().optional(), // the name of the addon that provides the catalog
 });
 
 export const CacheAndPlaySchema = z
