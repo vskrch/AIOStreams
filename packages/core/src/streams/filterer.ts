@@ -1606,6 +1606,10 @@ class StreamFilterer {
           normaliseSizeRange(global?.movies);
       } else {
         minMax =
+          (isAnime
+            ? normaliseSizeRange(resolution?.anime) ||
+              normaliseSizeRange(global?.anime)
+            : undefined) ||
           normaliseSizeRange(resolution?.series) ||
           normaliseSizeRange(global?.series);
       }
