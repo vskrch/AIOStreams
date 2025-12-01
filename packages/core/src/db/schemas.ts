@@ -82,9 +82,7 @@ const SizeFilter = z.object({
     //   max: z.number().min(1).optional(),
     // })
     .optional(),
-  anime: z
-    .tuple([z.number().min(0), z.number().min(0)])
-    .optional(),
+  anime: z.tuple([z.number().min(0), z.number().min(0)]).optional(),
 });
 
 const SizeFilterOptions = z.object({

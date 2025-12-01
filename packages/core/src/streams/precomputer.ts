@@ -40,7 +40,8 @@ class StreamPrecomputer {
 
   /**
    * Precompute SeaDex status for anime streams
-   * Tags streams with seadex.isBest and seadex.isSeadex based on infoHash matching
+   * Tags streams with seadex.isBest and seadex.isSeadex
+   * First tries to match by infoHash, then falls back to release group matching
    */
   private async precomputeSeaDex(
     streams: ParsedStream[],
@@ -80,39 +81,62 @@ class StreamPrecomputer {
 
     if (
       seadexResult.bestHashes.size === 0 &&
-      seadexResult.allHashes.size === 0
+      seadexResult.allHashes.size === 0 &&
+      seadexResult.bestGroups.size === 0 &&
+      seadexResult.allGroups.size === 0
     ) {
       logger.debug(`No SeaDex releases found for AniList ID ${anilistId}`);
       return;
     }
     let seadexBestCount = 0;
     let seadexCount = 0;
+    let seadexGroupFallbackCount = 0;
 
     for (const stream of streams) {
       const infoHash = stream.torrent?.infoHash?.toLowerCase();
-      if (!infoHash) {
-        continue;
+
+      // First try hash matching
+      if (infoHash) {
+        const isBest = seadexResult.bestHashes.has(infoHash);
+        const isSeadex = seadexResult.allHashes.has(infoHash);
+
+        if (isSeadex) {
+          stream.seadex = {
+            isBest,
+            isSeadex: true,
+          };
+
+          if (isBest) {
+            seadexBestCount++;
+          }
+          seadexCount++;
+          continue;
+        }
       }
 
-      const isBest = seadexResult.bestHashes.has(infoHash);
-      const isSeadex = seadexResult.allHashes.has(infoHash);
+      // Fallback to release group matching
+      const releaseGroup = stream.parsedFile?.releaseGroup?.toLowerCase();
+      if (releaseGroup) {
+        const isBestGroup = seadexResult.bestGroups.has(releaseGroup);
+        const isSeadexGroup = seadexResult.allGroups.has(releaseGroup);
 
-      if (isSeadex) {
-        stream.seadex = {
-          isBest,
-          isSeadex: true,
-        };
-
-        if (isBest) {
-          seadexBestCount++;
+        if (isBestGroup || isSeadexGroup) {
+          stream.seadex = {
+            isBest: isBestGroup,
+            isSeadex: true,
+          };
+          if (isBestGroup) {
+            seadexBestCount++;
+          }
+          seadexCount++;
+          seadexGroupFallbackCount++;
         }
-        seadexCount++;
       }
     }
 
     if (seadexCount > 0) {
       logger.info(
-        `Tagged ${seadexCount} streams as SeaDex releases (${seadexBestCount} best) for AniList ID ${anilistId}`
+        `Tagged ${seadexCount} streams as SeaDex releases (${seadexBestCount} best, ${seadexGroupFallbackCount} via group fallback) for AniList ID ${anilistId}`
       );
     }
   }

@@ -507,7 +507,7 @@ export abstract class StreamExpressionEngine {
         return streams.filter((stream) => stream.seadex?.isBest === true);
       }
 
-      // Return all SeaDex releases (best or regular)
+      // Return all SeaDex releases (includes group fallback matches)
       return streams.filter((stream) => stream.seadex?.isSeadex === true);
     };
 
