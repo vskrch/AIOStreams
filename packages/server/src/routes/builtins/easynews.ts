@@ -64,7 +64,7 @@ router.get(
  * This endpoint is needed because Easynews requires a POST request to fetch NZBs
  */
 router.get(
-  '/nzb/:encodedAuth/:encodedParams{/:aiostreamsAuth}.nzb',
+  '/nzb/:encodedAuth/:encodedParams{/:aiostreamsAuth}/:filename.nzb',
   easynewsNzbRateLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     const {
