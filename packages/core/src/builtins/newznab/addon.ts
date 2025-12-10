@@ -109,11 +109,14 @@ export class NewznabAddon extends BaseNabAddon<NewznabAddonConfig, NewznabApi> {
         url: Env.BASE_URL,
         credentials: auth,
       });
-      const urlsToProxy = nzbs.map((nzb) => nzb.nzb);
+      const nzbsToProxy = nzbs.map((nzb) => ({
+        url: nzb.nzb,
+        filename: nzb.title,
+      }));
       const proxiedUrls = await proxy.generateUrls(
-        urlsToProxy.map((url) => ({
+        nzbsToProxy.map(({ url, filename }) => ({
           url,
-          filename: url.split('/').pop(),
+          filename: filename || url.split('/').pop(),
           type: 'nzb',
         })),
         false // don't encrypt NZB URLs to make sure the URLs stay the same.
