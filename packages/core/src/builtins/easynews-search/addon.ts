@@ -27,6 +27,7 @@ import EasynewsApi, {
   EasynewsAuthSchema,
   EASYNEWS_BASE,
 } from './api.js';
+import { BuiltinProxy } from '../../proxy/builtin.js';
 
 const logger = createLogger('easynews');
 
@@ -91,6 +92,14 @@ export class EasynewsSearchAddon extends BaseDebridAddon<EasynewsSearchAddonConf
     parsedId: ParsedId,
     metadata: SearchMetadata
   ): Promise<NZB[]> {
+    // validate aiostreams auth if provided
+    if (this.userData.aiostreamsAuth) {
+      try {
+        BuiltinProxy.validateAuth(this.userData.aiostreamsAuth);
+      } catch (error) {
+        throw new Error('Invalid AIOStreams Auth.');
+      }
+    }
     const queryLimit = createQueryLimit();
 
     if (!metadata.primaryTitle) {
