@@ -46,7 +46,9 @@ router.get(
       await aiostreams.initialise();
 
       const meta = await aiostreams.getMeta(type, id);
-      const transformed = await transformer.transformMeta(meta);
+      const transformed = await transformer.transformMeta(meta, {
+        provideStreamData: true,
+      });
       if (!transformed) {
         next();
       } else {
