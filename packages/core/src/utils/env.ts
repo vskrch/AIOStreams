@@ -1823,6 +1823,10 @@ export const Env = cleanEnv(process.env, {
     default: 14 * 24 * 60 * 60, // 14 days
     desc: 'Builtin Torznab/Newznab Capabilities cache TTL',
   }),
+  BUILTIN_NAB_USER_AGENT: userAgent({
+    default: undefined,
+    desc: 'Builtin Torznab/Newznab user agent',
+  }),
   BUILTIN_NAB_MAX_PAGES: num({
     default: 5,
     desc: 'Maximum number of pages to fetch from Torznab/Newznab indexers during pagination',

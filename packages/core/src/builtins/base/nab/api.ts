@@ -355,7 +355,7 @@ export class BaseNabApi<N extends 'torznab' | 'newznab'> {
     path.endsWith('/') ? path.slice(0, -1) : path;
   private getHeaders = () => ({
     'Content-Type': 'application/xml',
-    'User-Agent': Env.DEFAULT_USER_AGENT,
+    'User-Agent': Env.BUILTIN_NAB_USER_AGENT ?? Env.DEFAULT_USER_AGENT,
   });
 
   private async request<T>(
