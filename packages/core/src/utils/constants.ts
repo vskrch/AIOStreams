@@ -765,11 +765,8 @@ export const AUTO_PLAY_ATTRIBUTES = [
   'size',
 ] as const;
 
-const NON_DEFAULT_AUTO_PLAY_ATTRIBUTES = ['infoHash', 'size', 'type', 'addon'];
-
-export const DEFAULT_AUTO_PLAY_ATTRIBUTES = AUTO_PLAY_ATTRIBUTES.filter(
-  (attribute) => !NON_DEFAULT_AUTO_PLAY_ATTRIBUTES.includes(attribute)
-);
+export const DEFAULT_AUTO_PLAY_ATTRIBUTES: (typeof AUTO_PLAY_ATTRIBUTES)[number][] =
+  ['resolution', 'quality', 'releaseGroup'] as const;
 
 export const AUTO_PLAY_METHODS = [
   'matchingFile',
