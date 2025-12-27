@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import {
   AIOStreams,
   MetaResponse,
@@ -15,7 +15,7 @@ router.use(stremioMetaRateLimiter);
 
 router.get(
   '/:type/:id.json',
-  async (req: Request, res: Response<MetaResponse>, next) => {
+  async (req: Request, res: Response<MetaResponse>, next: NextFunction) => {
     if (!req.userData) {
       res.status(200).json({
         meta: StremioTransformer.createErrorMeta({
