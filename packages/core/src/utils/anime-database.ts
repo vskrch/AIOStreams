@@ -31,7 +31,7 @@ const DATA_SOURCES = {
   },
   manami: {
     name: 'Manami DB',
-    url: 'https://github.com/manami-project/anime-offline-database/releases/download/latest/anime-offline-database.json',
+    url: 'https://github.com/manami-project/anime-offline-database/releases/download/latest/anime-offline-database-minified.json',
     filePath: path.join(ANIME_DATABASE_PATH, 'manami-db.json'),
     etagPath: path.join(ANIME_DATABASE_PATH, 'manami-db.etag'),
     loader: 'loadManamiDb',
