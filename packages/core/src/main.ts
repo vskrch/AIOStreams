@@ -654,6 +654,25 @@ export class AIOStreams {
           sourceExtras.skip = undefined; // Don't send skip to catalogs that don't support it
         }
 
+        // now check whether the catalog requires an extra but we dont have it - in which case we skip it
+        const requiredExtras = catalogExtras?.filter((e) => e.isRequired);
+        if (requiredExtras && requiredExtras.length > 0) {
+          for (const reqExtra of requiredExtras) {
+            if (!sourceExtras.has(reqExtra.name)) {
+              logger.debug(
+                `Skipping source ${encodedCatalogId} for merged catalog ${mergedCatalog.name}: missing required extra "${reqExtra.name}"`
+              );
+              return {
+                encodedCatalogId,
+                items: [],
+                fetched: 0,
+                success: true,
+                skipped: true,
+              };
+            }
+          }
+        }
+
         logger.debug('Fetching merged catalog source', {
           encodedCatalogId,
           addonInstanceId,
