@@ -553,7 +553,11 @@ export class AnimeDatabase {
 
     logger.info('Starting initial refresh of all anime data sources...');
     for (const dataSource of Object.values(DATA_SOURCES)) {
-      await this.refreshDataSource(dataSource);
+      try {
+        await this.refreshDataSource(dataSource);
+      } catch (error) {
+        logger.error(`Failed to refresh data source ${dataSource}: ${error}`);
+      }
     }
 
     this.setupAllRefreshIntervals();
