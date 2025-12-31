@@ -979,24 +979,24 @@ export class AIOStreams {
       return items;
     }
 
-    const seenById = new Set<string>();
-    const seenByTitle = new Set<string>();
+    const seenIds = new Set<string>();
+    const seenTitles = new Set<string>();
 
     return items.filter((item) => {
-      for (const method of methods) {
-        if (method === 'id') {
-          if (seenById.has(item.id)) {
-            return false;
-          }
-          seenById.add(item.id);
-        } else if (method === 'title') {
-          const title = (item.name || item.id).toLowerCase();
-          if (seenByTitle.has(title)) {
-            return false;
-          }
-          seenByTitle.add(title);
-        }
+      const itemIds = [item.id, (item as any).imdb_id].filter(Boolean);
+      const title = (item.name || item.id).toLowerCase();
+
+      const isDuplicateById =
+        methods.includes('id') && itemIds.some((id) => seenIds.has(id));
+      const isDuplicateByTitle =
+        methods.includes('title') && seenTitles.has(title);
+
+      if (isDuplicateById || isDuplicateByTitle) {
+        return false;
       }
+
+      itemIds.forEach((id) => seenIds.add(id));
+      seenTitles.add(title);
       return true;
     });
   }
