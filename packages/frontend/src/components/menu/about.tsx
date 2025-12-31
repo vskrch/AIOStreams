@@ -183,7 +183,7 @@ AIOStreams consolidates multiple Stremio addons and debrid services - including 
                 }
               }}
             >
-              {uuid && password ? 'Log Out' : 'Log In'}
+              {uuid && password ? 'Sign Out' : 'Sign In'}
             </Button>
           </div>
 
