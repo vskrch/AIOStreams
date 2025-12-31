@@ -306,7 +306,7 @@ export class AIOStreams {
     addonInstanceId: string,
     catalogId: string,
     type: string,
-    extras?: string
+    parsedExtras?: ExtrasParser
   ): Promise<{
     success: boolean;
     items: MetaPreview[];
@@ -335,11 +335,10 @@ export class AIOStreams {
       actualType = modification.type;
     }
 
-    const parsedExtras = new ExtrasParser(extras);
-    if (parsedExtras.genre === 'None') {
+    if (parsedExtras?.genre === 'None') {
       parsedExtras.genre = undefined;
     }
-    const extrasString = parsedExtras.toString();
+    const extrasString = parsedExtras?.toString();
 
     try {
       const start = Date.now();
@@ -379,12 +378,14 @@ export class AIOStreams {
     const addonInstanceId = id.split('.', 2)[0];
     const actualCatalogId = id.split('.').slice(1).join('.');
 
+    const parsedExtras = new ExtrasParser(extras);
+
     // Fetch raw catalog items
     const result = await this.fetchRawCatalogItems(
       addonInstanceId,
       actualCatalogId,
       type,
-      extras
+      parsedExtras
     );
 
     if (!result.success) {
@@ -404,7 +405,7 @@ export class AIOStreams {
       result.items,
       id,
       type,
-      extras
+      parsedExtras
     );
 
     return { success: true, data: catalog, errors: [] };
@@ -418,11 +419,11 @@ export class AIOStreams {
     items: MetaPreview[],
     catalogId: string,
     type: string,
-    extras?: string,
+    parsedExtras?: ExtrasParser,
     isSearchRequest?: boolean
   ): Promise<MetaPreview[]> {
     let catalog = [...items];
-    const isSearch = isSearchRequest ?? extras?.includes('search');
+    const isSearch = isSearchRequest ?? parsedExtras?.search;
 
     const modification = this.userData.catalogModifications?.find(
       (mod) =>
@@ -433,7 +434,7 @@ export class AIOStreams {
     if (modification?.shuffle && !isSearch) {
       const actualCatalogId = catalogId.split('.').slice(1).join('.');
       // Use extras as part of cache key so different extras get different shuffle
-      const cacheKey = `${type}-${actualCatalogId}-${extras || ''}-${this.userData.uuid}`;
+      const cacheKey = `${type}-${actualCatalogId}-${parsedExtras?.toString() || ''}-${this.userData.uuid}`;
       const cachedShuffle = await shuffleCache.get(cacheKey);
       if (cachedShuffle) {
         catalog = cachedShuffle;
@@ -549,7 +550,7 @@ export class AIOStreams {
     };
 
     const fetchPromises = mergedCatalog.catalogIds.map(
-      async (encodedCatalogId) => {
+      async (encodedCatalogId: string) => {
         logger.debug(`Handling merged catalog source`, { encodedCatalogId });
         const params = new URLSearchParams(encodedCatalogId);
         const catalogId = params.get('id');
@@ -657,14 +658,14 @@ export class AIOStreams {
           encodedCatalogId,
           addonInstanceId,
           catalogType,
-          sourceExtras: sourceExtras.toString(),
+          constructedExtras: sourceExtras.toString(),
         });
 
         const result = await this.fetchRawCatalogItems(
           addonInstanceId,
           actualCatalogId,
           catalogType,
-          sourceExtras.toString() || undefined
+          sourceExtras
         );
 
         if (!result.success) {
@@ -689,7 +690,7 @@ export class AIOStreams {
           result.items,
           catalogId,
           catalogType,
-          sourceExtras.toString() || undefined,
+          sourceExtras,
           isSearchRequest
         );
 
