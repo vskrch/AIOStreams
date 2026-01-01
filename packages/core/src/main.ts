@@ -1634,7 +1634,23 @@ export class AIOStreams {
           if (modification?.name) {
             catalog.name = modification.name;
           }
-          if (modification?.onlyOnDiscover) {
+
+          // checking that no extras are required already
+          // if its a non genre extra, then its just not possible as it would lead to having 2 required extras.
+          // if it is the genre extra that is required, then there isnt a need to apply the modification as its already only on discover
+          const canApplyOnlyOnDiscover = catalog.extra?.every(
+            (e) => !e.isRequired
+          );
+          // checking that a search extra exists and is not required already
+          const canApplyOnlyOnSearch = catalog.extra?.some(
+            (e) => e.name === 'search' && !e.isRequired
+          );
+          // we can only disable search if the search extra is not required. if it is required, disabling can lead to unexpected behavior
+          const canDisableSearch = catalog.extra?.some(
+            (e) => e.name === 'search' && !e.isRequired
+          );
+
+          if (modification?.onlyOnDiscover && canApplyOnlyOnDiscover) {
             // A few cases
             // the catalog already has genres. In which case we set isRequired for the genre extra to true
             // and also add a new genre with name 'None' to the top - if isRequried was previously false.
@@ -1661,11 +1677,16 @@ export class AIOStreams {
                 isRequired: true,
               });
             }
+          } else if (modification?.onlyOnSearch && canApplyOnlyOnSearch) {
+            const searchExtra = catalog.extra?.find((e) => e.name === 'search');
+            if (searchExtra) {
+              searchExtra.isRequired = true;
+            }
           }
           if (modification?.overrideType !== undefined) {
             catalog.type = modification.overrideType;
           }
-          if (modification?.disableSearch) {
+          if (modification?.disableSearch && canDisableSearch) {
             catalog.extra = catalog.extra?.filter((e) => e.name !== 'search');
           }
           return catalog;

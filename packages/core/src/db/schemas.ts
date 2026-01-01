@@ -292,6 +292,7 @@ const CatalogModification = z.object({
   persistShuffleFor: z.number().min(0).max(24).optional(), // persist the shuffle for a given amount of time (in hours)
   onlyOnDiscover: z.boolean().optional(), // only show the catalog on the discover page
   disableSearch: z.boolean().optional(), // disable the search for the catalog
+  onlyOnSearch: z.boolean().optional(), // only show the catalog on search results - mutually exclusive with onlyOnDiscover, only available when the catalog has a non-required search extra
   enabled: z.boolean().optional(), // enable or disable the catalog
   rpdb: z.boolean().optional(), // use rpdb for posters if supported
   overrideType: z.string().min(1).optional(), // override the type of the catalog
@@ -299,6 +300,8 @@ const CatalogModification = z.object({
   searchable: z.boolean().optional(), // property of whether the catalog is searchable (not a search only catalog)
   addonName: z.string().optional(), // the name of the addon that provides the catalog
 });
+
+export type CatalogModification = z.infer<typeof CatalogModification>;
 
 const MergedCatalog = z.object({
   id: z.string().min(1), // unique id for the merged catalog

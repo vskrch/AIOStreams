@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { MergedCatalog } from '@aiostreams/core';
+import { MergedCatalog, CatalogModification } from '@aiostreams/core';
 import { PageWrapper } from '../shared/page-wrapper';
 import { useStatus } from '@/context/status';
 import { useUserData } from '@/context/userData';
 import { SettingsCard } from '../shared/settings-card';
-import { Button, IconButton } from '../ui/button';
+import { Button, CloseButton, IconButton } from '../ui/button';
 import { Modal } from '../ui/modal';
 import { Switch } from '../ui/switch';
 import { Card } from '../ui/card';
@@ -28,7 +28,7 @@ import { PlusIcon, SearchIcon, FilterIcon } from 'lucide-react';
 import TemplateOption from '../shared/template-option';
 import * as constants from '../../../../core/src/utils/constants';
 import { TextInput } from '../ui/text-input';
-import { MdSubtitles, MdOutlineDataset } from 'react-icons/md';
+import { MdSubtitles, MdOutlineDataset, MdSavedSearch } from 'react-icons/md';
 import { RiFolderDownloadFill } from 'react-icons/ri';
 
 import { Popover } from '../ui/popover';
@@ -80,23 +80,6 @@ import { NumberInput } from '../ui/number-input';
 import { useDisclosure } from '@/hooks/disclosure';
 import { useMode } from '@/context/mode';
 import { Select } from '../ui/select';
-
-interface CatalogModification {
-  id: string;
-  type: string;
-  name?: string;
-  overrideType?: string;
-  enabled?: boolean;
-  shuffle?: boolean;
-  reverse?: boolean;
-  persistShuffleFor?: number;
-  rpdb?: boolean;
-  onlyOnDiscover?: boolean;
-  hideable?: boolean;
-  searchable?: boolean;
-  addonName?: string;
-  disableSearch?: boolean;
-}
 
 export function AddonsMenu() {
   return (
@@ -1546,11 +1529,6 @@ function CatalogSettingsCard() {
             existingMods.map((mod) => `${mod.id}-${mod.type}`)
           );
 
-          // Build set of merged catalog IDs to preserve them during filtering
-          const mergedCatalogIds = new Set(
-            (prev.mergedCatalogs || []).map((mc) => `${mc.id}-${mc.type}`)
-          );
-
           // first we need to handle existing modifications, to ensure that they keep their order
           const modifications = existingMods.map((eMod) => {
             // Skip merged catalogs - they don't come from the API
@@ -1590,32 +1568,13 @@ function CatalogSettingsCard() {
             }
           });
 
-          // Add merged catalogs that don't exist in modifications yet
-          (prev.mergedCatalogs || [])
-            .filter((mc) => mc.enabled !== false)
-            .forEach((mc) => {
-              if (!existingIds.has(`${mc.id}-${mc.type}`)) {
-                modifications.push({
-                  id: mc.id,
-                  name: mc.name,
-                  type: mc.type,
-                  enabled: true,
-                  hideable: true,
-                  searchable: true,
-                  addonName: 'Merged Catalog',
-                });
-              }
-            });
-
           // Filter out modifications for catalogs that no longer exist
           // BUT keep merged catalogs (they're managed separately)
           const newCatalogIds = new Set(
             response.data!.map((c) => `${c.id}-${c.type}`)
           );
-          const filteredMods = modifications.filter(
-            (mod) =>
-              newCatalogIds.has(`${mod.id}-${mod.type}`) ||
-              mergedCatalogIds.has(`${mod.id}-${mod.type}`)
+          const filteredMods = modifications.filter((mod) =>
+            newCatalogIds.has(`${mod.id}-${mod.type}`)
           );
 
           return {
@@ -1846,6 +1805,31 @@ function MergedCatalogsCard() {
     useState<MergedCatalog['mergeMethod']>('sequential');
   const [catalogSearch, setCatalogSearch] = useState('');
   const [expandedAddons, setExpandedAddons] = useState<Set<string>>(new Set());
+  const [pendingDeleteMergedCatalogId, setPendingDeleteMergedCatalogId] =
+    useState<string | null>(null);
+
+  const confirmDeleteLastUnavailable = useConfirmationDialog({
+    title: 'Delete Merged Catalog',
+    description:
+      'This is the last catalog in this merged catalog. Removing it will delete the entire merged catalog. Are you sure?',
+    actionText: 'Delete Merged Catalog',
+    actionIntent: 'alert',
+    onConfirm: () => {
+      if (pendingDeleteMergedCatalogId) {
+        setUserData((prev) => ({
+          ...prev,
+          mergedCatalogs: prev.mergedCatalogs?.filter(
+            (mc) => mc.id !== pendingDeleteMergedCatalogId
+          ),
+          catalogModifications: prev.catalogModifications?.filter(
+            (mod) => mod.id !== pendingDeleteMergedCatalogId
+          ),
+        }));
+        setPendingDeleteMergedCatalogId(null);
+        toast.success('Merged catalog deleted');
+      }
+    },
+  });
 
   const mergedCatalogs = userData.mergedCatalogs || [];
 
@@ -2082,44 +2066,94 @@ function MergedCatalogsCard() {
                     <AccordionTrigger>
                       <div className="flex items-center justify-center md:justify-between w-full">
                         <h4 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide hidden md:block">
-                          Included Catalogs
+                          Included Catalogs ({mc.catalogIds.length})
                         </h4>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4">
                         {/* Included catalogs list */}
-                        <div>
-                          <h5 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
-                            Included Catalogs ({mc.catalogIds.length})
-                          </h5>
-                          <div className="flex flex-wrap gap-1.5">
-                            {mc.catalogIds.map((catalogId) => {
-                              const catalog = allCatalogs.find(
-                                (c) => c.value === catalogId
-                              );
-                              return (
-                                <span
-                                  key={catalogId}
-                                  className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-[var(--subtle)] border border-[var(--border)] text-[var(--muted-foreground)] ${catalog?.isDisabled ? 'opacity-60' : ''}`}
-                                >
-                                  <span className="font-medium text-[var(--foreground)]">
-                                    {catalog?.name || catalogId}
-                                  </span>
-                                  {catalog?.isDisabled && (
-                                    <span className="text-[10px] px-1 py-0.5 rounded bg-[var(--alert-subtle)] text-[var(--alert)]">
-                                      Disabled
-                                    </span>
-                                  )}
-                                  {catalog && (
-                                    <span className="text-[10px] px-1 py-0.5 rounded bg-[var(--brand-subtle)] text-[var(--brand)]">
-                                      {capitalise(catalog.catalogType)}
-                                    </span>
-                                  )}
+                        <div className="flex flex-wrap gap-1.5">
+                          {mc.catalogIds.map((catalogId) => {
+                            const catalog = allCatalogs.find(
+                              (c) => c.value === catalogId
+                            );
+                            const isUnavailable = !catalog;
+                            const availableCatalogsCount = mc.catalogIds.filter(
+                              (id) => allCatalogs.find((c) => c.value === id)
+                            ).length;
+                            const isLastAvailable =
+                              !isUnavailable && availableCatalogsCount === 1;
+                            const isLastCatalog = mc.catalogIds.length === 1;
+
+                            const handleRemove = (e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              if (isLastAvailable) {
+                                toast.error(
+                                  'Cannot remove the last available catalog. Add another catalog first or delete the merged catalog.'
+                                );
+                                return;
+                              }
+                              if (isLastCatalog && isUnavailable) {
+                                // Last catalog and it's unavailable - confirm deletion of merged catalog
+                                setPendingDeleteMergedCatalogId(mc.id);
+                                confirmDeleteLastUnavailable.open();
+                                return;
+                              }
+                              // Normal removal
+                              setUserData((prev) => ({
+                                ...prev,
+                                mergedCatalogs: prev.mergedCatalogs?.map(
+                                  (merged) =>
+                                    merged.id === mc.id
+                                      ? {
+                                          ...merged,
+                                          catalogIds: merged.catalogIds.filter(
+                                            (id) => id !== catalogId
+                                          ),
+                                        }
+                                      : merged
+                                ),
+                              }));
+                            };
+
+                            return (
+                              <span
+                                key={catalogId}
+                                className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-[var(--subtle)] border border-[var(--border)] text-[var(--muted-foreground)] ${catalog?.isDisabled ? 'opacity-60' : ''} ${isUnavailable ? 'border-[var(--destructive)]' : ''}`}
+                              >
+                                <span className="font-medium text-[var(--foreground)]">
+                                  {catalog?.name || 'Unknown Catalog'}
                                 </span>
-                              );
-                            })}
-                          </div>
+                                {isUnavailable && (
+                                  <span className="text-[10px] px-1 py-0.5 rounded bg-[var(--destructive-subtle)] text-[var(--destructive)]">
+                                    Unavailable
+                                  </span>
+                                )}
+                                {catalog?.isDisabled && (
+                                  <span className="text-[10px] px-1 py-0.5 rounded bg-[var(--alert-subtle)] text-[var(--alert)]">
+                                    Disabled
+                                  </span>
+                                )}
+                                {catalog && (
+                                  <span className="text-[10px] px-1 py-0.5 rounded bg-[var(--brand-subtle)] text-[var(--brand)]">
+                                    {capitalise(catalog.catalogType)}
+                                  </span>
+                                )}
+                                <CloseButton
+                                  type="button"
+                                  className="ml-0.5"
+                                  size="sm"
+                                  onClick={handleRemove}
+                                  title={
+                                    isLastAvailable
+                                      ? 'Cannot remove last available catalog'
+                                      : 'Remove catalog'
+                                  }
+                                />
+                              </span>
+                            );
+                          })}
                         </div>
                       </div>
                     </AccordionContent>
@@ -2289,18 +2323,61 @@ function MergedCatalogsCard() {
 
             {/* Selected catalogs preview */}
             {selectedCatalogs.length > 0 && (
-              <div className="text-xs text-[--muted]">
-                Selected ({selectedCatalogs.length}/{maxMergedCatalogSources}):{' '}
-                {selectedCatalogs
-                  .slice(0, 3)
-                  .map((id) => {
-                    const cat = allCatalogs.find((c) => c.value === id);
-                    return cat?.name || id;
-                  })
-                  .join(', ')}
-                {selectedCatalogs.length > 3 &&
-                  ` +${selectedCatalogs.length - 3} more`}
-              </div>
+              <>
+                {/* Show unavailable catalogs that can be removed */}
+                {(() => {
+                  const unavailableCatalogs = selectedCatalogs.filter(
+                    (id) => !allCatalogs.find((c) => c.value === id)
+                  );
+                  if (unavailableCatalogs.length === 0) return null;
+                  return (
+                    <div className="p-2 rounded-md bg-[var(--destructive-subtle)] border border-[var(--destructive)]">
+                      <p className="text-xs text-[var(--destructive)] font-medium mb-2">
+                        {unavailableCatalogs.length} unavailable catalog
+                        {unavailableCatalogs.length !== 1 ? 's' : ''} (click to
+                        remove):
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {unavailableCatalogs.map((id) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedCatalogs((prev) =>
+                                prev.filter((c) => c !== id)
+                              )
+                            }
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-[var(--destructive)] text-white hover:opacity-80 transition-opacity"
+                          >
+                            Unknown Catalog
+                            <span className="font-bold">×</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div className="text-xs text-[--muted]">
+                  Selected ({selectedCatalogs.length}/{maxMergedCatalogSources}
+                  ):{' '}
+                  {selectedCatalogs
+                    .filter((id) => allCatalogs.find((c) => c.value === id))
+                    .slice(0, 3)
+                    .map((id) => {
+                      const cat = allCatalogs.find((c) => c.value === id);
+                      return cat?.name || id;
+                    })
+                    .join(', ')}
+                  {selectedCatalogs.filter((id) =>
+                    allCatalogs.find((c) => c.value === id)
+                  ).length > 3 &&
+                    ` +${
+                      selectedCatalogs.filter((id) =>
+                        allCatalogs.find((c) => c.value === id)
+                      ).length - 3
+                    } more`}
+                </div>
+              </>
             )}
           </div>
 
@@ -2377,6 +2454,7 @@ function MergedCatalogsCard() {
           </Button>
         </form>
       </Modal>
+      <ConfirmationDialog {...confirmDeleteLastUnavailable} />
     </SettingsCard>
   );
 }
@@ -2531,7 +2609,7 @@ function SortableCatalogItem({
               )}
             </div>
             <p className="text-xs md:text-sm text-[var(--muted-foreground)] mb-2 md:mb-0">
-              {catalog.addonName}
+              {isMergedCatalog ? 'Merged Catalog' : catalog.addonName}
             </p>
 
             {/* Mobile Controls Row - only visible on small screens */}
@@ -2718,6 +2796,7 @@ function SortableCatalogItem({
                                 <TbSmartHome />
                               )
                             }
+                            disabled={catalog.onlyOnSearch}
                             intent="primary-subtle"
                             rounded
                             onClick={(e) => {
@@ -2749,7 +2828,9 @@ function SortableCatalogItem({
                           <IconButton
                             className="text-2xl h-10 w-10"
                             icon={
-                              catalog.disableSearch ? (
+                              catalog.onlyOnSearch ? (
+                                <MdSavedSearch />
+                              ) : catalog.disableSearch ? (
                                 <TbSearchOff />
                               ) : (
                                 <TbSearch />
@@ -2762,21 +2843,42 @@ function SortableCatalogItem({
                               setUserData((prev) => ({
                                 ...prev,
                                 catalogModifications:
-                                  prev.catalogModifications?.map((c) =>
-                                    c.id === catalog.id &&
-                                    c.type === catalog.type
-                                      ? {
-                                          ...c,
-                                          disableSearch: !c.disableSearch,
-                                        }
-                                      : c
-                                  ),
+                                  prev.catalogModifications?.map((c) => {
+                                    if (
+                                      c.id !== catalog.id ||
+                                      c.type !== catalog.type
+                                    )
+                                      return c;
+                                    // 3-state cycle: normal -> onlyOnSearch -> disableSearch -> normal
+                                    if (!c.onlyOnSearch && !c.disableSearch) {
+                                      // normal -> onlyOnSearch
+                                      return {
+                                        ...c,
+                                        onlyOnSearch: true,
+                                        onlyOnDiscover: false,
+                                      };
+                                    } else if (c.onlyOnSearch) {
+                                      // onlyOnSearch -> disableSearch
+                                      return {
+                                        ...c,
+                                        onlyOnSearch: false,
+                                        disableSearch: true,
+                                      };
+                                    } else {
+                                      // disableSearch -> normal
+                                      return { ...c, disableSearch: false };
+                                    }
+                                  }),
                               }));
                             }}
                           />
                         }
                       >
-                        Searchable
+                        {catalog.onlyOnSearch
+                          ? 'Search Only'
+                          : catalog.disableSearch
+                            ? 'Search Disabled'
+                            : 'Searchable'}
                       </Tooltip>
                     )}
                   </div>
@@ -2899,16 +3001,22 @@ function SortableCatalogItem({
                       <Switch
                         label="Discover Only"
                         help="Hide this catalog from the home page and only show it on the Discover page"
-                        moreHelp="This can potentially break the catalog!"
                         side="right"
                         value={catalog.onlyOnDiscover ?? false}
+                        disabled={catalog.onlyOnSearch}
                         onValueChange={(onlyOnDiscover) => {
                           setUserData((prev) => ({
                             ...prev,
                             catalogModifications:
                               prev.catalogModifications?.map((c) =>
                                 c.id === catalog.id && c.type === catalog.type
-                                  ? { ...c, onlyOnDiscover }
+                                  ? {
+                                      ...c,
+                                      onlyOnDiscover,
+                                      onlyOnSearch: onlyOnDiscover
+                                        ? false
+                                        : c.onlyOnSearch,
+                                    }
                                   : c
                               ),
                           }));
@@ -2917,23 +3025,55 @@ function SortableCatalogItem({
                     )}
 
                     {catalog.searchable && (
-                      <Switch
-                        label="Disable Search"
-                        help="Disable the search for this catalog"
-                        side="right"
-                        value={catalog.disableSearch ?? false}
-                        onValueChange={(disableSearch) => {
-                          setUserData((prev) => ({
-                            ...prev,
-                            catalogModifications:
-                              prev.catalogModifications?.map((c) =>
-                                c.id === catalog.id && c.type === catalog.type
-                                  ? { ...c, disableSearch }
-                                  : c
-                              ),
-                          }));
-                        }}
-                      />
+                      <>
+                        <Switch
+                          label="Search Only"
+                          help="Only show this catalog when searching"
+                          side="right"
+                          value={catalog.onlyOnSearch ?? false}
+                          disabled={catalog.disableSearch}
+                          onValueChange={(onlyOnSearch) => {
+                            setUserData((prev) => ({
+                              ...prev,
+                              catalogModifications:
+                                prev.catalogModifications?.map((c) =>
+                                  c.id === catalog.id && c.type === catalog.type
+                                    ? {
+                                        ...c,
+                                        onlyOnSearch,
+                                        onlyOnDiscover: onlyOnSearch
+                                          ? false
+                                          : c.onlyOnDiscover,
+                                      }
+                                    : c
+                                ),
+                            }));
+                          }}
+                        />
+                        <Switch
+                          label="Disable Search"
+                          help="Disable the search for this catalog"
+                          side="right"
+                          value={catalog.disableSearch ?? false}
+                          onValueChange={(disableSearch) => {
+                            setUserData((prev) => ({
+                              ...prev,
+                              catalogModifications:
+                                prev.catalogModifications?.map((c) =>
+                                  c.id === catalog.id && c.type === catalog.type
+                                    ? {
+                                        ...c,
+                                        disableSearch,
+                                        onlyOnSearch: disableSearch
+                                          ? false
+                                          : c.onlyOnSearch,
+                                      }
+                                    : c
+                                ),
+                            }));
+                          }}
+                        />
+                      </>
                     )}
                   </div>
                 </div>
