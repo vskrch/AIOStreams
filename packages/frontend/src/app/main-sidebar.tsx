@@ -228,7 +228,7 @@ export function MainSidebar() {
                     : user.userData.addonLogo || '/logo.png'
                 }
                 alt="logo"
-                className="max-w-[90px] max-h-[60px] object-contain"
+                className="max-w-[90px] max-h-[60px] object-contain p-4"
               />
             </div>
             {status?.settings.alternateDesign === false && (
