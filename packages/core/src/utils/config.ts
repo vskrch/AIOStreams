@@ -844,6 +844,29 @@ function validateOption(
     }
     return value;
   }
+  if (option.type === 'subsection') {
+    for (const subOption of option.subOptions ?? []) {
+      // for subsection, the value must be an object
+      if (typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error(
+          `The value for subsection option '${option.name}' must be an object, got ${Array.isArray(value) ? 'array' : typeof value}`
+        );
+      }
+      const subValue = value[subOption.id];
+      try {
+        value[subOption.id] = validateOption(
+          subOption,
+          subValue,
+          decryptValues
+        );
+      } catch (error) {
+        throw new Error(
+          `The value for sub-option '${subOption.name}' in subsection option '${option.name}' is invalid: ${error}`
+        );
+      }
+    }
+    return value;
+  }
   if (option.type === 'multi-select') {
     if (!Array.isArray(value)) {
       throw new Error(

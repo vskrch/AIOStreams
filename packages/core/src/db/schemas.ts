@@ -207,6 +207,7 @@ const OptionDefinition = z.object({
     'alert',
     'socials',
     'oauth',
+    'subsection',
     'custom-nntp-servers',
   ]),
   oauth: z
@@ -229,6 +230,9 @@ const OptionDefinition = z.object({
       })
     )
     .optional(),
+  get subOptions() {
+    return z.array(OptionDefinition).optional();
+  },
   intent: z
     .enum([
       'alert',
