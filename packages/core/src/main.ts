@@ -400,12 +400,16 @@ export class AIOStreams {
       };
     }
 
+    // // Use extras as part of cache key so different extras get different shuffle
+    const shuffleCacheKey = `${type}-${actualCatalogId}-${parsedExtras?.toString() || ''}-${this.userData.uuid}`;
+
     // Apply catalog modifications (shuffle, reverse, RPDB, etc.)
     const catalog = await this.applyCatalogModifications(
       result.items,
       id,
       type,
-      parsedExtras
+      parsedExtras,
+      shuffleCacheKey
     );
 
     return { success: true, data: catalog, errors: [] };
@@ -420,10 +424,10 @@ export class AIOStreams {
     catalogId: string,
     type: string,
     parsedExtras?: ExtrasParser,
-    isSearchRequest?: boolean
+    shuffleCacheKey?: string
   ): Promise<MetaPreview[]> {
     let catalog = [...items];
-    const isSearch = isSearchRequest ?? parsedExtras?.search;
+    const isSearch = parsedExtras?.search;
 
     const modification = this.userData.catalogModifications?.find(
       (mod) =>
@@ -431,11 +435,11 @@ export class AIOStreams {
     );
 
     // Apply shuffle if enabled (not for search requests)
-    if (modification?.shuffle && !isSearch) {
-      const actualCatalogId = catalogId.split('.').slice(1).join('.');
-      // Use extras as part of cache key so different extras get different shuffle
-      const cacheKey = `${type}-${actualCatalogId}-${parsedExtras?.toString() || ''}-${this.userData.uuid}`;
-      const cachedShuffle = await shuffleCache.get(cacheKey);
+    if (modification?.shuffle && !isSearch && shuffleCacheKey) {
+      // const actualCatalogId = catalogId.split('.').slice(1).join('.');
+      // // Use extras as part of cache key so different extras get different shuffle
+      // const cacheKey = `${type}-${actualCatalogId}-${parsedExtras?.toString() || ''}-${this.userData.uuid}`;
+      const cachedShuffle = await shuffleCache.get(shuffleCacheKey);
       if (cachedShuffle) {
         catalog = cachedShuffle;
       } else {
@@ -445,7 +449,7 @@ export class AIOStreams {
         }
         if (modification.persistShuffleFor) {
           await shuffleCache.set(
-            cacheKey,
+            shuffleCacheKey,
             catalog,
             modification.persistShuffleFor * 3600
           );
@@ -704,19 +708,10 @@ export class AIOStreams {
           };
         }
 
-        // Apply catalog modifications (shuffle, reverse, RPDB) to each source's items
-        const modifiedItems = await this.applyCatalogModifications(
-          result.items,
-          catalogId,
-          catalogType,
-          sourceExtras,
-          isSearchRequest
-        );
-
         return {
           encodedCatalogId,
-          items: modifiedItems,
-          fetched: result.items.length, // Use original count for skip tracking
+          items: result.items,
+          fetched: result.items.length,
           success: true,
           skipped: false,
         };
@@ -782,6 +777,17 @@ export class AIOStreams {
       mergedCatalog.deduplicationMethods
     );
 
+    const shuffleCacheKey = `${baseCacheKey}-skip=${requestedSkip}-shuffle`;
+
+    // Apply catalog modifications (shuffle, reverse, RPDB) to the merged catalog
+    allItems = await this.applyCatalogModifications(
+      allItems,
+      id,
+      type,
+      parsedExtras,
+      shuffleCacheKey
+    );
+
     // Calculate the next skip value (current skip + items we're returning)
     const nextSkip = requestedSkip + allItems.length;
 
@@ -828,15 +834,6 @@ export class AIOStreams {
           }
         }
         return result;
-      }
-
-      case 'shuffle': {
-        const allItems = itemsBySource.flat();
-        for (let i = allItems.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [allItems[i], allItems[j]] = [allItems[j], allItems[i]];
-        }
-        return allItems;
       }
 
       case 'imdbRating': {

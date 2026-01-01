@@ -314,7 +314,6 @@ const MergedCatalog = z.object({
     .enum([
       'sequential', // merge in order of catalogIds array
       'interleave', // interleave: 1st from each, then 2nd from each, etc.
-      'shuffle', // shuffle the merged results
       'imdbRating', // sort by IMDB rating (descending)
       'releaseDateAsc', // sort by release date (oldest first)
       'releaseDateDesc', // sort by release date (newest first)
