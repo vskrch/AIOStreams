@@ -1110,7 +1110,11 @@ export class AIOStreams {
           addonName: candidate.addon.name,
           addonInstanceId: candidate.instanceId,
         });
-        meta.links = this.convertDiscoverDeepLinks(meta.links);
+        if (this.userData.usePosterServiceForMeta) {
+          await this.applyPosterModifications([meta], type, true);
+        } else {
+          meta.links = this.convertDiscoverDeepLinks(meta.links);
+        }
 
         if (meta.videos) {
           meta.videos = await Promise.all(

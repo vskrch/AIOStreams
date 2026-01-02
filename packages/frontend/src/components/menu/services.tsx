@@ -379,6 +379,26 @@ function Content() {
         )}
 
         <Switch
+          label="Use Poster Service for Library/Continue Watching"
+          side="right"
+          value={userData.usePosterServiceForMeta || false}
+          onValueChange={(v) => {
+            setUserData((prev) => ({
+              ...prev,
+              usePosterServiceForMeta: v,
+            }));
+          }}
+          disabled={!userData.rpdbApiKey && !userData.topPosterApiKey}
+          help={
+            <span>
+              If enabled, AIOStreams will use the selected poster service to
+              fetch posters for single meta items - which generally means items
+              in your Library and Continue Watching.
+            </span>
+          }
+        />
+
+        <Switch
           label="Use Poster Redirect API"
           side="right"
           disabled={!userData.rpdbApiKey && !userData.topPosterApiKey}
