@@ -404,7 +404,7 @@ router.all(
         logger.debug(`[${requestId}] Making upstream request`, {
           username: auth.username,
           method: method,
-          proxied: useProxy
+          tunneled: useProxy
             ? `true${proxyIndex > 1 ? ` (${proxyIndex + 1})` : ''}`
             : 'false',
           range: headers['range'],
