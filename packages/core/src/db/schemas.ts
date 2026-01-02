@@ -298,7 +298,7 @@ const CatalogModification = z.object({
   disableSearch: z.boolean().optional(), // disable the search for the catalog
   onlyOnSearch: z.boolean().optional(), // only show the catalog on search results - mutually exclusive with onlyOnDiscover, only available when the catalog has a non-required search extra
   enabled: z.boolean().optional(), // enable or disable the catalog
-  rpdb: z.boolean().optional(), // use rpdb for posters if supported
+  usePosterService: z.boolean().optional(), // use rpdb or top poster for posters if supported
   overrideType: z.string().min(1).optional(), // override the type of the catalog
   hideable: z.boolean().optional(), // hide the catalog from the home page
   searchable: z.boolean().optional(), // property of whether the catalog is searchable (not a search only catalog)
@@ -476,7 +476,10 @@ export const UserDataSchema = z.object({
     uncachedAnime: z.array(SortCriterion).optional(),
   }),
   rpdbApiKey: z.string().optional(),
-  rpdbUseRedirectApi: z.boolean().optional(),
+  // rpdbUseRedirectApi: z.boolean().optional(),
+  topPosterApiKey: z.string().optional(),
+  posterService: z.enum(['rpdb', 'top-poster']).optional(),
+  usePosterRedirectApi: z.boolean().optional(),
   formatter: Formatter,
   proxy: StreamProxyConfig.optional(),
   resultLimits: ResultLimitOptions.optional(),
@@ -1113,6 +1116,11 @@ export const RPDBIsValidResponse = z.object({
   valid: z.boolean(),
 });
 export type RPDBIsValidResponse = z.infer<typeof RPDBIsValidResponse>;
+
+export const TopPosterIsValidResponse = z.object({
+  valid: z.boolean(),
+});
+export type TopPosterIsValidResponse = z.infer<typeof TopPosterIsValidResponse>;
 
 export const TemplateSchema = z.object({
   metadata: z.object({

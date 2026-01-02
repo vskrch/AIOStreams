@@ -143,6 +143,24 @@ export function applyMigrations(config: any): UserData {
     }));
   }
 
+  if (
+    config.rpdbUseRedirectApi !== undefined &&
+    config.usePosterRedirectApi === undefined
+  ) {
+    config.usePosterRedirectApi = config.rpdbUseRedirectApi;
+    delete config.rpdbUseRedirectApi;
+  }
+
+  // migrate 'rpdb' to 'usePosterService' in all catalog modifications
+  if (Array.isArray(config.catalogModifications)) {
+    for (const mod of config.catalogModifications) {
+      if (mod.usePosterService === undefined && mod.rpdb === true) {
+        mod.usePosterService = true;
+      }
+      delete mod.rpdb;
+    }
+  }
+
   return config;
 }
 const DefaultUserData: UserData = {
