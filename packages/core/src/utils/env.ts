@@ -480,6 +480,10 @@ export const Env = cleanEnv(process.env, {
     default: true,
     desc: 'Enable the search API. If true, the search API will be enabled.',
   }),
+  ZYCLOPS_HEALTH_PROXY_ENDPOINT: url({
+    default: 'https://zyclops.elfhosted.com',
+    desc: 'Base URL of the Zyclops health proxy endpoint used by the Newznab preset.',
+  }),
   ANIME_DB_LEVEL_OF_DETAIL: str({
     default: 'required',
     desc: 'Detail level for the anime database. none: no anime database, required: only load the required databases, full: load all data',
