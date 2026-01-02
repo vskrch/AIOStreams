@@ -427,7 +427,7 @@ export async function validateConfig(
   const needTmdb =
     config.titleMatching?.enabled ||
     config.yearMatching?.enabled ||
-    config.digitalReleaseFilter;
+    config.digitalReleaseFilter?.enabled;
 
   if (needTmdb && !tmdbAuth) {
     throw new Error(
@@ -537,6 +537,16 @@ export function applyMigrations(config: any): UserData {
         config.deduplicator.multiGroupBehaviour = 'keep_all';
         break;
     }
+  }
+
+  if (typeof config.digitalReleaseFilter === 'boolean') {
+    const oldValue = config.digitalReleaseFilter;
+    config.digitalReleaseFilter = {
+      enabled: oldValue,
+      tolerance: 1,
+      requestTypes: ['movie', 'series', 'anime'],
+      addons: [],
+    };
   }
   if (config.titleMatching?.matchYear) {
     config.yearMatching = {

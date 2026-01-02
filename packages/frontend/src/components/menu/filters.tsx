@@ -2875,16 +2875,114 @@ function Content() {
                   description="This will filter out all results for movies that are determined to not have a digital release."
                 >
                   <Switch
-                    label="Enable"
+                    label="Enabled"
                     side="right"
-                    value={userData.digitalReleaseFilter}
+                    value={userData.digitalReleaseFilter?.enabled ?? false}
                     onValueChange={(value) => {
                       setUserData((prev) => ({
                         ...prev,
-                        digitalReleaseFilter: value,
+                        digitalReleaseFilter: {
+                          ...(prev.digitalReleaseFilter || {}),
+                          enabled: value,
+                        },
                       }));
                     }}
                   />
+
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <Slider
+                        label="Tolerance"
+                        moreHelp="Ignore the digital release filter if the movie was released within this many days of the current date. This accounts for early releases, leaks, and server timezone differences."
+                        disabled={!userData.digitalReleaseFilter?.enabled}
+                        value={[userData.digitalReleaseFilter?.tolerance ?? 0]}
+                        min={0}
+                        max={365}
+                        step={1}
+                        defaultValue={[0]}
+                        onValueChange={(value) => {
+                          setUserData((prev) => ({
+                            ...prev,
+                            digitalReleaseFilter: {
+                              ...prev.digitalReleaseFilter,
+                              tolerance: value[0],
+                            },
+                          }));
+                        }}
+                      />
+                    </div>
+                    <div className="w-24">
+                      <NumberInput
+                        label="Value"
+                        step={1}
+                        value={userData.digitalReleaseFilter?.tolerance ?? 0}
+                        min={0}
+                        max={365}
+                        disabled={!userData.digitalReleaseFilter?.enabled}
+                        onValueChange={(newValue) => {
+                          if (newValue !== undefined) {
+                            setUserData((prev) => ({
+                              ...prev,
+                              digitalReleaseFilter: {
+                                ...prev.digitalReleaseFilter,
+                                tolerance: newValue,
+                              },
+                            }));
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-[--muted]">Tolerance in days</p>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Combobox
+                        multiple
+                        disabled={!userData.digitalReleaseFilter?.enabled}
+                        label="Request Types"
+                        emptyMessage="There aren't any request types to choose from..."
+                        help="Request types that will use the digital release filter. Leave blank to apply to all request types."
+                        options={TYPES.map((type) => ({
+                          label: type,
+                          value: type,
+                          textValue: type,
+                        }))}
+                        value={userData.digitalReleaseFilter?.requestTypes}
+                        onValueChange={(value) => {
+                          setUserData((prev) => ({
+                            ...prev,
+                            digitalReleaseFilter: {
+                              ...prev.digitalReleaseFilter,
+                              requestTypes: value,
+                            },
+                          }));
+                        }}
+                      />
+                      <Combobox
+                        multiple
+                        disabled={!userData.digitalReleaseFilter?.enabled}
+                        label="Addons"
+                        help="Addons that will use the digital release filter. Leave blank to apply to all addons."
+                        emptyMessage="You haven't installed any addons yet..."
+                        options={userData.presets.map((preset) => ({
+                          label: preset.options.name || preset.type,
+                          textValue: preset.options.name || preset.type,
+                          value: preset.instanceId,
+                        }))}
+                        value={userData.digitalReleaseFilter?.addons || []}
+                        onValueChange={(value) => {
+                          setUserData((prev) => ({
+                            ...prev,
+                            digitalReleaseFilter: {
+                              ...prev.digitalReleaseFilter,
+                              addons: value,
+                            },
+                          }));
+                        }}
+                      />
+                    </div>
+                  </div>
                 </SettingsCard>
                 <SettingsCard
                   title="SeaDex Integration"
