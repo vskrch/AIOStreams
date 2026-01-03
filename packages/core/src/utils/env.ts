@@ -1854,7 +1854,7 @@ export const Env = cleanEnv(process.env, {
   }),
 
   BUILTIN_ZILEAN_URL: url({
-    default: 'https://zilean.elfhosted.com',
+    default: 'https://zileanfortheweebs.midnightignite.me',
     desc: 'Builtin Zilean URL',
   }),
   BUILTIN_DEFAULT_ZILEAN_TIMEOUT: num({
