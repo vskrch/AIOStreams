@@ -1660,9 +1660,10 @@ export class AIOStreams {
           // checking that no extras are required already
           // if its a non genre extra, then its just not possible as it would lead to having 2 required extras.
           // if it is the genre extra that is required, then there isnt a need to apply the modification as its already only on discover
-          const canApplyOnlyOnDiscover = catalog.extra?.every(
-            (e) => !e.isRequired
-          );
+          // if there are no extras, we can also apply the modification
+          const canApplyOnlyOnDiscover = catalog.extra
+            ? catalog.extra.every((e) => !e.isRequired)
+            : true;
           // checking that a search extra exists and is not required already
           const canApplyOnlyOnSearch = catalog.extra?.some(
             (e) => e.name === 'search' && !e.isRequired
