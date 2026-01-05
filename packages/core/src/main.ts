@@ -314,7 +314,21 @@ export class AIOStreams {
     error?: { title: string; description: string };
   }> {
     const addon = this.getAddon(addonInstanceId);
+
     if (!addon) {
+      const initError = (
+        this.addonInitialisationErrors as { addon: Preset; error: string }[]
+      ).find((e) => addonInstanceId.startsWith(e.addon.instanceId || ''));
+      if (initError) {
+        return {
+          success: false,
+          items: [],
+          error: {
+            title: `[❌] ${initError.error}`,
+            description: `Addon ${addonInstanceId} failed to initialise. Try reinstalling/disabling/uninstalling the addon.`,
+          },
+        };
+      }
       return {
         success: false,
         items: [],
@@ -1301,7 +1315,13 @@ export class AIOStreams {
 
     for (const preset of this.userData.presets.filter((p) => p.enabled)) {
       try {
-        const addons = await PresetManager.fromId(preset.type).generateAddons(
+        const Preset = PresetManager.fromId(preset.type);
+        if (Preset.METADATA.DISABLED) {
+          throw new Error(
+            `${Preset.METADATA.NAME} has been ${Preset.METADATA.DISABLED.removed ? 'removed' : 'disabled'}: ${Preset.METADATA.DISABLED.reason}`
+          );
+        }
+        const addons = await Preset.generateAddons(
           this.userData,
           preset.options
         );

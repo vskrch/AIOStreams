@@ -1028,6 +1028,7 @@ const PresetMinimalMetadataSchema = z.object({
   DISABLED: z
     .object({
       reason: z.string(),
+      removed: z.boolean().optional(),
       disabled: z.boolean(),
     })
     .optional(),

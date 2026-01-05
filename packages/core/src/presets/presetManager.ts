@@ -69,6 +69,7 @@ import { TorrentGalaxyPreset } from './torrentGalaxy.js';
 import { UsenetStreamerPreset } from './usenetStreamer.js';
 import { NekoBtPreset } from './nekoBt.js';
 import { EasynewsSearchPreset } from './easynewsSearch.js';
+import { Preset } from './index.js';
 
 let PRESET_LIST: string[] = [
   'custom',
@@ -160,7 +161,7 @@ export class PresetManager {
     );
   }
 
-  static fromId(id: string) {
+  static fromId(id: string): typeof Preset {
     switch (id) {
       case 'torrentio':
         return TorrentioPreset;
