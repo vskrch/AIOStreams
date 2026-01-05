@@ -478,7 +478,7 @@ export const UserDataSchema = z.object({
   rpdbApiKey: z.string().optional(),
   // rpdbUseRedirectApi: z.boolean().optional(),
   topPosterApiKey: z.string().optional(),
-  posterService: z.enum(['rpdb', 'top-poster']).optional(),
+  posterService: z.enum(['rpdb', 'top-poster', 'none']).optional(),
   usePosterRedirectApi: z.boolean().optional(),
   usePosterServiceForMeta: z.boolean().optional(),
   formatter: Formatter,
