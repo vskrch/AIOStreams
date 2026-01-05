@@ -448,9 +448,24 @@ export class AIOStreams {
       (mod) =>
         mod.id === catalogId && (mod.type === type || mod.overrideType === type)
     );
+    const applyShuffle = modification?.shuffle && !isSearch && shuffleCacheKey;
+    const applyReverse = !applyShuffle && modification?.reverse && !isSearch;
+
+    logger.debug(`Applying catalog modifications`, {
+      catalogId,
+      type,
+      modificationFound: !!modification,
+      posterService:
+        modification?.usePosterService === true &&
+        this.userData.posterService !== 'none'
+          ? this.userData.posterService
+          : false,
+      shuffle: !!applyShuffle,
+      reverse: !!applyReverse,
+    });
 
     // Apply shuffle if enabled (not for search requests)
-    if (modification?.shuffle && !isSearch && shuffleCacheKey) {
+    if (applyShuffle) {
       // const actualCatalogId = catalogId.split('.').slice(1).join('.');
       // // Use extras as part of cache key so different extras get different shuffle
       // const cacheKey = `${type}-${actualCatalogId}-${parsedExtras?.toString() || ''}-${this.userData.uuid}`;
@@ -470,7 +485,7 @@ export class AIOStreams {
           );
         }
       }
-    } else if (modification?.reverse && !isSearch) {
+    } else if (applyReverse) {
       catalog = catalog.reverse();
     }
 
