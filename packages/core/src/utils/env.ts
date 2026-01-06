@@ -189,6 +189,24 @@ const userAgent = makeValidator((x) => {
   return x.replace(/{version}/g, metadata?.version || 'unknown');
 });
 
+const userAgentMappings = makeValidator<Map<string, string>>((x) => {
+  if (typeof x !== 'string') {
+    throw new EnvError('User agent mappings must be a string');
+  }
+  const mappings = new Map<string, string>();
+  x.split(',').forEach((x) => {
+    const [key, value] = x.split(':');
+    if (!key || !value) {
+      throw new EnvError('User agent mappings must be in the format key:value');
+    }
+    mappings.set(
+      key,
+      value.replace(/{version}/g, metadata?.version || 'unknown')
+    );
+  });
+  return mappings;
+});
+
 // comma separated list of alias:uuid
 const aliasedUUIDs = makeExactValidator((x) => {
   try {
@@ -570,8 +588,8 @@ export const Env = cleanEnv(process.env, {
     desc: 'Default user agent for the addon',
   }),
 
-  HOSTNAME_USER_AGENT_OVERRIDES: str({
-    default: '*.strem.fun:Stremio',
+  HOSTNAME_USER_AGENT_OVERRIDES: userAgentMappings({
+    default: undefined,
     desc: 'Comma separated list of hostname:useragent pairs. Takes priority over any other user agent settings.',
   }),
 
