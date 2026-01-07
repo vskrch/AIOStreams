@@ -803,6 +803,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       behaviorHints: {
         videoSize: torrentOrNzb.file.size,
         filename: torrentOrNzb.file.name,
+        folderSize: torrentOrNzb.size,
       },
     };
   }
