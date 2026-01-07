@@ -768,7 +768,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       : '';
 
     const name = `[${shortCode} ${cacheIndicator}${torrentOrNzb.service?.library ? ' ☁️' : ''}] ${this.name}`;
-    const description = `${torrentOrNzb.title}\n${torrentOrNzb.file.name}\n${
+    const description = `${torrentOrNzb.title ? torrentOrNzb.title : ''}\n${torrentOrNzb.file.name ? torrentOrNzb.file.name : ''}\n${
       torrentOrNzb.indexer ? `🔍 ${torrentOrNzb.indexer}` : ''
     } ${'seeders' in torrentOrNzb && torrentOrNzb.seeders ? `👤 ${torrentOrNzb.seeders}` : ''} ${
       torrentOrNzb.age ? `🕒 ${formatHours(torrentOrNzb.age)}` : ''
