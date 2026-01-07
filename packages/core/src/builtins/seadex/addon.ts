@@ -115,8 +115,17 @@ export class SeaDexAddon extends BaseDebridAddon<SeaDexAddonConfig> {
           torrents.push({
             confirmed: true,
             hash,
-            sources: [],
             indexer: torrent.tracker,
+            sources:
+              torrent.tracker === 'Nyaa'
+                ? [
+                    'http://nyaa.tracker.wf:7777/announce',
+                    'udp://open.stealth.si:80/announce',
+                    'udp://tracker.opentrackr.org:1337/announce',
+                    'udp://exodus.desync.com:6969/announce',
+                    'udp://tracker.torrent.eu.org:451/announce',
+                  ]
+                : [],
             size: totalSize,
             type: 'torrent',
           });
