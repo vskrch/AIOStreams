@@ -115,6 +115,7 @@ export class SeaDexAddon extends BaseDebridAddon<SeaDexAddonConfig> {
           torrents.push({
             confirmed: true,
             hash,
+            group: torrent.releaseGroup,
             indexer: torrent.tracker,
             sources:
               torrent.tracker === 'Nyaa'

@@ -256,6 +256,13 @@ class StreamParser {
     }
     return undefined;
   }
+  protected getResolution(
+    stream: Stream,
+    currentParsedStream: ParsedStream
+  ): string | undefined {
+    return undefined; //
+  }
+
 
   protected getSize(
     stream: Stream,
@@ -467,7 +474,10 @@ class StreamParser {
       resolution: fileParsed?.resolution || folderParsed?.resolution,
       quality: fileParsed?.quality || folderParsed?.quality,
       encode: fileParsed?.encode || folderParsed?.encode,
-      releaseGroup: fileParsed?.releaseGroup || folderParsed?.releaseGroup,
+      releaseGroup:
+        this.getReleaseGroup(stream, parsedStream) ||
+        fileParsed?.releaseGroup ||
+        folderParsed?.releaseGroup,
       edition: fileParsed?.edition || folderParsed?.edition,
       remastered: fileParsed?.remastered || folderParsed?.remastered,
       repack: fileParsed?.repack || folderParsed?.repack,

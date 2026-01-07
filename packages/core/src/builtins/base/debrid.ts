@@ -772,7 +772,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
       torrentOrNzb.indexer ? `🔍 ${torrentOrNzb.indexer}` : ''
     } ${'seeders' in torrentOrNzb && torrentOrNzb.seeders ? `👤 ${torrentOrNzb.seeders}` : ''} ${
       torrentOrNzb.age ? `🕒 ${formatHours(torrentOrNzb.age)}` : ''
-    }`;
+    } ${torrentOrNzb.group ? `\n🏷️ ${torrentOrNzb.group}` : ''}`;
 
     return {
       url:
