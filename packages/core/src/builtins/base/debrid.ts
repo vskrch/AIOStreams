@@ -62,6 +62,7 @@ export const BaseDebridConfigSchema = z.object({
   tmdbReadAccessToken: z.string().optional(),
   tvdbApiKey: z.string().optional(),
   cacheAndPlay: CacheAndPlaySchema.optional(),
+  autoRemoveDownloads: z.boolean().optional(),
   checkOwned: z.boolean().optional().default(true),
 });
 export type BaseDebridConfig = z.infer<typeof BaseDebridConfigSchema>;
@@ -740,6 +741,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
             cacheAndPlay:
               this.userData.cacheAndPlay?.enabled &&
               this.userData.cacheAndPlay?.streamTypes?.includes('torrent'),
+            autoRemoveDownloads: this.userData.autoRemoveDownloads,
           }
         : {
             type: 'usenet',
@@ -753,6 +755,7 @@ export abstract class BaseDebridAddon<T extends BaseDebridConfig> {
             cacheAndPlay:
               this.userData.cacheAndPlay?.enabled &&
               this.userData.cacheAndPlay?.streamTypes?.includes('usenet'),
+            autoRemoveDownloads: this.userData.autoRemoveDownloads,
           }
       : undefined;
 

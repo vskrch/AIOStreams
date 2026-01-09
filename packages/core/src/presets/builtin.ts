@@ -158,6 +158,7 @@ export class BuiltinAddonPreset extends Preset {
         credential: this.getServiceCredential(service, userData),
       })),
       cacheAndPlay: userData.cacheAndPlay,
+      autoRemoveDownloads: userData.autoRemoveDownloads,
     };
   }
 }
