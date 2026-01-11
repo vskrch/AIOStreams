@@ -194,16 +194,35 @@ const userAgentMappings = makeValidator<Map<string, string>>((x) => {
     throw new EnvError('User agent mappings must be a string');
   }
   const mappings = new Map<string, string>();
-  x.split(',').forEach((x) => {
-    const [key, value] = x.split(':');
-    if (!key || !value) {
-      throw new EnvError('User agent mappings must be in the format key:value');
+
+  const regex = /([a-zA-Z0-9.-]+):([^,]*(?:,[^a-zA-Z0-9.-][^,]*)*)/g;
+
+  let match;
+  let hasMatches = false;
+
+  while ((match = regex.exec(x)) !== null) {
+    hasMatches = true;
+    const hostname = match[1].trim();
+    const userAgent = match[2].trim();
+
+    if (!hostname || !userAgent) {
+      throw new EnvError(
+        `User agent mappings must be in the format hostname:useragent (got "${match[0]}")`
+      );
     }
+
     mappings.set(
-      key,
-      value.replace(/{version}/g, metadata?.version || 'unknown')
+      hostname,
+      userAgent.replace(/{version}/g, metadata?.version || 'unknown')
     );
-  });
+  }
+
+  if (!hasMatches) {
+    throw new EnvError(
+      'User agent mappings must be in the format hostname:useragent,hostname:useragent,...'
+    );
+  }
+
   return mappings;
 });
 
