@@ -1,12 +1,15 @@
 import { Cache } from '../../utils/cache.js';
 import { Env } from '../../utils/env.js';
-import { formatZodError, makeRequest } from '../../utils/index.js';
+import {
+  formatZodError,
+  makeRequest,
+  DistributedLock,
+} from '../../utils/index.js';
 import { createLogger } from '../../utils/index.js';
+import { searchWithBackgroundRefresh } from '../utils/general.js';
 import { z } from 'zod';
 
 const logger = createLogger('seadex');
-
-const API_BASE_URL = 'https://releases.moe/api/';
 
 // Zod Schemas
 const SeaDexTorrentSchema = z.object({
@@ -89,8 +92,12 @@ class SeaDexAPI {
   async getEntriesByAnilistId(anilistId: number): Promise<SeaDexResponse> {
     const cacheKey = `anilist-${anilistId}`;
 
-    return this.cache.wrap(
-      async () => {
+    return searchWithBackgroundRefresh({
+      searchCache: this.cache,
+      searchCacheKey: cacheKey,
+      bgCacheKey: `seadex:${cacheKey}`,
+      cacheTTL: Env.BUILTIN_SEADEX_ENTRY_CACHE_TTL,
+      fetchFn: async () => {
         logger.debug(`Fetching SeaDex data for AniList ID ${anilistId}`);
 
         const params = new URLSearchParams({
@@ -100,16 +107,16 @@ class SeaDexAPI {
         });
 
         return this.request<SeaDexResponse>(
-          `collections/entries/records?${params.toString()}`,
+          `/api/collections/entries/records?${params.toString()}`,
           {
             schema: SeaDexResponseSchema,
             timeout: 10000,
           }
         );
       },
-      cacheKey,
-      60 * 60 // 1 hour cache
-    );
+      isEmptyResult: (result) => result.items.length === 0,
+      logger,
+    });
   }
 
   private async request<T>(
@@ -121,8 +128,29 @@ class SeaDexAPI {
       timeout?: number;
     }
   ): Promise<T> {
+    const lockKey = `${Env.BUILTIN_SEADEX_URL}${endpoint}`;
+    const { result } = await DistributedLock.getInstance().withLock(
+      lockKey,
+      () => this._request(endpoint, options),
+      {
+        timeout: options.timeout ?? Env.MAX_TIMEOUT,
+        ttl: (options.timeout ?? Env.MAX_TIMEOUT) + 1000,
+      }
+    );
+    return result;
+  }
+
+  private async _request<T>(
+    endpoint: string,
+    options: {
+      schema: z.ZodSchema<T>;
+      method?: string;
+      body?: unknown;
+      timeout?: number;
+    }
+  ): Promise<T> {
     const { schema, method = 'GET' } = options;
-    const url = new URL(endpoint, API_BASE_URL);
+    const url = new URL(endpoint, Env.BUILTIN_SEADEX_URL);
 
     logger.debug(`Making ${method} request to ${endpoint}`);
 
@@ -163,6 +191,5 @@ class SeaDexAPI {
   }
 }
 
-export { API_BASE_URL as seadexApiUrl };
 export type { SeaDexResponse, SeaDexEntry, SeaDexTorrent };
 export default SeaDexAPI;

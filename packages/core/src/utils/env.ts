@@ -1917,6 +1917,15 @@ export const Env = cleanEnv(process.env, {
     desc: 'Builtin NekoBT timeout',
   }),
 
+  BUILTIN_SEADEX_URL: url({
+    default: 'https://releases.moe',
+    desc: 'Builtin SeaDex URL',
+  }),
+  BUILTIN_SEADEX_ENTRY_CACHE_TTL: num({
+    default: 24 * 60 * 60, // 24 hours
+    desc: 'Builtin SeaDex entry cache TTL',
+  }),
+
   BUILTIN_BITMAGNET_URL: url({
     default: undefined,
     desc: 'Builtin Bitmagnet URL',
