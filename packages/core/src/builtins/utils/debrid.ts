@@ -225,6 +225,7 @@ async function processTorrentsForDebridService(
       results.push({
         ...torrent,
         title: torrent.title ?? magnetCheckResult?.name,
+        size: magnetCheckResult?.size || torrent.size,
         file,
         service: {
           id: service.id,
