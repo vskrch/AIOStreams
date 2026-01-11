@@ -1020,20 +1020,54 @@ export class AnimeDatabase {
 
     const data = JSON.parse(fileContents);
 
-    // Validate each entry
+    // Validate and store kitsu entries
     this.dataStore.kitsuById = new Map();
+    let enrichedCount = 0;
+
     for (const [kitsuId, kitsuEntry] of Object.entries(data)) {
       const validated = validateKitsuEntry(kitsuEntry);
       if (validated !== null) {
         this.dataStore.kitsuById.set(Number(kitsuId), validated);
+
+        // Enrich Fribb mappings with IMDB ID if available and not already present
+        if (validated.imdbId) {
+          const kitsuMappings = this.dataStore.fribbMappingsById
+            .get('kitsuId')
+            ?.get(Number(kitsuId));
+
+          if (kitsuMappings && kitsuMappings.length > 0) {
+            for (const mapping of kitsuMappings) {
+              if (!mapping.imdbId) {
+                mapping.imdbId = validated.imdbId;
+
+                const imdbMap = this.dataStore.fribbMappingsById.get('imdbId');
+                if (!imdbMap) continue;
+                const existingImdbMappings =
+                  imdbMap.get(validated.imdbId) || [];
+
+                if (
+                  !existingImdbMappings.some(
+                    (m) => m.kitsuId === Number(kitsuId)
+                  )
+                ) {
+                  existingImdbMappings.push(mapping);
+                  imdbMap.set(validated.imdbId, existingImdbMappings);
+                  this.dataStore.fribbMappingsById.set('imdbId', imdbMap);
+                  enrichedCount++;
+                }
+              }
+            }
+          }
+        }
       } else {
         logger.warn(
           `[${DATA_SOURCES.kitsuImdb.name}] Skipping invalid entry for kitsuId ${kitsuId}`
         );
       }
     }
+
     logger.info(
-      `[${DATA_SOURCES.kitsuImdb.name}] Loaded and indexed ${this.dataStore.kitsuById.size} valid entries in ${getTimeTakenSincePoint(start)}`
+      `[${DATA_SOURCES.kitsuImdb.name}] Loaded ${this.dataStore.kitsuById.size} kitsu entries and enriched ${enrichedCount} Fribb mappings with IMDB IDs in ${getTimeTakenSincePoint(start)}`
     );
   }
 
