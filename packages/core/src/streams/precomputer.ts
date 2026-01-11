@@ -69,7 +69,12 @@ class StreamPrecomputer {
       return;
     }
     const animeDb = AnimeDatabase.getInstance();
-    const entry = animeDb.getEntryById(parsedId.type, parsedId.value);
+    const entry = animeDb.getEntryById(
+      parsedId.type,
+      parsedId.value,
+      parsedId.season ? Number(parsedId.season) : undefined,
+      parsedId.episode ? Number(parsedId.episode) : undefined
+    );
     const anilistIdRaw = entry?.mappings?.anilistId;
 
     if (!anilistIdRaw) {
