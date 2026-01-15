@@ -55,35 +55,6 @@ export class SootioPreset extends Preset {
         Env.SOOTIO_URL
       ),
       {
-        id: 'torrentScrapers',
-        name: 'Torrent Scrapers',
-        description:
-          'Select the torrent scrapers to use. More scrapers = more results but slower response times.',
-        type: 'multi-select',
-        options: [
-          { label: 'Jackett', value: 'jackett' },
-          { label: '1337x', value: '1337x' },
-          { label: 'BTDigg', value: 'btdig' },
-          { label: 'Bitmagnet', value: 'bitmagnet' },
-          { label: 'Knaben', value: 'knaben' },
-          { label: 'Ext.to', value: 'extto' },
-          { label: 'TorrentDownload', value: 'torrentdownload' },
-        ],
-        default: ['knaben', 'extto', 'torrentdownload'],
-      },
-      {
-        id: 'indexerScrapers',
-        name: 'Indexer Scrapers',
-        description: 'Direct indexer access for better results',
-        type: 'multi-select',
-        options: [
-          { label: 'Zilean', value: 'zilean' },
-          { label: 'Comet', value: 'comet' },
-          { label: 'StremThru', value: 'stremthru' },
-        ],
-        default: ['zilean', 'stremthru'],
-      },
-      {
         id: 'httpProviders',
         name: 'HTTP Stream Providers',
         description: 'The HTTP stream providers to use for the addon.',
@@ -324,6 +295,10 @@ export class SootioPreset extends Preset {
           }
         : undefined;
 
+    const finalProviders = httpProviders
+      ? [httpProviders, ...debridProviders]
+      : debridProviders;
+
     const config = {
       DebridProvider:
         serviceIds && serviceIds.length > 0
@@ -333,17 +308,7 @@ export class SootioPreset extends Preset {
         serviceIds && serviceIds.length > 0
           ? this.getServiceCredential(serviceIds[0], userData)
           : undefined,
-      DebridServices: [...debridProviders, httpProviders],
-      Scrapers: options.torrentScrapers || [
-        'knaben',
-        'extto',
-        'torrentdownload',
-      ],
-      IndexerScrapers: options.indexerScrapers || [
-        'zilean',
-        'comet',
-        'stremthru',
-      ],
+      DebridServices: finalProviders,
       ShowCatalog: true,
       Languages: [],
     };
