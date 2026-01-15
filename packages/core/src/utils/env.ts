@@ -181,12 +181,17 @@ export const forcedPort = makeValidator<string>((input: string) => {
   return coerced.toString();
 });
 
+const parseUserAgent = (input: string): string => {
+  if (['false', 'none', ''].includes(input.toLowerCase().trim()))
+    return 'false';
+  return input.replace(/{version}/g, metadata?.version || 'unknown');
+};
 const userAgent = makeValidator((x) => {
   if (typeof x !== 'string') {
     throw new Error('User agent must be a string');
   }
   // replace {version} with the version of the addon
-  return x.replace(/{version}/g, metadata?.version || 'unknown');
+  return parseUserAgent(x);
 });
 
 const userAgentMappings = makeValidator<Map<string, string>>((x) => {
@@ -211,10 +216,7 @@ const userAgentMappings = makeValidator<Map<string, string>>((x) => {
       );
     }
 
-    mappings.set(
-      hostname,
-      userAgent.replace(/{version}/g, metadata?.version || 'unknown')
-    );
+    mappings.set(hostname, parseUserAgent(userAgent));
   }
 
   if (!hasMatches) {
