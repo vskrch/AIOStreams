@@ -39,6 +39,7 @@ export class SootioPreset extends Preset {
       constants.ALLDEBRID_SERVICE,
       constants.OFFCLOUD_SERVICE,
       constants.DEBRIDER_SERVICE,
+      constants.EASYNEWS_SERVICE,
     ];
 
     const supportedResources = [
@@ -53,6 +54,35 @@ export class SootioPreset extends Preset {
         Env.DEFAULT_SOOTIO_TIMEOUT,
         Env.SOOTIO_URL
       ),
+      {
+        id: 'torrentScrapers',
+        name: 'Torrent Scrapers',
+        description:
+          'Select the torrent scrapers to use. More scrapers = more results but slower response times.',
+        type: 'multi-select',
+        options: [
+          { label: 'Jackett', value: 'jackett' },
+          { label: '1337x', value: '1337x' },
+          { label: 'BTDigg', value: 'btdig' },
+          { label: 'Bitmagnet', value: 'bitmagnet' },
+          { label: 'Knaben', value: 'knaben' },
+          { label: 'Ext.to', value: 'extto' },
+          { label: 'TorrentDownload', value: 'torrentdownload' },
+        ],
+        default: ['knaben', 'extto', 'torrentdownload'],
+      },
+      {
+        id: 'indexerScrapers',
+        name: 'Indexer Scrapers',
+        description: 'Direct indexer access for better results',
+        type: 'multi-select',
+        options: [
+          { label: 'Zilean', value: 'zilean' },
+          { label: 'Comet', value: 'comet' },
+          { label: 'StremThru', value: 'stremthru' },
+        ],
+        default: ['zilean', 'stremthru'],
+      },
       {
         id: 'httpProviders',
         name: 'HTTP Stream Providers',
@@ -257,7 +287,43 @@ export class SootioPreset extends Preset {
       alldebrid: 'AllDebrid',
       debrider: 'DebriderApp',
       premiumize: 'Premiumize',
+      easynews: 'Easynews',
     };
+
+    const debridProviders = (serviceIds || []).map((id) => {
+      if (id === constants.EASYNEWS_SERVICE) {
+        const credential = this.getServiceCredential(id, userData);
+        return {
+          provider: serviceNameMap[id],
+          username: credential.username,
+          password: credential.password,
+        };
+      } else {
+        return {
+          provider: serviceNameMap[id],
+          apiKey: this.getServiceCredential(id, userData),
+        };
+      }
+    });
+
+    const httpProviders =
+      options.httpProviders && options.httpProviders.length > 0
+        ? {
+            provider: 'httpstreaming',
+            http4khdhub: options.httpProviders.includes('http4khdhub'),
+            httpHDHub4u: options.httpProviders.includes('httpHDHub4u'),
+            httpUHDMovies: options.httpProviders.includes('httpUHDMovies'),
+            httpMoviesDrive: options.httpProviders.includes('httpMoviesDrive'),
+            httpMKVCinemas: options.httpProviders.includes('httpMKVCinemas'),
+            httpMkvDrama: options.httpProviders.includes('httpMkvDrama'),
+            httpMalluMv: options.httpProviders.includes('httpMalluMv'),
+            httpCineDoze: options.httpProviders.includes('httpCineDoze'),
+            httpVixSrc: options.httpProviders.includes('httpVixSrc'),
+            httpNetflixMirror:
+              options.httpProviders.includes('httpNetflixMirror'),
+          }
+        : undefined;
+
     const config = {
       DebridProvider:
         serviceIds && serviceIds.length > 0
@@ -267,31 +333,18 @@ export class SootioPreset extends Preset {
         serviceIds && serviceIds.length > 0
           ? this.getServiceCredential(serviceIds[0], userData)
           : undefined,
-      DebridServices: [
-        ...(serviceIds && serviceIds.length > 0
-          ? [
-              {
-                provider: serviceNameMap[serviceIds[0]],
-                apiKey: this.getServiceCredential(serviceIds[0], userData),
-              },
-            ]
-          : []),
-        options.httpProviders && options.httpProviders.length > 0
-          ? {
-              provider: 'httpstreaming',
-              http4khdhub: options.httpProviders.includes('http4khdhub'),
-              httpHDHub4u: options.httpProviders.includes('httpHDHub4u'),
-              httpUHDMovies: options.httpProviders.includes('httpUHDMovies'),
-              httpMoviesDrive: options.httpProviders.includes('httpMoviesDrive'),
-              httpMKVCinemas: options.httpProviders.includes('httpMKVCinemas'),
-              httpMkvDrama: options.httpProviders.includes('httpMkvDrama'),
-              httpMalluMv: options.httpProviders.includes('httpMalluMv'),
-              httpCineDoze: options.httpProviders.includes('httpCineDoze'),
-              httpVixSrc: options.httpProviders.includes('httpVixSrc'),
-              httpNetflixMirror: options.httpProviders.includes('httpNetflixMirror'),
-            }
-          : undefined,
-      ].filter((item) => item !== undefined),
+      DebridServices: [...debridProviders, httpProviders],
+      Scrapers: options.torrentScrapers || [
+        'knaben',
+        'extto',
+        'torrentdownload',
+      ],
+      IndexerScrapers: options.indexerScrapers || [
+        'zilean',
+        'comet',
+        'stremthru',
+      ],
+      ShowCatalog: true,
       Languages: [],
     };
 
