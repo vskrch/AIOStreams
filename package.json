@@ -17,7 +17,7 @@
     "start:dev": "cross-env NODE_ENV=development tsx watch packages/server/src/server.ts",
     "start:addon:dev": "pnpm run start:dev",
     "start:frontend:dev": "pnpm -F frontend run dev",
-    "heroku-postbuild": "pnpm install && pnpm build"
+    "heroku-postbuild": "pnpm install && pnpm build && node scripts/heroku-cleanup.cjs"
   },
   "author": "Viren070",
   "license": "MIT",

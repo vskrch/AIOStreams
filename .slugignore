@@ -1,0 +1,23 @@
+# Ignore source files (TypeScript)
+*.ts
+!*.d.ts
+
+# Ignore documentation and config not needed at runtime
+*.md
+.git
+.github
+.vscode
+branding
+.prettierrc
+tsconfig*.json
+release-please-config.json
+.release-please-manifest.json
+
+# Ignore source directories (compiled JS is in dist)
+packages/*/src
+packages/frontend/.next
+
+# Keep pnpm-lock.yaml but ignore other yaml
+*.yaml
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
