@@ -465,6 +465,33 @@ export const Env = cleanEnv(process.env, {
     default: 5000,
     desc: 'Redis timeout for the addon',
   }),
+
+  // SQLite Backup Configuration (for ephemeral filesystems like Heroku)
+  SQLITE_BACKUP_ENABLED: bool({
+    default: false,
+    desc: 'Enable SQLite database backup to S3-compatible storage',
+  }),
+  SQLITE_BACKUP_S3_ENDPOINT: str({
+    default: undefined,
+    desc: 'S3-compatible endpoint URL (e.g., https://xxx.r2.cloudflarestorage.com)',
+  }),
+  SQLITE_BACKUP_S3_BUCKET: str({
+    default: undefined,
+    desc: 'S3 bucket name for storing backups',
+  }),
+  SQLITE_BACKUP_S3_ACCESS_KEY: str({
+    default: undefined,
+    desc: 'S3 access key for backup storage',
+  }),
+  SQLITE_BACKUP_S3_SECRET_KEY: str({
+    default: undefined,
+    desc: 'S3 secret key for backup storage',
+  }),
+  SQLITE_BACKUP_S3_REGION: str({
+    default: 'auto',
+    desc: 'S3 region (usually "auto" for R2/B2)',
+  }),
+
   ADDON_PROXY: urlOrUrlList({
     default: undefined,
     desc: 'Proxy URL for the addon',

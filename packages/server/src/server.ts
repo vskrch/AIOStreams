@@ -16,13 +16,30 @@ import {
   TemplateManager,
   maskSensitiveInfo,
   constants,
+  initializeBackup,
+  restoreDatabase,
+  backupDatabase,
 } from '@aiostreams/core';
 import { randomBytes } from 'crypto';
 
 const logger = createLogger('server');
 
+function initialiseSqliteBackup() {
+  initializeBackup({
+    enabled: Env.SQLITE_BACKUP_ENABLED,
+    endpoint: Env.SQLITE_BACKUP_S3_ENDPOINT,
+    bucket: Env.SQLITE_BACKUP_S3_BUCKET,
+    accessKey: Env.SQLITE_BACKUP_S3_ACCESS_KEY,
+    secretKey: Env.SQLITE_BACKUP_S3_SECRET_KEY,
+    region: Env.SQLITE_BACKUP_S3_REGION,
+    databaseUri: Env.DATABASE_URI,
+  });
+}
+
 async function initialiseDatabase() {
   try {
+    // Restore from backup before initializing (for ephemeral filesystems like Heroku)
+    await restoreDatabase();
     await DB.getInstance().initialise(Env.DATABASE_URI, []);
   } catch (error) {
     logger.error('Failed to initialise database:', error);
@@ -90,6 +107,7 @@ async function start() {
   try {
     logStartupInfo();
     await initialiseTemplates();
+    initialiseSqliteBackup();
     await initialiseDatabase();
     await initialiseRedis();
     initialiseAnimeDatabase();
@@ -119,6 +137,8 @@ async function shutdown() {
   await Cache.close();
   FeatureControl.cleanup();
   await DB.getInstance().close();
+  // Backup database after closing (for ephemeral filesystems like Heroku)
+  await backupDatabase();
 }
 
 process.on('SIGTERM', async () => {
