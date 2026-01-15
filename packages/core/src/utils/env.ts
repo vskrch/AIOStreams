@@ -491,6 +491,10 @@ export const Env = cleanEnv(process.env, {
     default: 'auto',
     desc: 'S3 region (usually "auto" for R2/B2)',
   }),
+  SQLITE_BACKUP_INTERVAL_SECONDS: num({
+    default: 300, // 5 minutes
+    desc: 'Interval in seconds between automatic database backups (default: 300 = 5 minutes)',
+  }),
 
   ADDON_PROXY: urlOrUrlList({
     default: undefined,

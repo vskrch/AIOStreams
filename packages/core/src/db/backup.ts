@@ -200,3 +200,52 @@ export async function backupDatabase(): Promise<boolean> {
 export function isBackupEnabled(): boolean {
   return backupConfig?.enabled ?? false;
 }
+
+/**
+ * Check if a backup exists in S3
+ */
+export async function backupExists(): Promise<boolean> {
+  if (!backupConfig?.enabled || !s3Client) {
+    return false;
+  }
+
+  const backupKey = getBackupKey();
+
+  try {
+    await s3Client.send(
+      new HeadObjectCommand({
+        Bucket: backupConfig.bucket,
+        Key: backupKey,
+      })
+    );
+    return true;
+  } catch (error: any) {
+    if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Ensure a backup exists in S3 - if not, create one immediately
+ * Should be called after database initialization
+ */
+export async function ensureBackupExists(): Promise<void> {
+  if (!backupConfig?.enabled || !s3Client) {
+    return;
+  }
+
+  try {
+    const exists = await backupExists();
+    if (!exists) {
+      logger.info('No backup exists in S3, creating initial backup...');
+      await backupDatabase();
+    } else {
+      logger.info('Backup already exists in S3, skipping initial upload');
+    }
+  } catch (error) {
+    logger.error('Failed to ensure backup exists:', error);
+  }
+}
+

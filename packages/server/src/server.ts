@@ -19,6 +19,7 @@ import {
   initializeBackup,
   restoreDatabase,
   backupDatabase,
+  ensureBackupExists,
 } from '@aiostreams/core';
 import { randomBytes } from 'crypto';
 
@@ -109,6 +110,8 @@ async function start() {
     await initialiseTemplates();
     initialiseSqliteBackup();
     await initialiseDatabase();
+    // If no backup exists in S3, create one now
+    await ensureBackupExists();
     await initialiseRedis();
     initialiseAnimeDatabase();
     FeatureControl.initialise();
@@ -137,7 +140,7 @@ async function shutdown() {
   await Cache.close();
   FeatureControl.cleanup();
   await DB.getInstance().close();
-  // Backup database after closing (for ephemeral filesystems like Heroku)
+  // Backup database on shutdown (for ephemeral filesystems like Heroku)
   await backupDatabase();
 }
 
