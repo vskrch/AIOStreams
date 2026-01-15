@@ -1,0 +1,1 @@
+{\n  "name": "AIOStreams Addon",\n  "version": "1.0.0",\n  "author": "vskrch",\n  "description": "Basic addon for managing streaming data.",\n  "main": "index.js"\n}
