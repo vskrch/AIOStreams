@@ -1,5 +1,4 @@
-# Ignore source files (TypeScript) - but keep .d.ts type definitions
-# Note: .slugignore doesn't support negation, so we list specific patterns
+# Ignore test files
 *.test.ts
 *.spec.ts
 
@@ -10,13 +9,10 @@
 .vscode
 branding
 .prettierrc
-tsconfig*.json
 release-please-config.json
 .release-please-manifest.json
 compose.yaml
 
-# Ignore source directories (compiled JS is in dist)
-packages/core/src
-packages/server/src
-packages/frontend/src
-packages/frontend/.next
+# Note: Do NOT exclude tsconfig files or src directories here!
+# They are needed during the heroku-postbuild phase.
+# The heroku-cleanup.cjs script handles post-build cleanup.
