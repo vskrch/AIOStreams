@@ -1,6 +1,7 @@
-# Ignore source files (TypeScript)
-*.ts
-!*.d.ts
+# Ignore source files (TypeScript) - but keep .d.ts type definitions
+# Note: .slugignore doesn't support negation, so we list specific patterns
+*.test.ts
+*.spec.ts
 
 # Ignore documentation and config not needed at runtime
 *.md
@@ -12,12 +13,10 @@ branding
 tsconfig*.json
 release-please-config.json
 .release-please-manifest.json
+compose.yaml
 
 # Ignore source directories (compiled JS is in dist)
-packages/*/src
+packages/core/src
+packages/server/src
+packages/frontend/src
 packages/frontend/.next
-
-# Keep pnpm-lock.yaml but ignore other yaml
-*.yaml
-!pnpm-lock.yaml
-!pnpm-workspace.yaml
