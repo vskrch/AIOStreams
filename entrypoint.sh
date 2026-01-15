@@ -1,21 +1,24 @@
 #!/bin/bash
 
-# Entrypoint script for AIOStreams deployment on Heroku
+# Entrypoint script for AIOStreams deployment
 
 set -e
 
 # Environment validation
-if [[ -z "$MY_ENV_VAR" ]]; then
-    echo "Error: MY_ENV_VAR is not set."
-    exit 1
+if [[ -z "$SECRET_KEY" ]]; then
+    echo "Warning: SECRET_KEY is not set. The application may not function correctly."
 fi
 
-# Directory creation
-if [ ! -d "my_directory" ]; then
-    echo "Creating directory my_directory..."
-    mkdir my_directory
+if [[ -z "$DATABASE_URI" ]]; then
+    echo "Warning: DATABASE_URI is not set. The application may not function correctly."
+fi
+
+# Create data directory if it doesn't exist (for SQLite)
+if [ ! -d "data" ]; then
+    echo "Creating data directory..."
+    mkdir -p data
 fi
 
 # Start the application
-echo "Starting the application..."
-exec python app.py
+echo "Starting AIOStreams..."
+exec node packages/server/dist/server.js

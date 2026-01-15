@@ -4,6 +4,7 @@
   "description": "AIOStreams consolidates multiple Stremio addons and debrid services into a single, easily configurable addon. It allows highly customisable filtering, sorting, and formatting of results and supports proxying all your streams through MediaFlow Proxy or StremThru for improved compatibility and IP restriction bypassing.",
   "type": "module",
   "main": "dist/index.js",
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "test": "pnpm run test --workspaces",
     "release": "commit-and-tag-version",
@@ -15,7 +16,8 @@
     "start:addon": "pnpm run start",
     "start:dev": "cross-env NODE_ENV=development tsx watch packages/server/src/server.ts",
     "start:addon:dev": "pnpm run start:dev",
-    "start:frontend:dev": "pnpm -F frontend run dev"
+    "start:frontend:dev": "pnpm -F frontend run dev",
+    "heroku-postbuild": "pnpm install && pnpm build"
   },
   "author": "Viren070",
   "license": "MIT",
