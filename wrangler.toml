@@ -1,0 +1,37 @@
+name = "aiostreams"
+main = "packages/worker/dist/index.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment variables - set these via wrangler secret or dashboard
+# [vars]
+# NODE_ENV = "production"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "aiostreams"
+database_id = "your-database-id-here"
+
+# KV Namespace for caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-id-here"
+
+# Optional: R2 bucket for static assets
+# [[r2_buckets]]
+# binding = "ASSETS"
+# bucket_name = "aiostreams-assets"
+
+[build]
+command = "pnpm -w run build:worker"
+cwd = "."
+
+# Development configuration
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Production deployment
+[env.production]
+name = "aiostreams"

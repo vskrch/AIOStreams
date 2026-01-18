@@ -10,12 +10,15 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "metadata": "node scripts/generateMetadata.cjs",
     "build": "pnpm -F core run build && pnpm -F server run build && pnpm -F frontend run build",
+    "build:worker": "pnpm -F core run build && pnpm -F @aiostreams/worker run build",
     "build:watch": "tsc --build --watch",
     "start": "node packages/server/dist/server",
     "start:addon": "pnpm run start",
     "start:dev": "cross-env NODE_ENV=development tsx watch packages/server/src/server.ts",
     "start:addon:dev": "pnpm run start:dev",
-    "start:frontend:dev": "pnpm -F frontend run dev"
+    "start:frontend:dev": "pnpm -F frontend run dev",
+    "dev:worker": "pnpm -F @aiostreams/worker run dev",
+    "deploy:worker": "pnpm run build:worker && wrangler deploy"
   },
   "author": "Viren070",
   "license": "MIT",
@@ -32,5 +35,6 @@
   },
   "engines": {
     "node": ">=24.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
 }
