@@ -36,6 +36,7 @@ export interface Env {
   
   // Proxy Configuration
   MEDIAFLOW_PROXY_URL?: string;
+  MEDIAFLOW_PROXY_PASSWORD?: string;
   STREMTHRU_URL?: string;
   
   // Feature Flags

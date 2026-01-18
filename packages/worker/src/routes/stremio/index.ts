@@ -324,7 +324,18 @@ stremio.get('/:uuid/:password/stream/:type/:id', async (c) => {
     const uniqueStreams = deduplicateStreams(sortedStreams, dedupeConfig);
     
     // Apply proxy if configured
-    const proxyConfig: ProxyConfig = config.proxy || { enabled: false, type: 'none' };
+    let proxyConfig: ProxyConfig = config.proxy || { enabled: false, type: 'none' };
+    
+    // Fallback to environment configuration for MediaFlow
+    if (proxyConfig.type === 'mediaflow' && !proxyConfig.url) {
+      if (c.env.MEDIAFLOW_PROXY_URL) {
+        proxyConfig = {
+          ...proxyConfig,
+          url: c.env.MEDIAFLOW_PROXY_URL,
+          apiPassword: proxyConfig.apiPassword || c.env.MEDIAFLOW_PROXY_PASSWORD,
+        };
+      }
+    }
     
     // Format streams
     const formatterConfig = {

@@ -11,12 +11,12 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "aiostreams"
-database_id = "your-database-id-here"
+database_id = "8cc57dcf-df29-46da-9890-77c4f04c5f27"
 
 # KV Namespace for caching
 [[kv_namespaces]]
 binding = "CACHE"
-id = "your-kv-id-here"
+id = "61012ea0c6584ff386bdb7c5e9222fee"
 
 # Optional: R2 bucket for static assets
 # [[r2_buckets]]
